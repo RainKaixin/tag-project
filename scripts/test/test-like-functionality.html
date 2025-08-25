@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>喜欢功能测试</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .result {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        font-family: monospace;
+        white-space: pre-wrap;
+      }
+      .success {
+        color: #28a745;
+      }
+      .error {
+        color: #dc3545;
+      }
+      .info {
+        color: #17a2b8;
+      }
+      .warning {
+        color: #ffc107;
+      }
+      .current-user {
+        background: #e3f2fd;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        font-weight: bold;
+      }
+      .like-button {
+        display: inline-flex;
+        align-items: center;
+        background: #ff4757;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s ease;
+      }
+      .like-button:hover {
+        background: #ff3742;
+      }
+      .like-button.liked {
+        background: #ff4757;
+      }
+      .like-button.not-liked {
+        background: #ddd;
+        color: #666;
+      }
+      .like-count {
+        font-size: 24px;
+        font-weight: bold;
+        color: #ff4757;
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>❤️ 喜欢功能测试</h1>
+
+      <div class="test-section">
+        <h3>👤 当前用户</h3>
+        <div id="currentUser" class="current-user">未设置</div>
+        <div>
+          <button onclick="setCurrentUser('alice')">切换到 Alice</button>
+          <button onclick="setCurrentUser('bryan')">切换到 Bryan</button>
+          <button onclick="setCurrentUser('alex')">切换到 Alex</button>
+        </div>
+      </div>
+
+      <div class="test-section">
+        <h3>❤️ 喜欢按钮</h3>
+        <div id="likeCount" class="like-count">0</div>
+        <div style="text-align: center">
+          <button
+            id="likeButton"
+            class="like-button not-liked"
+            onclick="toggleLike()"
+          >
+            🤍 0
+          </button>
+        </div>
+      </div>
+
+      <div class="test-section">
+        <h3>📊 测试结果</h3>
+        <div id="testResults" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>🎯 操作</h3>
+        <button onclick="clearData()">清除数据</button>
+        <button onclick="runFullTest()">运行完整测试</button>
+        <button onclick="debugStats()">调试统计</button>
+      </div>
+    </div>
+
+    <script type="module">
+      // 模拟浏览器环境
+      const mockNavigator = {
+        userAgent:
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        language: 'en-US',
+      };
+
+      const mockScreen = {
+        width: 1920,
+        height: 1080,
+      };
+
+      // 模拟localStorage
+      const mockLocalStorage = {
+        data: {},
+        getItem(key) {
+          return this.data[key] || null;
+        },
+        setItem(key, value) {
+          this.data[key] = value;
+        },
+        removeItem(key) {
+          delete this.data[key];
+        },
+      };
+
+      // 设置全局变量
+      window.navigator = mockNavigator;
+      window.screen = mockScreen;
+      window.localStorage = mockLocalStorage;
+
+      let likeService = null;
+      let currentUser = 'alice';
+      let currentLikeCount = 0;
+      let isLiked = false;
+
+      // 导入喜欢服务
+      import('./src/services/mock/likeService.js')
+        .then(module => {
+          likeService = module;
+          updateCurrentUserDisplay();
+          refreshLikeStatus();
+        })
+        .catch(error => {
+          console.error('Failed to load like service:', error);
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 加载服务失败: ${error.message}</div>`;
+        });
+
+      // 设置当前用户
+      window.setCurrentUser = userId => {
+        currentUser = userId;
+        updateCurrentUserDisplay();
+        refreshLikeStatus();
+        document.getElementById(
+          'testResults'
+        ).innerHTML = `<div class="success">✅ 已切换到用户: ${userId}</div>`;
+      };
+
+      // 更新当前用户显示
+      function updateCurrentUserDisplay() {
+        document.getElementById(
+          'currentUser'
+        ).innerHTML = `当前用户: ${currentUser}`;
+      }
+
+      // 切换喜欢状态
+      window.toggleLike = async () => {
+        if (!likeService) return;
+
+        try {
+          console.log(`\n🧪 用户 ${currentUser} 切换喜欢状态`);
+
+          const result = await likeService.toggleArtworkLike(
+            'test_artwork_123',
+            currentUser
+          );
+
+          if (result.success) {
+            currentLikeCount = result.data.likes;
+            isLiked = result.data.liked;
+
+            updateLikeButton();
+            updateLikeCount();
+
+            const resultDiv = document.getElementById('testResults');
+            resultDiv.innerHTML = `
+                        <div class="success">✅ ${currentUser} ${
+              isLiked ? '点赞' : '取消点赞'
+            }成功:</div>
+                        <div class="info">   Success: ${result.success}</div>
+                        <div class="info">   Is Liked: ${
+                          result.data.liked
+                        }</div>
+                        <div class="info">   Total Likes: ${
+                          result.data.likes
+                        }</div>
+                    `;
+          } else {
+            document.getElementById(
+              'testResults'
+            ).innerHTML = `<div class="error">❌ 切换喜欢状态失败: ${result.error}</div>`;
+          }
+        } catch (error) {
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 操作失败: ${error.message}</div>`;
+        }
+      };
+
+      // 刷新喜欢状态
+      async function refreshLikeStatus() {
+        if (!likeService || !currentUser) return;
+
+        try {
+          const result = await likeService.checkUserLikeStatus(
+            'test_artwork_123',
+            currentUser
+          );
+
+          if (result.success) {
+            currentLikeCount = result.data.likes;
+            isLiked = result.data.liked;
+
+            updateLikeButton();
+            updateLikeCount();
+          }
+        } catch (error) {
+          console.error('Failed to refresh like status:', error);
+        }
+      }
+
+      // 更新喜欢按钮
+      function updateLikeButton() {
+        const button = document.getElementById('likeButton');
+        if (isLiked) {
+          button.className = 'like-button liked';
+          button.innerHTML = `❤️ ${currentLikeCount}`;
+        } else {
+          button.className = 'like-button not-liked';
+          button.innerHTML = `🤍 ${currentLikeCount}`;
+        }
+      }
+
+      // 更新喜欢数量显示
+      function updateLikeCount() {
+        document.getElementById('likeCount').innerHTML = currentLikeCount;
+      }
+
+      // 运行完整测试
+      window.runFullTest = async () => {
+        if (!likeService) return;
+
+        try {
+          // 清除数据
+          likeService.clearAllLikeData();
+
+          const users = ['alice', 'bryan', 'alex'];
+          let results = [];
+
+          for (const user of users) {
+            currentUser = user;
+            updateCurrentUserDisplay();
+
+            const result = await likeService.toggleArtworkLike(
+              'test_artwork_123',
+              user
+            );
+
+            results.push({
+              user: user,
+              liked: result.data.liked,
+              totalLikes: result.data.likes,
+            });
+
+            // 更新显示
+            currentLikeCount = result.data.likes;
+            isLiked = result.data.liked;
+            updateLikeButton();
+            updateLikeCount();
+
+            // 等待一下
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+
+          document.getElementById('testResults').innerHTML = `
+                    <div class="success">✅ 完整测试完成:</div>
+                    <div class="info">${JSON.stringify(results, null, 2)}</div>
+                `;
+        } catch (error) {
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 测试失败: ${error.message}</div>`;
+        }
+      };
+
+      window.clearData = () => {
+        if (!likeService) return;
+
+        try {
+          likeService.clearAllLikeData();
+          currentLikeCount = 0;
+          isLiked = false;
+          updateLikeButton();
+          updateLikeCount();
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="success">✅ 所有数据已清除</div>`;
+        } catch (error) {
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 清除数据失败: ${error.message}</div>`;
+        }
+      };
+
+      window.debugStats = () => {
+        if (!likeService) return;
+
+        try {
+          likeService.debugLikeStats('test_artwork_123');
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="info">🔍 调试信息已打印到控制台</div>`;
+        } catch (error) {
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 调试失败: ${error.message}</div>`;
+        }
+      };
+    </script>
+  </body>
+</html>

@@ -1,0 +1,227 @@
+/* SaveButton 基础样式 */
+.saveButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  user-select: none;
+  outline: none;
+}
+
+/* 未收藏状态 - 默认样式（无颜色） */
+.unfavorited {
+  background-color: white;
+  color: #374151; /* gray-700 */
+  border: 1px solid #d1d5db; /* gray-300 */
+}
+
+.unfavorited:hover:not(.disabled) {
+  background-color: #f9fafb; /* gray-50 */
+  border-color: #9ca3af; /* gray-400 */
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.unfavorited:active:not(.disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 已收藏状态 - Works（蓝色） */
+.favoritedWork {
+  background-color: #3b82f6; /* tag-blue */
+  color: white;
+  border: 1px solid #3b82f6;
+}
+
+.favoritedWork:hover:not(.disabled) {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.favoritedWork:active:not(.disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+/* 已收藏状态 - Collaboration（紫色） */
+.favoritedCollab {
+  background-color: #8b5cf6; /* tag-purple */
+  color: white;
+  border: 1px solid #8b5cf6;
+}
+
+.favoritedCollab:hover:not(.disabled) {
+  background-color: #7c3aed;
+  border-color: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.favoritedCollab:active:not(.disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+}
+
+/* 禁用状态 */
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 图标样式 */
+.icon {
+  transition: all 0.2s ease-in-out;
+}
+
+/* 未收藏图标 - 空心 */
+.outlined {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+/* 已收藏图标 - 实心 */
+.filled {
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+/* 文字样式 */
+.text {
+  font-size: inherit;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* 尺寸变体 */
+.sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  min-height: 2rem;
+}
+
+.sm .icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.md {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  min-height: 2.5rem;
+}
+
+.md .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.lg {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  min-height: 3rem;
+}
+
+.lg .icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* 焦点样式 */
+.saveButton:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* 键盘导航支持 */
+.saveButton:focus-visible {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .md {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    min-height: 2.25rem;
+  }
+
+  .md .icon {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  .lg {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    min-height: 2.5rem;
+  }
+
+  .lg .icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+/* 动画效果 */
+@keyframes savePulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.favoritedWork,
+.favoritedCollab {
+  animation: savePulse 0.3s ease-in-out;
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .unfavorited {
+    border: 2px solid #6b7280;
+  }
+
+  .favoritedWork {
+    border: 2px solid #1e40af;
+  }
+
+  .favoritedCollab {
+    border: 2px solid #5b21b6;
+  }
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .saveButton,
+  .icon {
+    transition: none;
+  }
+
+  .favoritedWork,
+  .favoritedCollab {
+    animation: none;
+  }
+
+  .unfavorited:hover:not(.disabled),
+  .favoritedWork:hover:not(.disabled),
+  .favoritedCollab:hover:not(.disabled) {
+    transform: none;
+  }
+}

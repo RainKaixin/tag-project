@@ -1,0 +1,179 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  width: min(640px, 92vw);
+  min-height: 320px;
+  position: relative;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.closeButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.content {
+  padding: 24px 56px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.body {
+  margin-bottom: 32px;
+}
+
+.body p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #dc2626;
+  margin-bottom: 16px;
+}
+
+.body p:last-child {
+  margin-bottom: 0;
+}
+
+.emailLink {
+  color: #3b82f6;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.emailLink:hover {
+  color: #2563eb;
+}
+
+.divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 24px 0;
+}
+
+.signature {
+  margin-bottom: 32px;
+  text-align: right;
+}
+
+.signature p {
+  font-size: 14px;
+  color: #000000;
+  margin: 0;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+}
+
+.primaryButton {
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.primaryButton:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .overlay {
+    padding: 16px;
+  }
+
+  .content {
+    padding: 20px 40px;
+  }
+
+  .title {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .body p {
+    font-size: 15px;
+  }
+
+  .signature p {
+    font-size: 13px;
+  }
+
+  .primaryButton {
+    width: 100%;
+    padding: 14px 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 16px 32px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .body p {
+    font-size: 14px;
+  }
+
+  .signature p {
+    font-size: 12px;
+  }
+}

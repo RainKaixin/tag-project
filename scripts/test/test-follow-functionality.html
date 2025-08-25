@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>關注功能測試</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .result {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        font-family: monospace;
+        white-space: pre-wrap;
+      }
+      .success {
+        color: #28a745;
+      }
+      .error {
+        color: #dc3545;
+      }
+      .info {
+        color: #17a2b8;
+      }
+      .warning {
+        color: #ffc107;
+      }
+      .current-user {
+        background: #e3f2fd;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        font-weight: bold;
+      }
+      .follow-button {
+        display: inline-flex;
+        align-items: center;
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s ease;
+      }
+      .follow-button:hover {
+        background: #0056b3;
+      }
+      .follow-button.following {
+        background: #6c757d;
+      }
+      .follow-button.following:hover {
+        background: #5a6268;
+      }
+      .followers-count {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 10px 0;
+      }
+      .artist-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+        background: #f8f9fa;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>👥 關注功能測試</h1>
+
+      <div class="test-section">
+        <h3>👤 當前用戶</h3>
+        <div id="currentUser" class="current-user">未設置</div>
+        <div>
+          <button onclick="setCurrentUser('alice')">切換到 Alice</button>
+          <button onclick="setCurrentUser('bryan')">切換到 Bryan</button>
+          <button onclick="setCurrentUser('alex')">切換到 Alex</button>
+        </div>
+      </div>
+
+      <div class="test-section">
+        <h3>🎨 藝術家列表</h3>
+        <div id="artistsList"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>📊 測試結果</h3>
+        <div id="testResults" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>🎯 操作</h3>
+        <button onclick="clearAllData()">清除所有數據</button>
+        <button onclick="runFullTest()">運行完整測試</button>
+        <button onclick="debugCurrentData()">調試當前數據</button>
+      </div>
+    </div>
+
+    <script type="module">
+      // 模擬localStorage
+      const mockLocalStorage = {
+        data: {},
+        getItem(key) {
+          return this.data[key] || null;
+        },
+        setItem(key, value) {
+          this.data[key] = value;
+        },
+        removeItem(key) {
+          delete this.data[key];
+        },
+      };
+
+      // 設置全局變量
+      window.localStorage = mockLocalStorage;
+
+      let followService = null;
+      let currentUser = 'alice';
+      const artists = [
+        { id: 'alice', name: 'Alice Chen', followers: 0 },
+        { id: 'bryan', name: 'Bryan Rodriguez', followers: 0 },
+        { id: 'alex', name: 'Alex Johnson', followers: 0 },
+      ];
+
+      // 導入關注服務
+      import('./src/services/mock/followService.js')
+        .then(module => {
+          followService = module;
+          updateCurrentUserDisplay();
+          updateArtistsList();
+        })
+        .catch(error => {
+          console.error('Failed to load follow service:', error);
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 加載服務失敗: ${error.message}</div>`;
+        });
+
+      // 設置當前用戶
+      window.setCurrentUser = userId => {
+        currentUser = userId;
+        updateCurrentUserDisplay();
+        updateArtistsList();
+        document.getElementById(
+          'testResults'
+        ).innerHTML = `<div class="success">✅ 已切換到用戶: ${userId}</div>`;
+      };
+
+      // 更新當前用戶顯示
+      function updateCurrentUserDisplay() {
+        document.getElementById(
+          'currentUser'
+        ).innerHTML = `當前用戶: ${currentUser}`;
+      }
+
+      // 更新藝術家列表
+      async function updateArtistsList() {
+        if (!followService) return;
+
+        const artistsListDiv = document.getElementById('artistsList');
+        let html = '';
+
+        for (const artist of artists) {
+          try {
+            // 獲取關注者數量
+            const countResult = await followService.getFollowersCount(
+              artist.id
+            );
+            const followersCount = countResult.success
+              ? countResult.data.followersCount
+              : 0;
+
+            // 檢查當前用戶是否關注
+            const statusResult = await followService.checkFollowStatus(
+              currentUser,
+              artist.id
+            );
+            const isFollowing = statusResult.success
+              ? statusResult.data.isFollowing
+              : false;
+
+            html += `
+                        <div class="artist-card">
+                            <h4>${artist.name}</h4>
+                            <p>關注者: <span class="followers-count">${followersCount}</span></p>
+                            <button 
+                                class="follow-button ${
+                                  isFollowing ? 'following' : ''
+                                }"
+                                onclick="toggleFollow('${artist.id}')"
+                                ${currentUser === artist.id ? 'disabled' : ''}
+                            >
+                                ${
+                                  currentUser === artist.id
+                                    ? '自己'
+                                    : isFollowing
+                                    ? '取消關注'
+                                    : '關注'
+                                }
+                            </button>
+                        </div>
+                    `;
+          } catch (error) {
+            console.error(`Error updating artist ${artist.id}:`, error);
+          }
+        }
+
+        artistsListDiv.innerHTML = html;
+      }
+
+      // 切換關注狀態
+      window.toggleFollow = async artistId => {
+        if (!followService || currentUser === artistId) return;
+
+        try {
+          console.log(`\n🧪 用戶 ${currentUser} 切換關注狀態: ${artistId}`);
+
+          const result = await followService.toggleFollow(
+            currentUser,
+            artistId
+          );
+
+          if (result.success) {
+            document.getElementById('testResults').innerHTML = `
+                        <div class="success">✅ ${currentUser} ${
+              result.data.isFollowing ? '關注' : '取消關注'
+            } ${artistId} 成功:</div>
+                        <div class="info">   Success: ${result.success}</div>
+                        <div class="info">   Is Following: ${
+                          result.data.isFollowing
+                        }</div>
+                        <div class="info">   Followers Count: ${
+                          result.data.followersCount
+                        }</div>
+                    `;
+
+            // 更新藝術家列表
+            updateArtistsList();
+          } else {
+            document.getElementById(
+              'testResults'
+            ).innerHTML = `<div class="error">❌ 切換關注狀態失敗: ${result.error}</div>`;
+          }
+        } catch (error) {
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 操作失敗: ${error.message}</div>`;
+        }
+      };
+
+      // 運行完整測試
+      window.runFullTest = async () => {
+        if (!followService) return;
+
+        try {
+          // 清除數據
+          followService.clearAllFollowData();
+
+          const users = ['alice', 'bryan', 'alex'];
+          const testArtists = ['bryan', 'alex']; // Alice不能關注自己
+          let results = [];
+
+          for (const user of users) {
+            currentUser = user;
+            updateCurrentUserDisplay();
+
+            for (const artistId of testArtists) {
+              if (user !== artistId) {
+                // 不能關注自己
+                const result = await followService.toggleFollow(user, artistId);
+
+                results.push({
+                  follower: user,
+                  artist: artistId,
+                  isFollowing: result.data.isFollowing,
+                  followersCount: result.data.followersCount,
+                });
+
+                // 等待一下
+                await new Promise(resolve => setTimeout(resolve, 200));
+              }
+            }
+          }
+
+          // 更新顯示
+          updateArtistsList();
+
+          document.getElementById('testResults').innerHTML = `
+                    <div class="success">✅ 完整測試完成:</div>
+                    <div class="info">${JSON.stringify(results, null, 2)}</div>
+                `;
+        } catch (error) {
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 測試失敗: ${error.message}</div>`;
+        }
+      };
+
+      window.clearAllData = () => {
+        if (!followService) return;
+
+        try {
+          followService.clearAllFollowData();
+          updateArtistsList();
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="success">✅ 所有數據已清除</div>`;
+        } catch (error) {
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 清除數據失敗: ${error.message}</div>`;
+        }
+      };
+
+      window.debugCurrentData = () => {
+        if (!followService) return;
+
+        try {
+          const stats = followService.getAllFollowStats();
+          document.getElementById('testResults').innerHTML = `
+                    <div class="info">🔍 調試信息:</div>
+                    <div class="info">${JSON.stringify(stats, null, 2)}</div>
+                `;
+        } catch (error) {
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 調試失敗: ${error.message}</div>`;
+        }
+      };
+    </script>
+  </body>
+</html>

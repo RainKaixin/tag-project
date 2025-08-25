@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>瀏覽量修復測試</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .result {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        font-family: monospace;
+        white-space: pre-wrap;
+      }
+      .success {
+        color: #28a745;
+      }
+      .error {
+        color: #dc3545;
+      }
+      .info {
+        color: #17a2b8;
+      }
+      .warning {
+        color: #ffc107;
+      }
+      .current-user {
+        background: #e3f2fd;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        font-weight: bold;
+      }
+      .view-count {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>👁️ 瀏覽量修復測試</h1>
+
+      <div class="test-section">
+        <h3>👤 當前用戶</h3>
+        <div id="currentUser" class="current-user">未設置</div>
+        <div>
+          <button onclick="setCurrentUser('alice')">切換到 Alice</button>
+          <button onclick="setCurrentUser('bryan')">切換到 Bryan</button>
+          <button onclick="setCurrentUser('alex')">切換到 Alex</button>
+        </div>
+      </div>
+
+      <div class="test-section">
+        <h3>🎨 測試作品</h3>
+        <div>
+          <button onclick="testArtwork('artwork_1')">測試作品 1</button>
+          <button onclick="testArtwork('artwork_2')">測試作品 2</button>
+          <button onclick="testArtwork('artwork_3')">測試作品 3</button>
+        </div>
+        <div id="viewCount" class="view-count">0</div>
+      </div>
+
+      <div class="test-section">
+        <h3>📊 測試結果</h3>
+        <div id="testResults" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>🎯 操作</h3>
+        <button onclick="clearAllData()">清除所有數據</button>
+        <button onclick="runFullTest()">運行完整測試</button>
+        <button onclick="debugCurrentData()">調試當前數據</button>
+      </div>
+    </div>
+
+    <script type="module">
+      // 模擬瀏覽器環境
+      const mockNavigator = {
+        userAgent:
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        language: 'en-US',
+      };
+
+      const mockScreen = {
+        width: 1920,
+        height: 1080,
+      };
+
+      // 模擬localStorage
+      const mockLocalStorage = {
+        data: {},
+        getItem(key) {
+          return this.data[key] || null;
+        },
+        setItem(key, value) {
+          this.data[key] = value;
+        },
+        removeItem(key) {
+          delete this.data[key];
+        },
+      };
+
+      // 設置全局變量
+      window.navigator = mockNavigator;
+      window.screen = mockScreen;
+      window.localStorage = mockLocalStorage;
+
+      let viewCountService = null;
+      let currentUser = 'alice';
+      let currentArtwork = 'artwork_1';
+      let currentViewCount = 0;
+
+      // 導入瀏覽量服務
+      import('./src/services/mock/viewCountService.js')
+        .then(module => {
+          viewCountService = module;
+          updateCurrentUserDisplay();
+          refreshViewCount();
+        })
+        .catch(error => {
+          console.error('Failed to load view count service:', error);
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 加載服務失敗: ${error.message}</div>`;
+        });
+
+      // 設置當前用戶
+      window.setCurrentUser = userId => {
+        currentUser = userId;
+        updateCurrentUserDisplay();
+        refreshViewCount();
+        document.getElementById(
+          'testResults'
+        ).innerHTML = `<div class="success">✅ 已切換到用戶: ${userId}</div>`;
+      };
+
+      // 更新當前用戶顯示
+      function updateCurrentUserDisplay() {
+        document.getElementById(
+          'currentUser'
+        ).innerHTML = `當前用戶: ${currentUser}`;
+      }
+
+      // 測試作品
+      window.testArtwork = async artworkId => {
+        if (!viewCountService) return;
+
+        currentArtwork = artworkId;
+        document.getElementById(
+          'testResults'
+        ).innerHTML = `<div class="info">🔄 正在測試作品: ${artworkId}</div>`;
+
+        try {
+          console.log(`\n🧪 用戶 ${currentUser} 訪問作品 ${artworkId}`);
+
+          const result = await viewCountService.recordArtworkView(artworkId, {
+            userId: currentUser,
+            userAgent: navigator.userAgent,
+          });
+
+          if (result.success) {
+            currentViewCount = result.viewCount;
+            updateViewCount();
+
+            const resultDiv = document.getElementById('testResults');
+            resultDiv.innerHTML = `
+                        <div class="success">✅ 瀏覽記錄成功:</div>
+                        <div class="info">  作品ID: ${artworkId}</div>
+                        <div class="info">  用戶: ${currentUser}</div>
+                        <div class="info">  總瀏覽量: ${result.viewCount}</div>
+                        <div class="info">  是否新記錄: ${
+                          result.isNewView ? '是' : '否'
+                        }</div>
+                    `;
+          } else {
+            document.getElementById(
+              'testResults'
+            ).innerHTML = `<div class="error">❌ 瀏覽記錄失敗: ${result.error}</div>`;
+          }
+        } catch (error) {
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 操作失敗: ${error.message}</div>`;
+        }
+      };
+
+      // 刷新瀏覽量
+      async function refreshViewCount() {
+        if (!viewCountService || !currentArtwork) return;
+
+        try {
+          const result = await viewCountService.getArtworkViewCount(
+            currentArtwork
+          );
+
+          if (result.success) {
+            currentViewCount = result.viewCount;
+            updateViewCount();
+          }
+        } catch (error) {
+          console.error('Failed to refresh view count:', error);
+        }
+      }
+
+      // 更新瀏覽量顯示
+      function updateViewCount() {
+        document.getElementById('viewCount').innerHTML = currentViewCount;
+      }
+
+      // 運行完整測試
+      window.runFullTest = async () => {
+        if (!viewCountService) return;
+
+        try {
+          // 清除數據
+          viewCountService.clearAllViewData();
+
+          const users = ['alice', 'bryan', 'alex'];
+          const artworks = ['artwork_1', 'artwork_2'];
+          let results = [];
+
+          for (const artwork of artworks) {
+            currentArtwork = artwork;
+            updateViewCount();
+
+            for (const user of users) {
+              currentUser = user;
+              updateCurrentUserDisplay();
+
+              const result = await viewCountService.recordArtworkView(artwork, {
+                userId: user,
+                userAgent: navigator.userAgent,
+              });
+
+              results.push({
+                artwork: artwork,
+                user: user,
+                viewCount: result.viewCount,
+                isNewView: result.isNewView,
+              });
+
+              // 更新顯示
+              currentViewCount = result.viewCount;
+              updateViewCount();
+
+              // 等待一下
+              await new Promise(resolve => setTimeout(resolve, 200));
+            }
+          }
+
+          document.getElementById('testResults').innerHTML = `
+                    <div class="success">✅ 完整測試完成:</div>
+                    <div class="info">${JSON.stringify(results, null, 2)}</div>
+                `;
+        } catch (error) {
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 測試失敗: ${error.message}</div>`;
+        }
+      };
+
+      window.clearAllData = () => {
+        if (!viewCountService) return;
+
+        try {
+          viewCountService.clearAllViewData();
+          // 清除localStorage中的所有相關數據
+          Object.keys(mockLocalStorage.data).forEach(key => {
+            if (key.startsWith('hasRecorded_') || key.startsWith('tag_')) {
+              delete mockLocalStorage.data[key];
+            }
+          });
+          currentViewCount = 0;
+          updateViewCount();
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="success">✅ 所有數據已清除</div>`;
+        } catch (error) {
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 清除數據失敗: ${error.message}</div>`;
+        }
+      };
+
+      window.debugCurrentData = () => {
+        if (!viewCountService) return;
+
+        try {
+          viewCountService.debugViewStats(currentArtwork);
+          document.getElementById('testResults').innerHTML = `
+                    <div class="info">🔍 調試信息已打印到控制台</div>
+                    <div class="info">當前localStorage數據:</div>
+                    <div class="info">${JSON.stringify(
+                      mockLocalStorage.data,
+                      null,
+                      2
+                    )}</div>
+                `;
+        } catch (error) {
+          document.getElementById(
+            'testResults'
+          ).innerHTML = `<div class="error">❌ 調試失敗: ${error.message}</div>`;
+        }
+      };
+    </script>
+  </body>
+</html>
