@@ -88,10 +88,6 @@ export const getCurrentUser = () => {
       if (avatarData) {
         const parsedData = JSON.parse(avatarData);
         if (parsedData && parsedData.avatarUrl) {
-          console.log(
-            '[getCurrentUser] Found avatar in localStorage:',
-            parsedData.avatarUrl?.substring(0, 30)
-          );
           return {
             ...user,
             avatar: parsedData.avatarUrl,
@@ -106,10 +102,6 @@ export const getCurrentUser = () => {
   // 回退到缓存的头像
   const cachedAvatar = getCachedAvatar(userId);
   if (cachedAvatar) {
-    console.log(
-      '[getCurrentUser] Using cached avatar:',
-      cachedAvatar?.substring(0, 30)
-    );
     return {
       ...user,
       avatar: cachedAvatar,
@@ -121,10 +113,6 @@ export const getCurrentUser = () => {
     cacheAvatar(userId, user.avatar);
   }
 
-  console.log(
-    '[getCurrentUser] Using default avatar:',
-    user.avatar?.substring(0, 30)
-  );
   return user;
 };
 

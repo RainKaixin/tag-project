@@ -6,79 +6,132 @@ import React, { useState } from 'react';
  */
 export function FilterPanel() {
   const [sortBy, setSortBy] = useState('Latest');
-  const [categories, setCategories] = useState(['All']);
-  const [software, setSoftware] = useState(['All']);
+  const [categories, setCategories] = useState([]);
+  const [software, setSoftware] = useState([]);
 
   const categoryOptions = [
-    'All',
-    'Visual Effects',
-    'Game Design',
+    'Accessory Design',
+    'Acting',
+    'Advertising',
     'Animation',
-    'Illustration',
-    'Sequential Art',
-    'Graphic Design',
-    'UI/UX',
-    'Fine Art',
-    'Film',
-    'Photography',
     'Architecture',
-    'Industrial Design',
+    'Art History',
+    'Creative Business Leadership',
     'Fashion Design',
+    'Fibers',
+    'Film',
+    'Film/Television',
+    'Fine Art',
+    'Game/ITGM',
+    'Graphic Design',
+    'Industrial Design',
+    'Illustration',
+    'Interior Design',
+    'Jewelry',
     'Motion Design',
+    'Painting',
+    'Photography',
+    'Service Design',
+    'Sequential Art',
+    'UI/UX',
+    'Visual Effects',
   ];
 
   const softwareOptions = [
-    'All',
-    'Blender',
-    'Maya',
-    'Photoshop',
-    'Illustrator',
-    'Unreal Engine',
-    'Unity',
-    'Nuke',
+    '3D-Coat',
+    '3ds Max',
     'After Effects',
+    'Blender',
     'Cinema 4D',
-    'Zbrush',
-    'Houdini',
-    'Substance Painter',
-    'Substance Designer',
+    'DaVinci Resolve',
     'Figma',
+    'Gaea',
+    'Houdini',
+    'Illustrator',
+    'InDesign',
+    'JavaScript',
+    'Maya',
+    'Nuke',
+    'Photoshop',
     'Python',
+    'Substance Designer',
+    'Substance Painter',
+    'Unity',
+    'Unreal Engine',
+    'ZBrush',
   ];
 
   const handleCategoryChange = category => {
-    if (category === 'All') {
-      setCategories(['All']);
-    } else {
-      setCategories(prev => {
-        const newCategories = prev.filter(c => c !== 'All');
-        if (newCategories.includes(category)) {
-          return newCategories.filter(c => c !== category);
-        } else {
-          return [...newCategories, category];
-        }
-      });
-    }
+    setCategories(prev => {
+      if (prev.includes(category)) {
+        return prev.filter(c => c !== category);
+      } else {
+        return [...prev, category];
+      }
+    });
   };
 
   const handleSoftwareChange = softwareName => {
-    if (softwareName === 'All') {
-      setSoftware(['All']);
-    } else {
-      setSoftware(prev => {
-        const newSoftware = prev.filter(s => s !== 'All');
-        if (newSoftware.includes(softwareName)) {
-          return newSoftware.filter(s => s !== softwareName);
-        } else {
-          return [...newSoftware, softwareName];
-        }
-      });
+    setSoftware(prev => {
+      if (prev.includes(softwareName)) {
+        return prev.filter(s => s !== softwareName);
+      } else {
+        return [...prev, softwareName];
+      }
+    });
+  };
+
+  const handleApplyFilters = () => {
+    // 构建筛选参数
+    const params = new URLSearchParams();
+    params.append('sort', sortBy.toLowerCase());
+
+    if (categories.length > 0) {
+      params.append('categories', categories.join(','));
     }
+
+    if (software.length > 0) {
+      params.append('software', software.join(','));
+    }
+
+    // 在新标签页打开专业聚合页面
+    const url = `/major-aggregation?${params.toString()}`;
+    window.open(url, '_blank');
+  };
+
+  const handleClearAll = () => {
+    setSortBy('Latest');
+    setCategories([]);
+    setSoftware([]);
+
+    // 强制重新渲染以确保UI更新
+    console.log('Clear all filters - Reset to default state');
   };
 
   return (
     <div className='bg-white p-6 rounded-lg shadow-sm border border-gray-200'>
-      <h3 className='text-lg font-semibold text-gray-900 mb-6'>Filters</h3>
+      <h3 className='text-lg font-semibold text-gray-900 mb-4'>Filters</h3>
+
+      {/* Action Buttons - 移到最上面 */}
+      <div className='flex gap-2 mb-6'>
+        <button
+          onClick={handleApplyFilters}
+          disabled={categories.length === 0 && software.length === 0}
+          className={`flex-1 px-3 py-1.5 text-sm rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 ${
+            categories.length === 0 && software.length === 0
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-tag-blue text-white hover:bg-blue-600 focus:ring-tag-blue'
+          }`}
+        >
+          Apply
+        </button>
+        <button
+          onClick={handleClearAll}
+          className='flex-1 px-3 py-1.5 bg-gray-100 text-gray-600 text-sm rounded-md hover:bg-gray-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1'
+        >
+          Clear
+        </button>
+      </div>
 
       {/* Sort By */}
       <div className='mb-6'>
@@ -90,7 +143,6 @@ export function FilterPanel() {
         >
           <option value='Latest'>Latest</option>
           <option value='Popular'>Popular</option>
-          <option value='Trending'>Trending</option>
         </select>
       </div>
 

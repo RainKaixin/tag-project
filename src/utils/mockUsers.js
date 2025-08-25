@@ -15,7 +15,7 @@ export const MOCK_USERS = {
     bio: 'Professional photographer specializing in portrait and street photography. Passionate about capturing authentic moments and telling stories through images.',
     school: 'MICA',
     pronouns: 'She/Her',
-    majors: ['Photograph', 'Art History'],
+    majors: ['Photography', 'Fine Art'],
     skills: ['Photography', 'Digital Art', 'Creative Design'],
     socialLinks: {
       instagram: 'https://www.instagram.com/alice',
@@ -42,7 +42,7 @@ export const MOCK_USERS = {
     bio: 'Digital illustrator and concept artist. Creating vibrant characters and imaginative worlds through digital art and traditional techniques.',
     school: 'Parsons School of Design',
     pronouns: 'he/him',
-    majors: ['Illustration', 'Digital Arts'],
+    majors: ['Illustration', 'Graphic Design'],
     skills: ['Illustration', 'Digital Art', 'Creative Design'],
     socialLinks: {
       instagram: 'https://www.instagram.com/bryanrodriguez',
@@ -83,7 +83,7 @@ export const MOCK_USERS = {
     bio: 'Experienced concept artist and 3D modeler. Specializing in environment design and character development for games and films.',
     school: 'California Institute of the Arts',
     pronouns: 'they/them',
-    majors: ['Character Animation', 'Game Design'],
+    majors: ['Animation', 'Game Design'],
     skills: ['Concept Art', 'Digital Art', 'Creative Design'],
     socialLinks: {
       instagram: 'https://www.instagram.com/alexchen',

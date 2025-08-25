@@ -38,10 +38,6 @@ export const getUserAvatar = (user, currentMockUser) => {
         if (avatarData) {
           const parsedData = JSON.parse(avatarData);
           if (parsedData && parsedData.avatarUrl) {
-            console.log(
-              '[getUserAvatar] Found avatar in localStorage:',
-              parsedData.avatarUrl?.substring(0, 30)
-            );
             return parsedData.avatarUrl;
           }
         }
@@ -52,10 +48,6 @@ export const getUserAvatar = (user, currentMockUser) => {
 
     // 回退到靜態數據
     const fallbackAvatar = currentMockUser?.avatar || user.avatar || null;
-    console.log(
-      '[getUserAvatar] Using fallback avatar:',
-      fallbackAvatar?.substring(0, 30)
-    );
     return fallbackAvatar;
   }
   return null;

@@ -57,12 +57,12 @@ const UserAvatar = ({ user, currentMockUser, onClick, className = '' }) => {
       window.removeEventListener('avatar:updated', handleAvatarUpdate);
       window.removeEventListener('avatar:deleted', handleAvatarDeleted);
     };
-  }, [currentMockUser?.id, user?.id, currentMockUser?.avatar, user?.avatar]);
+  }, [currentMockUser?.id, user?.id]);
 
   // 當用戶或 currentMockUser 改變時，更新頭像
   useEffect(() => {
     setAvatarUrl(getUserAvatar(user, currentMockUser));
-  }, [user, currentMockUser]);
+  }, [user?.id, currentMockUser?.id]);
 
   if (isLoggedIn && avatarUrl) {
     // 已登录且有头像：显示用户头像

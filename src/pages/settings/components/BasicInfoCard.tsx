@@ -3,6 +3,8 @@ import React, { useState, useCallback } from 'react';
 import styles from '../EditProfile.module.css';
 import type { BasicInfoCardProps, BasicInfo } from '../types';
 
+import MajorSelector from './MajorSelector';
+
 const BasicInfoCard: React.FC<BasicInfoCardProps> = ({
   data,
   onChange,
@@ -10,70 +12,40 @@ const BasicInfoCard: React.FC<BasicInfoCardProps> = ({
   onMinorsChange,
   errors,
 }) => {
-  const [majorInputValue, setMajorInputValue] = useState('');
-  const [majorError, setMajorError] = useState('');
-
   const handleChange = (field: keyof BasicInfo, value: string) => {
     onChange(field, value);
   };
 
-  const handleAddMajor = useCallback(() => {
-    const major = majorInputValue.trim();
+  const handleAddMajor = useCallback(
+    major => {
+      // 检查重复（不区分大小写）
+      const normalizedMajor = major.toLowerCase();
+      const allMajors = [...(data.majors || []), ...(data.minors || [])];
+      const isDuplicate = allMajors.some(
+        existing => existing.toLowerCase() === normalizedMajor
+      );
 
-    // 验证输入
-    if (!major) {
-      setMajorError('Please enter a major or minor');
-      return;
-    }
+      if (isDuplicate) {
+        return; // MajorSelector 会显示错误信息
+      }
 
-    if (major.length > 30) {
-      setMajorError('Major/minor name must be 30 characters or less');
-      return;
-    }
+      // 智能添加：如果 majors 少于 3 个，添加到 majors；否则添加到 minors
+      const currentMajors = data.majors || [];
+      const currentMinors = data.minors || [];
 
-    if (major.length < 2) {
-      setMajorError('Major/minor name must be at least 2 characters');
-      return;
-    }
-
-    // 检查重复（不区分大小写）
-    const normalizedMajor = major.toLowerCase();
-    const allMajors = [...(data.majors || []), ...(data.minors || [])];
-    const isDuplicate = allMajors.some(
-      existing => existing.toLowerCase() === normalizedMajor
-    );
-
-    if (isDuplicate) {
-      setMajorError('This major/minor already exists');
-      return;
-    }
-
-    // 智能添加：如果 majors 少于 3 个，添加到 majors；否则添加到 minors
-    const currentMajors = data.majors || [];
-    const currentMinors = data.minors || [];
-
-    if (currentMajors.length < 3) {
-      // 添加到 majors
-      const newMajors = [...currentMajors, major];
-      onMajorsChange(newMajors);
-    } else if (currentMinors.length < 3) {
-      // 添加到 minors
-      const newMinors = [...currentMinors, major];
-      onMinorsChange(newMinors);
-    } else {
-      setMajorError('Maximum 3 majors & minors allowed');
-      return;
-    }
-
-    setMajorInputValue('');
-    setMajorError('');
-  }, [
-    majorInputValue,
-    data.majors,
-    data.minors,
-    onMajorsChange,
-    onMinorsChange,
-  ]);
+      if (currentMajors.length < 3) {
+        // 添加到 majors
+        const newMajors = [...currentMajors, major];
+        onMajorsChange(newMajors);
+      } else if (currentMinors.length < 3) {
+        // 添加到 minors
+        const newMinors = [...currentMinors, major];
+        onMinorsChange(newMinors);
+      }
+      // 如果都满了，MajorSelector 会处理错误
+    },
+    [data.majors, data.minors, onMajorsChange, onMinorsChange]
+  );
 
   const handleRemoveMajor = useCallback(
     (majorToRemove: string) => {
@@ -93,26 +65,6 @@ const BasicInfoCard: React.FC<BasicInfoCardProps> = ({
       onMinorsChange(newMinors);
     },
     [data.minors, onMinorsChange]
-  );
-
-  const handleMajorKeyPress = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleAddMajor();
-      }
-    },
-    [handleAddMajor]
-  );
-
-  const handleMajorInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setMajorInputValue(e.target.value);
-      if (majorError) {
-        setMajorError('');
-      }
-    },
-    [majorError]
   );
 
   return (
@@ -248,42 +200,7 @@ const BasicInfoCard: React.FC<BasicInfoCardProps> = ({
 
             {/* 添加专业输入 */}
             <div className={styles.addMajorContainer}>
-              <div className={styles.addMajorInputGroup}>
-                <input
-                  type='text'
-                  value={majorInputValue}
-                  onChange={handleMajorInputChange}
-                  onKeyPress={handleMajorKeyPress}
-                  placeholder='Add a major or minor...'
-                  className={`${styles.input} ${styles.addMajorInput}`}
-                />
-                <button
-                  type='button'
-                  onClick={handleAddMajor}
-                  className={styles.addMajorButton}
-                  disabled={!majorInputValue.trim()}
-                >
-                  <svg
-                    className={styles.addIcon}
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M12 6v6m0 0v6m0-6h6m-6 0H6'
-                    />
-                  </svg>
-                </button>
-              </div>
-              {majorError && (
-                <div className={styles.errorMessage}>{majorError}</div>
-              )}
-              <div className={styles.helpText}>
-                Press Enter or click + to add. Maximum 3 majors & minors.
-              </div>
+              <MajorSelector onAddMajor={handleAddMajor} disabled={false} />
             </div>
           </div>
         </div>

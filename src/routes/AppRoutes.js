@@ -20,6 +20,7 @@ import UploadFormGuard from '../components/UploadFormGuard';
 import UploadPage from '../components/UploadPage';
 import WorkDetailPage from '../components/work-detail/WorkDetailPage_refactored';
 import CoFuture2025 from '../pages/competitions/CoFuture2025';
+import MajorAggregationPage from '../pages/MajorAggregationPage';
 import EditProfile from '../pages/settings/EditProfile.tsx';
 import TagAggregationPage from '../pages/TagAggregationPage';
 import { useNavigation } from '../utils/navigation';
@@ -196,6 +197,16 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <TagAggregationPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* 专业聚合页面 - 需要保护 */}
+      <Route
+        path='/major-aggregation'
+        element={
+          <ProtectedRoute>
+            <MajorAggregationPage />
           </ProtectedRoute>
         }
       />

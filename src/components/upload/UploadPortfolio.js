@@ -555,21 +555,27 @@ const UploadPortfolio = () => {
                 } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <option value=''>Add software</option>
-                <option value='Photoshop'>Photoshop</option>
-                <option value='Illustrator'>Illustrator</option>
-                <option value='Blender'>Blender</option>
-                <option value='Maya'>Maya</option>
+                <option value='3D-Coat'>3D-Coat</option>
                 <option value='3ds Max'>3ds Max</option>
-                <option value='Cinema 4D'>Cinema 4D</option>
                 <option value='After Effects'>After Effects</option>
-                <option value='Premiere Pro'>Premiere Pro</option>
+                <option value='Blender'>Blender</option>
+                <option value='Cinema 4D'>Cinema 4D</option>
+                <option value='DaVinci Resolve'>DaVinci Resolve</option>
                 <option value='Figma'>Figma</option>
-                <option value='Sketch'>Sketch</option>
-                <option value='Procreate'>Procreate</option>
-                <option value='ZBrush'>ZBrush</option>
+                <option value='Gaea'>Gaea</option>
+                <option value='Houdini'>Houdini</option>
+                <option value='Illustrator'>Illustrator</option>
+                <option value='InDesign'>InDesign</option>
+                <option value='JavaScript'>JavaScript</option>
+                <option value='Maya'>Maya</option>
+                <option value='Nuke'>Nuke</option>
+                <option value='Photoshop'>Photoshop</option>
+                <option value='Python'>Python</option>
+                <option value='Substance Designer'>Substance Designer</option>
                 <option value='Substance Painter'>Substance Painter</option>
                 <option value='Unity'>Unity</option>
                 <option value='Unreal Engine'>Unreal Engine</option>
+                <option value='ZBrush'>ZBrush</option>
                 <option value='Other'>Other</option>
               </select>
               <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>

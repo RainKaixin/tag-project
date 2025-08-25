@@ -73,7 +73,7 @@ const ArtistSidebar = ({ artist, className = '' }) => {
                 {artist.majors?.map((major, index) => (
                   <span
                     key={`major-${index}`}
-                    className='bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full'
+                    className='bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full'
                   >
                     {major}
                   </span>
@@ -81,7 +81,7 @@ const ArtistSidebar = ({ artist, className = '' }) => {
                 {artist.minors?.map((minor, index) => (
                   <span
                     key={`minor-${index}`}
-                    className='bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full'
+                    className='bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full'
                   >
                     {minor}
                   </span>
