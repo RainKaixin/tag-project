@@ -13,6 +13,7 @@ import NotificationCenter from '../components/NotificationCenter';
 import ProtectedRoute from '../components/ProtectedRoute';
 import RegisterPage from '../components/register-page/RegisterPage_refactored';
 import TAGMePage from '../components/TAGMePage';
+import CollaborationTestPage from '../components/testing/CollaborationTestPage';
 import NotificationTest from '../components/testing/NotificationTest';
 import TestMockAPI from '../components/testing/TestMockAPI';
 import UploadGuidelines from '../components/upload-guidelines/UploadGuidelines_refactored';
@@ -187,6 +188,16 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <TestMockAPI />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Collaboration 测试页面 - 临时添加 */}
+      <Route
+        path='/test-collaboration'
+        element={
+          <ProtectedRoute>
+            <CollaborationTestPage />
           </ProtectedRoute>
         }
       />

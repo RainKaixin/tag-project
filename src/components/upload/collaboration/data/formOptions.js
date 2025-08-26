@@ -79,6 +79,8 @@ export const getInitialFormData = () => ({
   contactDiscord: '', // Discord - 可選
   contactOther: '', // Other - 可選
   applicationDeadline: '',
+  poster: null, // 新增：招募海报图片
+  posterPreview: '', // 新增：图片预览URL
   roles: [
     {
       id: 1,

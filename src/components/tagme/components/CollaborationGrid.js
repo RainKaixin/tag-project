@@ -1,9 +1,75 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-import { collaborations } from '../data/mockData';
+import { getCollaborations } from '../../../services/collaborationService';
 
 const CollaborationGrid = ({ onCollaborationClick, onBookmarkToggle }) => {
+  const [collaborations, setCollaborations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // 获取协作数据
+  useEffect(() => {
+    const fetchCollaborations = async () => {
+      try {
+        setLoading(true);
+        const result = await getCollaborations();
+
+        if (result.success) {
+          setCollaborations(result.data);
+        } else {
+          setError(result.error);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCollaborations();
+
+    // 监听新协作发布事件
+    const handleNewCollaboration = () => {
+      fetchCollaborations();
+    };
+
+    window.addEventListener('collaboration:created', handleNewCollaboration);
+
+    return () => {
+      window.removeEventListener(
+        'collaboration:created',
+        handleNewCollaboration
+      );
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className='flex-1 flex items-center justify-center py-12'>
+        <div className='text-gray-500'>Loading collaborations...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className='flex-1 flex items-center justify-center py-12'>
+        <div className='text-red-500'>
+          Error loading collaborations: {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (collaborations.length === 0) {
+    return (
+      <div className='flex-1 flex items-center justify-center py-12'>
+        <div className='text-gray-500'>No collaborations found.</div>
+      </div>
+    );
+  }
+
   return (
     <div className='flex-1'>
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
@@ -18,11 +84,29 @@ const CollaborationGrid = ({ onCollaborationClick, onBookmarkToggle }) => {
                 to={`/tagme/collaboration/${collaboration.id}`}
                 className='block'
               >
-                <img
-                  src={collaboration.image}
-                  alt={collaboration.title}
-                  className='w-full h-56 object-cover'
-                />
+                {collaboration.posterPreview ? (
+                  <img
+                    src={collaboration.posterPreview}
+                    alt={collaboration.title}
+                    className='w-full h-56 object-cover'
+                  />
+                ) : (
+                  <div className='w-full h-56 bg-gray-200 flex items-center justify-center'>
+                    <svg
+                      className='w-12 h-12 text-gray-400'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'
+                      />
+                    </svg>
+                  </div>
+                )}
               </Link>
               {/* Bookmark Button */}
               <button
