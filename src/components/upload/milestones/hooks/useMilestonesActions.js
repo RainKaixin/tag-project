@@ -33,9 +33,11 @@ const useMilestonesActions = ({ state, setters }) => {
   const handleFileUpload = useCallback(
     (stageId, e) => {
       const files = Array.from(e.target.files);
+      // 只取第一張圖片作為 Milestone Poster
+      const posterFile = files.length > 0 ? [files[0]] : [];
       setMilestoneStages(prev =>
         prev.map(stage =>
-          stage.id === stageId ? { ...stage, posterFiles: files } : stage
+          stage.id === stageId ? { ...stage, posterFiles: posterFile } : stage
         )
       );
     },

@@ -19,7 +19,7 @@ export const useCollaborationData = () => {
   // 状态管理
   const [appliedPositions, setAppliedPositions] = useState(new Set());
   const [isSaved, setIsSaved] = useState(false);
-  const [activePositionTab, setActivePositionTab] = useState('details');
+  const [activePositionTab, setActivePositionTab] = useState('applications');
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [comment, setComment] = useState('');
   const [showApplyModal, setShowApplyModal] = useState(false);

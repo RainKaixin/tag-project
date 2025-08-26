@@ -46,7 +46,7 @@ export const FileUploadArea = ({ onFileUpload, id, children, ...props }) => (
     {children}
     <input
       type='file'
-      multiple
+      multiple={false}
       accept='.jpg,.jpeg,.png'
       onChange={onFileUpload}
       className='hidden'
@@ -56,7 +56,7 @@ export const FileUploadArea = ({ onFileUpload, id, children, ...props }) => (
       htmlFor={id}
       className='bg-tag-purple text-white px-4 py-2 rounded cursor-pointer hover:bg-purple-700 transition-colors duration-200'
     >
-      Choose Files
+      Choose Image
     </label>
   </div>
 );

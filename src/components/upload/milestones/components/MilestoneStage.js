@@ -33,7 +33,7 @@ const MilestoneStage = ({
       {/* Stage Name */}
       <div className='mb-6'>
         <label className='block text-sm font-medium text-gray-700 mb-2'>
-          Stage Name
+          Stage Name <span className='text-red-500'>*</span>
         </label>
         <input
           type='text'
@@ -48,7 +48,9 @@ const MilestoneStage = ({
       {/* Progress Bar */}
       <div className='mb-6'>
         <div className='flex justify-between items-center mb-2'>
-          <span className='text-sm text-gray-600'>Stage Progress</span>
+          <span className='text-sm text-gray-600'>
+            Stage Progress <span className='text-red-500'>*</span>
+          </span>
           <div className='flex items-center space-x-2'>
             <input
               type='number'
@@ -75,23 +77,25 @@ const MilestoneStage = ({
           id={`milestone-poster-upload-${stage.id}`}
         >
           <p className='text-gray-600 mb-2'>
-            Upload WIP that visually summarizes this stage
+            Upload a representative image for this stage
           </p>
-          <p className='text-xs text-gray-400 mb-4'>Only JPG or PNG, max 5MB</p>
+          <p className='text-xs text-gray-400 mb-4'>
+            Only JPG or PNG, max 2MB - Single image only
+          </p>
         </FileUploadArea>
         {stage.posterFiles.length > 0 && (
           <div className='mt-3'>
             <p className='text-sm text-gray-600'>
-              {stage.posterFiles.length} files selected
+              {stage.posterFiles.length} image selected
             </p>
           </div>
         )}
       </div>
 
-      {/* Date Achieved */}
+      {/* Stage Due Date */}
       <div className='mb-6'>
         <label className='block text-sm font-medium text-gray-700 mb-2'>
-          Date Achieved
+          Stage Due Date <span className='text-red-500'>*</span>
         </label>
         <input
           type='date'
@@ -107,7 +111,7 @@ const MilestoneStage = ({
       {/* Related Skills */}
       <div className='mb-6'>
         <label className='block text-sm font-medium text-gray-700 mb-2'>
-          Related Skills
+          Related Skills <span className='text-red-500'>*</span>
         </label>
         <input
           type='text'
@@ -121,19 +125,31 @@ const MilestoneStage = ({
         />
       </div>
 
-      {/* What's Next? */}
+      {/* Introduction */}
       <div className='mb-6'>
-        <label className='block text-sm font-medium text-gray-700 mb-2'>
-          What's Next?
+        <label className='block text-sm font-medium text-gray-700 mb-3'>
+          Introduction
         </label>
         <textarea
-          value={stage.whatsNext}
-          onChange={e => onFieldChange(stage.id, 'whatsNext', e.target.value)}
+          name={`introduction-${stage.id}`}
+          value={stage.introduction || ''}
+          onChange={e =>
+            onFieldChange(stage.id, 'introduction', e.target.value)
+          }
           onKeyDown={onKeyDown}
-          placeholder='Share your goals for the next stage...'
-          rows={4}
-          className='w-full bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-tag-purple focus:border-tag-purple'
+          placeholder='Brief introduction about this stage (max 200 characters)'
+          rows={3}
+          maxLength={200}
+          className='w-full bg-gray-50 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-tag-purple focus:border-tag-purple resize-none'
         />
+        <div className='flex justify-between items-center mt-1'>
+          <span className='text-xs text-gray-500'>
+            Brief introduction about this stage
+          </span>
+          <span className='text-xs text-gray-500'>
+            {(stage.introduction || '').length}/200
+          </span>
+        </div>
       </div>
 
       {/* 添加下一个阶段按钮 */}

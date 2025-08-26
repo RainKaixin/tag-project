@@ -45,7 +45,10 @@ export {
   submitFinalComment,
   getReviewState,
 } from './mock/reviewRequestService.js';
-export { createCollaborationRequest } from './mock/collaborationRequestService.js';
+export {
+  createCollaborationRequest,
+  getCollaborationRequestStatus,
+} from './mock/collaborationRequestService.js';
 export {
   uploadAvatar,
   getAvatarUrlWithCacheBust,

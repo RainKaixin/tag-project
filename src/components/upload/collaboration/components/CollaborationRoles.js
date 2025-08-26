@@ -1,4 +1,4 @@
-import { roleTypeOptions } from '../data/formOptions';
+import React, { useState } from 'react';
 
 const CollaborationRoles = ({
   roles,
@@ -6,11 +6,101 @@ const CollaborationRoles = ({
   onRemoveRole,
   onRoleChange,
 }) => {
+  const [skillInputs, setSkillInputs] = useState({});
+
+  // 處理技能輸入
+  const handleSkillInputChange = (roleId, value) => {
+    setSkillInputs(prev => ({
+      ...prev,
+      [roleId]: value,
+    }));
+  };
+
+  // 處理技能輸入的鍵盤事件
+  const handleSkillInputKeyDown = (roleId, e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const inputValue = skillInputs[roleId] || '';
+      const currentSkills =
+        roles.find(role => role.id === roleId)?.requiredSkills || '';
+
+      if (inputValue.trim()) {
+        const newSkill = inputValue.trim();
+        const existingSkills = currentSkills
+          ? currentSkills.split(',').map(s => s.trim())
+          : [];
+
+        if (!existingSkills.includes(newSkill)) {
+          const updatedSkills = [...existingSkills, newSkill].join(', ');
+          onRoleChange(roleId, 'requiredSkills', updatedSkills);
+        }
+
+        setSkillInputs(prev => ({
+          ...prev,
+          [roleId]: '',
+        }));
+      }
+    }
+  };
+
+  // 移除技能標籤
+  const removeSkill = (roleId, skillToRemove) => {
+    const currentSkills =
+      roles.find(role => role.id === roleId)?.requiredSkills || '';
+    const skills = currentSkills
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s !== skillToRemove);
+    onRoleChange(roleId, 'requiredSkills', skills.join(', '));
+  };
+
+  // 渲染技能標籤
+  const renderSkills = (roleId, skillsString) => {
+    if (!skillsString) return null;
+
+    const skills = skillsString
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s);
+
+    return (
+      <div className='flex flex-wrap gap-2 mt-2'>
+        {skills.map((skill, index) => (
+          <span
+            key={index}
+            className='inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full'
+          >
+            {skill}
+            <button
+              type='button'
+              onClick={() => removeSkill(roleId, skill)}
+              className='text-purple-600 hover:text-purple-800'
+            >
+              <svg
+                className='w-3 h-3'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M6 18L18 6M6 6l12 12'
+                />
+              </svg>
+            </button>
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div>
       <div className='flex justify-between items-center mb-4'>
         <h3 className='text-lg font-semibold text-gray-800'>
-          Team Roles Needed
+          Team Roles Needed <span className='text-red-500'>*</span>
         </h3>
         <button
           type='button'
@@ -57,44 +147,7 @@ const CollaborationRoles = ({
             <div className='space-y-3'>
               <div>
                 <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Select Role
-                </label>
-                <div className='relative'>
-                  <select
-                    value={role.roleType}
-                    onChange={e =>
-                      onRoleChange(role.id, 'roleType', e.target.value)
-                    }
-                    className='w-full bg-white border border-gray-300 rounded px-3 py-2 pr-10 focus:outline-none focus:ring-1 focus:ring-tag-purple focus:border-tag-purple appearance-none text-sm'
-                  >
-                    <option value=''>Choose a creative role</option>
-                    {roleTypeOptions.map((option, idx) => (
-                      <option key={idx} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>
-                    <svg
-                      className='w-4 h-4 text-gray-400'
-                      fill='none'
-                      stroke='currentColor'
-                      viewBox='0 0 24 24'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth={2}
-                        d='M19 9l-7 7-7-7'
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Add custom role...
+                  Role Name
                 </label>
                 <input
                   type='text'
@@ -102,7 +155,7 @@ const CollaborationRoles = ({
                   onChange={e =>
                     onRoleChange(role.id, 'customRole', e.target.value)
                   }
-                  placeholder='Or specify custom role'
+                  placeholder='e.g., UI/UX Designer, Frontend Developer, Motion Designer'
                   className='w-full bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-tag-purple focus:border-tag-purple text-sm'
                 />
               </div>
@@ -128,13 +181,18 @@ const CollaborationRoles = ({
                 </label>
                 <input
                   type='text'
-                  value={role.requiredSkills}
+                  value={skillInputs[role.id] || ''}
                   onChange={e =>
-                    onRoleChange(role.id, 'requiredSkills', e.target.value)
+                    handleSkillInputChange(role.id, e.target.value)
                   }
-                  placeholder='e.g., Figma, Adobe Creative Suite, Sketch, Cinema 4D'
+                  onKeyDown={e => handleSkillInputKeyDown(role.id, e)}
+                  placeholder='Type a skill and press Enter to add (e.g., Adobe Creative Suite, React Native)'
                   className='w-full bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-tag-purple focus:border-tag-purple text-sm'
                 />
+                <div className='text-xs text-gray-500 mt-1'>
+                  Press Enter to add each skill.
+                </div>
+                {renderSkills(role.id, role.requiredSkills)}
               </div>
             </div>
           </div>

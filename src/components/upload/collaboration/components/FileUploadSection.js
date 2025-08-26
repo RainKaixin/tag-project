@@ -19,11 +19,14 @@ const FileUploadSection = ({ onFileUpload }) => {
           />
         </svg>
         <p className='text-gray-600 mb-2'>Upload recruitment poster</p>
-        <p className='text-xs text-gray-400 mb-4'>JPG, PNG (Max 5MB)</p>
+        <p className='text-xs text-gray-400 mb-4'>
+          JPG, PNG (Max 5MB) - Only one image allowed
+        </p>
         <input
           type='file'
           accept='.jpg,.jpeg,.png'
           onChange={onFileUpload}
+          multiple={false}
           className='hidden'
           id='recruitment-poster-upload'
         />

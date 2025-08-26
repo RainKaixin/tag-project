@@ -45,6 +45,9 @@ const useReviewState = ({
   useEffect(() => {
     const loadReviewState = async () => {
       try {
+        setIsLoading(true);
+        setError(null);
+
         // 先尝试加载协作请求状态
         const { getCollaborationRequestStatus } = await import(
           '../../../services'
@@ -56,7 +59,6 @@ const useReviewState = ({
 
         if (collaborationStatus !== 'none') {
           setLocalRequestStatus(collaborationStatus);
-
           return;
         }
 
@@ -65,7 +67,12 @@ const useReviewState = ({
         setLocalRequestStatus(state);
       } catch (error) {
         console.error('Error loading request state:', error);
-        setError('Failed to load review state');
+        // 不设置错误状态，避免显示错误信息给用户
+        // setError('Failed to load review state');
+        // 默认设置为 'none' 状态
+        setLocalRequestStatus('none');
+      } finally {
+        setIsLoading(false);
       }
     };
 

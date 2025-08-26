@@ -65,6 +65,7 @@ const MilestonePage = () => {
           {/* Left Column - Project Info */}
           <MilestoneProjectInfo
             project={project}
+            milestones={milestones}
             onViewProject={milestoneActions.handleApplyToCollaboration}
           />
 
@@ -106,7 +107,7 @@ const MilestonePage = () => {
             <div className='flex border-b border-gray-200 mb-6'>
               <button
                 onClick={() => setters.setActiveTab('timeline')}
-                className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors duration-200 ${
+                className={`px-6 py-3 text-xl font-bold border-b-2 transition-colors duration-200 ${
                   milestoneState.activeTab === 'timeline'
                     ? 'border-purple-500 text-purple-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -116,7 +117,7 @@ const MilestonePage = () => {
               </button>
               <button
                 onClick={() => setters.setActiveTab('comments')}
-                className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors duration-200 ${
+                className={`px-6 py-3 text-xl font-bold border-b-2 transition-colors duration-200 ${
                   milestoneState.activeTab === 'comments'
                     ? 'border-purple-500 text-purple-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'

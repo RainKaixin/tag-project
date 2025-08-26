@@ -1,9 +1,9 @@
-
 const ProjectProgressBar = ({
   projectId,
   milestones = [],
   dueDate,
   onViewMilestones,
+  isMilestonePage = false,
 }) => {
   // 進度計算邏輯
   const total = milestones.length;
@@ -23,7 +23,7 @@ const ProjectProgressBar = ({
 
   // 點擊處理
   const handleClick = () => {
-    if (hasMilestones && onViewMilestones) {
+    if (hasMilestones && onViewMilestones && !isMilestonePage) {
       onViewMilestones(projectId);
     }
   };
@@ -42,17 +42,29 @@ const ProjectProgressBar = ({
       </div>
 
       <div
-        className='flex items-center gap-4 cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition-colors duration-200'
-        onClick={handleClick}
-        role='button'
-        tabIndex={0}
-        onKeyDown={e => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleClick();
-          }
-        }}
-        aria-label={`${progressText} · Click to view milestone details`}
+        className={`flex items-center gap-4 ${
+          !isMilestonePage
+            ? 'cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition-colors duration-200'
+            : ''
+        }`}
+        onClick={!isMilestonePage ? handleClick : undefined}
+        role={!isMilestonePage ? 'button' : undefined}
+        tabIndex={!isMilestonePage ? 0 : undefined}
+        onKeyDown={
+          !isMilestonePage
+            ? e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleClick();
+                }
+              }
+            : undefined
+        }
+        aria-label={
+          !isMilestonePage
+            ? `${progressText} · Click to view milestone details`
+            : undefined
+        }
       >
         {/* 進度條區域 */}
         <div className='flex-1'>
@@ -81,26 +93,28 @@ const ProjectProgressBar = ({
           </div>
         </div>
 
-        {/* 右側按鈕 */}
-        <button
-          onClick={e => {
-            e.stopPropagation();
-            handleClick();
-          }}
-          disabled={isButtonDisabled}
-          className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-            isButtonDisabled
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1'
-          }`}
-          aria-label={
-            isButtonDisabled
-              ? 'No milestones available'
-              : 'View milestone details'
-          }
-        >
-          {buttonText}
-        </button>
+        {/* 右側按鈕 - 只在非 Milestone 頁面顯示 */}
+        {!isMilestonePage && (
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              handleClick();
+            }}
+            disabled={isButtonDisabled}
+            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+              isButtonDisabled
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1'
+            }`}
+            aria-label={
+              isButtonDisabled
+                ? 'No milestones available'
+                : 'View milestone details'
+            }
+          >
+            {buttonText}
+          </button>
+        )}
       </div>
 
       {/* 空態提示 */}

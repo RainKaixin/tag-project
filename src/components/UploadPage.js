@@ -4,12 +4,15 @@ import { useLocation } from 'react-router-dom';
 import UploadCollaboration from './upload/UploadCollaboration';
 import UploadJobs from './upload/UploadJobs';
 import UploadMilestones from './upload/UploadMilestones';
-import UploadPortfolio from './upload/UploadPortfolio';
 import UploadArtMarket from './upload-art-market/UploadArtMarket_refactored';
+import UploadPortfolio from './upload-portfolio/UploadPortfolio_refactored';
 
 const UploadPage = () => {
   const location = useLocation();
   const [uploadType, setUploadType] = useState('portfolio'); // 恢复默认设置为portfolio
+  const [showTestModal, setShowTestModal] = useState(false);
+  const [testModalMessage, setTestModalMessage] = useState('');
+  const [pendingUploadType, setPendingUploadType] = useState(null);
 
   // 处理从UploadSuccess页面传递过来的activeUploadType状态和URL参数
   useEffect(() => {
@@ -33,6 +36,29 @@ const UploadPage = () => {
       window.history.replaceState({}, document.title);
     }
   }, [location.state, location.search]);
+
+  // 处理按钮点击
+  const handleButtonClick = (typeId, typeName) => {
+    if (typeId === 'art-market' || typeId === 'jobs') {
+      setTestModalMessage(
+        `${typeName} upload is currently in testing phase and not available yet.`
+      );
+      setShowTestModal(true);
+      // 暫時存儲要切換的類型，等用戶確認後再切換
+      setPendingUploadType(typeId);
+    } else {
+      setUploadType(typeId);
+    }
+  };
+
+  // 处理弹框确认
+  const handleModalConfirm = () => {
+    setShowTestModal(false);
+    if (pendingUploadType) {
+      setUploadType(pendingUploadType);
+      setPendingUploadType(null);
+    }
+  };
 
   // 上传类型配置
   const uploadTypes = [
@@ -188,7 +214,7 @@ const UploadPage = () => {
           {uploadTypes.map(type => (
             <button
               key={type.id}
-              onClick={() => setUploadType(type.id)}
+              onClick={() => handleButtonClick(type.id, type.name)}
               className={`bg-white border border-gray-200 rounded-lg px-4 py-3 text-center transition-all duration-200 hover:shadow ${
                 type.theme === 'blue'
                   ? 'hover:border-tag-blue'
@@ -219,6 +245,26 @@ const UploadPage = () => {
           {uploadType === 'milestones' && <UploadMilestones />}
         </div>
       </div>
+
+      {/* 测试弹框 */}
+      {showTestModal && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white p-6 rounded-lg shadow-xl max-w-sm w-full'>
+            <h3 className='text-lg font-semibold text-red-600 mb-2'>
+              Feature Under Development
+            </h3>
+            <p className='text-sm text-gray-800 mb-4'>{testModalMessage}</p>
+            <div className='flex justify-end space-x-2'>
+              <button
+                onClick={handleModalConfirm}
+                className='px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700'
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -4,6 +4,93 @@ import { InfoCard, PrimaryButton } from '../../ui';
 
 import CommentsSection from './CommentsSection';
 
+// 申請者頭像牆組件
+const ApplicationsWall = ({ applications = [] }) => {
+  if (applications.length === 0) {
+    return (
+      <div className='text-center py-8'>
+        <div className='text-gray-400 mb-2'>
+          <svg
+            className='w-12 h-12 mx-auto'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={1}
+              d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
+            />
+          </svg>
+        </div>
+        <p className='text-gray-500 text-sm'>No applications yet</p>
+        <p className='text-gray-400 text-xs mt-1'>Be the first to apply!</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className='space-y-4'>
+      <div className='flex items-center justify-between'>
+        <h4 className='font-semibold text-gray-900'>
+          Applications ({applications.length})
+        </h4>
+        <span className='text-sm text-gray-500'>
+          {applications.length}{' '}
+          {applications.length === 1 ? 'person' : 'people'} applied
+        </span>
+      </div>
+
+      <div className='grid grid-cols-6 gap-3'>
+        {applications.map((application, index) => (
+          <div key={index} className='text-center'>
+            <div className='relative group'>
+              <img
+                src={
+                  application.avatar ||
+                  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
+                }
+                alt={application.name}
+                className='w-12 h-12 rounded-full object-cover border-2 border-gray-200 hover:border-purple-300 transition-colors duration-200'
+              />
+              {application.status === 'approved' && (
+                <div className='absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white flex items-center justify-center'>
+                  <svg
+                    className='w-2 h-2 text-white'
+                    fill='currentColor'
+                    viewBox='0 0 20 20'
+                  >
+                    <path
+                      fillRule='evenodd'
+                      d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
+                      clipRule='evenodd'
+                    />
+                  </svg>
+                </div>
+              )}
+            </div>
+            <p
+              className='text-xs text-gray-600 mt-1 truncate'
+              title={application.name}
+            >
+              {application.name}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {applications.length > 6 && (
+        <div className='text-center'>
+          <button className='text-sm text-purple-600 hover:text-purple-700 font-medium'>
+            View all {applications.length} applications
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const PositionsList = ({
   positions,
   hasSubmittedApplication,
@@ -73,11 +160,6 @@ const PositionsList = ({
                       >
                         {getStatusText(position.status)}
                       </span>
-                      {position.applications > 0 && (
-                        <span className='px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800'>
-                          {position.applications} applications
-                        </span>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -135,15 +217,17 @@ const PositionsList = ({
               {/* Tab Navigation */}
               <div className='flex border-b border-gray-200'>
                 <button
-                  onClick={() => onPositionTabClick(position.id, 'details')}
+                  onClick={() =>
+                    onPositionTabClick(position.id, 'applications')
+                  }
                   className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors duration-200 ${
                     selectedPosition === position.id &&
-                    activePositionTab === 'details'
+                    activePositionTab === 'applications'
                       ? 'border-purple-500 text-purple-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  Position Details
+                  Applications
                 </button>
                 <button
                   onClick={() => onPositionTabClick(position.id, 'comments')}
@@ -160,36 +244,12 @@ const PositionsList = ({
 
               {/* Tab Content */}
               <div className='p-6'>
-                {/* Details Tab */}
+                {/* Applications Tab */}
                 {selectedPosition === position.id &&
-                  activePositionTab === 'details' && (
-                    <div className='space-y-4'>
-                      <div className='bg-gray-50 rounded-lg p-4'>
-                        <h4 className='font-semibold text-gray-900 mb-3'>
-                          Additional Information
-                        </h4>
-                        <div className='space-y-2 text-sm'>
-                          <div className='flex justify-between'>
-                            <span className='text-gray-600'>Work Type:</span>
-                            <span className='font-medium'>Remote</span>
-                          </div>
-                          <div className='flex justify-between'>
-                            <span className='text-gray-600'>
-                              Experience Level:
-                            </span>
-                            <span className='font-medium'>Mid-level</span>
-                          </div>
-                          <div className='flex justify-between'>
-                            <span className='text-gray-600'>
-                              Time Commitment:
-                            </span>
-                            <span className='font-medium'>
-                              15-20 hours/week
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  activePositionTab === 'applications' && (
+                    <ApplicationsWall
+                      applications={position.applications || []}
+                    />
                   )}
 
                 {/* Comments Tab */}

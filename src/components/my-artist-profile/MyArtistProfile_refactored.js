@@ -5,9 +5,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { useAppContext } from '../../context/AppContext';
+import { ArtistHeader } from '../artist-profile/components';
 
 import {
-  ArtistHeader,
   ArtistSidebar,
   PortfolioSection,
   CollaborationsSection,
@@ -74,8 +74,19 @@ const MyArtistProfile_refactored = () => {
       {/* Header Section */}
       <ArtistHeader
         artist={artist}
+        artworks={artworks}
+        isFollowing={false}
+        followersCount={0}
+        followingCount={0}
+        isOwnProfile={true}
         onBackClick={actions.handleBackClick}
         onEditProfileClick={actions.handleEditProfileClick}
+        onPreviewAsVisitorClick={() => {}}
+        onBackToOwnerViewClick={null}
+        toggleFollow={() => {}}
+        onFollowersClick={() => {}}
+        onFollowingClick={() => {}}
+        from='gallery'
       />
 
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
