@@ -2,21 +2,3 @@
 
 export { default as useArtistData } from './useArtistData';
 export { default as useArtistActions } from './useArtistActions';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

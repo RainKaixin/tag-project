@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 
+import { useAppContext } from '../../../context/AppContext';
 import { getPublicPortfolio } from '../../../services/supabase/portfolio';
 import { getCurrentUser } from '../../../utils/currentUser.js';
 import {
@@ -18,6 +19,7 @@ import {
 const useArtistState = () => {
   const { id: routeArtistId } = useParams();
   const location = useLocation();
+  const { state: appState } = useAppContext();
   // 修复路由判断：同时支持 /me 和 /artist/me 路由
   const isMeRoute =
     location.pathname === '/me' || location.pathname === '/artist/me';
@@ -34,6 +36,22 @@ const useArtistState = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(156);
   const [expandedCardId, setExpandedCardId] = useState(null);
+
+  // 获取来源信息
+  const getSourceInfo = useMemo(() => {
+    if (appState.navigationHistory.length > 0) {
+      const lastHistory =
+        appState.navigationHistory[appState.navigationHistory.length - 1];
+      return {
+        from: lastHistory.from || 'gallery',
+        activeTab: lastHistory.activeTab || 'Works',
+      };
+    }
+    return {
+      from: 'gallery',
+      activeTab: 'Works',
+    };
+  }, [appState.navigationHistory]);
 
   // 监听用户切换事件
   useEffect(() => {
@@ -314,6 +332,7 @@ const useArtistState = () => {
     expandedCardId,
     isOwnProfile,
     shouldShowBackToOwnerView,
+    sourceInfo: getSourceInfo, // 添加来源信息
     setCurrentUser,
     setIsFollowing,
     setFollowersCount,

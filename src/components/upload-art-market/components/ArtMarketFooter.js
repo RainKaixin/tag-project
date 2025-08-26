@@ -121,21 +121,3 @@ const ArtMarketFooter = ({
 };
 
 export default ArtMarketFooter;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

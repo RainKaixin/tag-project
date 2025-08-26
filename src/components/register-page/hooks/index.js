@@ -2,21 +2,3 @@
 
 export { default as useRegisterForm } from './useRegisterForm';
 export { default as useRegisterActions } from './useRegisterActions';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

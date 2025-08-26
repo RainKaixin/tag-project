@@ -1,4 +1,3 @@
-
 const RelatedProject = ({ relatedProject }) => {
   return (
     <div className='mb-8'>
@@ -39,25 +38,3 @@ const RelatedProject = ({ relatedProject }) => {
 };
 
 export default RelatedProject;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -153,21 +153,3 @@ const CollaborationsSection = ({
 };
 
 export default CollaborationsSection;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

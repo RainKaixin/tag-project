@@ -1,4 +1,3 @@
-
 export const SectionCard = props => <div className='card' {...props} />;
 export const SectionTitle = ({ children, ...props }) => (
   <h3 {...props}>{children}</h3>
@@ -61,25 +60,3 @@ export const FileUploadArea = ({ onFileUpload, id, children, ...props }) => (
     </label>
   </div>
 );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

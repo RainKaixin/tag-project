@@ -76,10 +76,3 @@ const useFollowingCount = userId => {
 };
 
 export default useFollowingCount;
-
-
-
-
-
-
-

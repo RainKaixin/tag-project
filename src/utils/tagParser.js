@@ -137,10 +137,3 @@ export const extractTagsFromMultiple = (...texts) => {
 
   return limitTags(uniqueTags);
 };
-
-
-
-
-
-
-

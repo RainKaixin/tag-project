@@ -17,33 +17,130 @@ export const artistService = {
    */
   getPublicArtists: async () => {
     try {
-      // 优先级1: LocalStorage (MockAPI)
-      const localStorageArtists = await localStorageAdapter.getPublicArtists();
-      if (
-        localStorageArtists &&
-        localStorageArtists.data &&
-        localStorageArtists.data.length > 0
-      ) {
-        console.log(`[artistService] Using LocalStorage artists list`);
-        return localStorageArtists;
+      console.log('[artistService] Getting all registered artists');
+
+      // 从用户档案服务获取所有注册用户
+      const { getProfile } = await import('../mock/userProfileService.js');
+      const { storage } = await import('../storage/index.js');
+
+      // 获取所有存储键
+      const keys = await storage.keys();
+
+      // 筛选出用户档案相关的键
+      const profileKeys = keys.filter(
+        key => key && key.startsWith('tag.userProfile.')
+      );
+
+      const artists = [];
+
+      // 遍历所有用户档案
+      for (const key of profileKeys) {
+        try {
+          const userId = key.replace('tag.userProfile.', '');
+
+          // 获取用户档案数据
+          const profileResult = await getProfile(userId);
+          if (!profileResult.success || !profileResult.data) {
+            console.warn(`[artistService] Failed to get profile for ${userId}`);
+            continue;
+          }
+
+          const profile = profileResult.data;
+
+          // 跳过没有姓名的用户（未完成注册）
+          if (!profile.fullName || !profile.fullName.trim()) {
+            console.log(
+              `[artistService] Skipping user ${userId} - no fullName`
+            );
+            continue;
+          }
+
+          // 获取用户的作品数据
+          const portfolioKey = `portfolio_${userId}`;
+          const portfolioData = await storage.getItem(portfolioKey);
+          let worksCount = 0;
+
+          if (portfolioData) {
+            try {
+              const portfolio = JSON.parse(portfolioData);
+              if (Array.isArray(portfolio)) {
+                // 只计算公开的作品
+                worksCount = portfolio.filter(
+                  item => item.isPublic !== false
+                ).length;
+              }
+            } catch (parseError) {
+              console.warn(
+                `[artistService] Failed to parse portfolio for ${userId}:`,
+                parseError
+              );
+            }
+          }
+
+          // 获取关注统计数据
+          const { getFollowersCount, getFollowingList } = await import(
+            '../mock/followService.js'
+          );
+
+          let followersCount = 0;
+          let followingCount = 0;
+
+          try {
+            const followersResult = await getFollowersCount(userId);
+            if (followersResult.success) {
+              followersCount = followersResult.data.followersCount;
+            }
+
+            const followingResult = await getFollowingList(userId);
+            if (followingResult.success) {
+              followingCount = followingResult.data.followingCount;
+            }
+          } catch (followError) {
+            console.warn(
+              `[artistService] Failed to get follow stats for ${userId}:`,
+              followError
+            );
+          }
+
+          // 构建艺术家数据
+          const artist = {
+            id: userId,
+            name: profile.fullName,
+            title: profile.title || 'Artist',
+            school: profile.school || '',
+            majors: profile.majors || [],
+            minors: profile.minors || [],
+            avatar: profile.avatar || null,
+            worksCount: worksCount,
+            followers: followersCount,
+            following: followingCount,
+            createdAt: profile.updatedAt || new Date().toISOString(),
+            updatedAt: profile.updatedAt || new Date().toISOString(),
+          };
+
+          artists.push(artist);
+        } catch (error) {
+          console.warn(
+            `[artistService] Error processing user profile ${key}:`,
+            error
+          );
+        }
       }
 
-      // 优先级2: Supabase (预留)
-      const supabaseArtists = await supabaseAdapter.getPublicArtists();
-      if (
-        supabaseArtists &&
-        supabaseArtists.data &&
-        supabaseArtists.data.length > 0
-      ) {
-        console.log(`[artistService] Using Supabase artists list`);
-        return supabaseArtists;
-      }
+      // 按注册时间排序（最新的在前）
+      artists.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-      // 优先级3: MockUsers (fallback)
-      console.log(`[artistService] Using MockUsers fallback for artists list`);
-      return await mockUsersAdapter.getPublicArtists();
+      console.log(`[artistService] Found ${artists.length} registered artists`);
+
+      return {
+        success: true,
+        data: artists,
+      };
     } catch (error) {
-      console.error(`[artistService] Error getting public artists:`, error);
+      console.error('[artistService] Error getting public artists:', error);
+
+      // 如果出错，回退到MockUsers（仅用于测试）
+      console.log('[artistService] Falling back to MockUsers');
       return await mockUsersAdapter.getPublicArtists();
     }
   },
@@ -187,8 +284,33 @@ export const artistService = {
       const userData = await userService.getUserById(userId);
 
       if (userData) {
-        // 创建艺术家记录
-        const artistData = {
+        // 获取用户的作品数据
+        const portfolioKey = `portfolio_${userId}`;
+        const portfolioData = await localStorageAdapter.getItem(portfolioKey);
+        let worksCount = 0;
+        let works = [];
+
+        if (portfolioData) {
+          try {
+            const portfolio = JSON.parse(portfolioData);
+            if (Array.isArray(portfolio)) {
+              // 只计算公开的作品
+              const publicWorks = portfolio.filter(
+                item => item.isPublic !== false
+              );
+              worksCount = publicWorks.length;
+              works = publicWorks;
+            }
+          } catch (parseError) {
+            console.warn(
+              `[artistService] Failed to parse portfolio for ${userId}:`,
+              parseError
+            );
+          }
+        }
+
+        // 构建艺术家数据
+        const artist = {
           id: userId,
           name: userData.name || userData.displayName || 'Unknown Artist',
           avatar: userData.avatar || '',
@@ -199,17 +321,15 @@ export const artistService = {
           majors: userData.majors || [],
           skills: userData.skills || [],
           socialLinks: userData.socialLinks || {},
-          works: [],
-          followers: 0,
-          following: 0,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          works: works, // 添加实际作品数据
+          worksCount: worksCount,
+          followers: 0, // TODO: 从关注服务获取真实数据
+          following: 0, // TODO: 从关注服务获取真实数据
+          createdAt: userData.updatedAt || new Date().toISOString(),
+          updatedAt: userData.updatedAt || new Date().toISOString(),
         };
 
-        const result = await localStorageAdapter.createArtist(
-          userId,
-          artistData
-        );
+        const result = await localStorageAdapter.createArtist(userId, artist);
         console.log(`[artistService] Created artist index for ${userId}`);
         return result;
       }

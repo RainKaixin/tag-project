@@ -1,4 +1,3 @@
-
 const MilestonesHeader = () => {
   return (
     <div className='text-center mb-8'>
@@ -28,25 +27,3 @@ const MilestonesHeader = () => {
 };
 
 export default MilestonesHeader;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

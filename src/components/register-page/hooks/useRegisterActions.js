@@ -100,21 +100,3 @@ const useRegisterActions = ({
 };
 
 export default useRegisterActions;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

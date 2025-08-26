@@ -127,7 +127,11 @@ const appReducer = (state, action) => {
         ...state,
         scrollPositions: {
           ...state.scrollPositions,
-          [action.payload.path]: action.payload.position,
+          [action.payload.path]: {
+            scrollY: action.payload.position,
+            elementInfo: action.payload.elementInfo || null,
+            timestamp: Date.now(),
+          },
         },
       };
     case ACTIONS.CLEAR_SCROLL_POSITION: {
@@ -224,10 +228,10 @@ export const AppProvider = ({ children }) => {
     ),
 
     saveScrollPosition: useCallback(
-      (path, position) =>
+      (path, position, elementInfo = null) =>
         dispatch({
           type: ACTIONS.SAVE_SCROLL_POSITION,
-          payload: { path, position },
+          payload: { path, position, elementInfo },
         }),
       [dispatch]
     ),

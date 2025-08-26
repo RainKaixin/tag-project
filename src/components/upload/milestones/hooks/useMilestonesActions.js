@@ -103,25 +103,3 @@ const useMilestonesActions = ({ state, setters }) => {
 };
 
 export default useMilestonesActions;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

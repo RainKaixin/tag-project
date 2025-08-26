@@ -59,25 +59,3 @@ export const createNewRole = () => ({
   roleDescription: '',
   requiredSkills: '',
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

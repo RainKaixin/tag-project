@@ -2,11 +2,45 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 import { artistService } from '../services/index.js';
+import { useNavigation } from '../utils/navigation';
+
+// 添加CSS样式来移除所有可能的列表项指示器
+const listStyleReset = {
+  listStyle: 'none',
+  listStyleType: 'none',
+  listStyleImage: 'none',
+  listStylePosition: 'outside',
+};
 
 const ArtistsList = ({ onArtistClick }) => {
   const [artists, setArtists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { navigateToArtist } = useNavigation();
+
+  // 添加CSS样式来移除所有可能的列表项指示器
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .no-markers::before,
+      .no-markers::after,
+      .no-markers *::before,
+      .no-markers *::after {
+        content: none !important;
+        display: none !important;
+      }
+      .no-markers {
+        list-style: none !important;
+        list-style-type: none !important;
+        list-style-image: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   useEffect(() => {
     loadArtists();
@@ -44,6 +78,11 @@ const ArtistsList = ({ onArtistClick }) => {
       Photography: 'bg-gray-500',
     };
     return colors[category] || 'bg-gray-500';
+  };
+
+  const handleArtistClick = (artist, event) => {
+    // 使用navigateToArtist函数，传递来源信息和元素信息
+    navigateToArtist(artist.id, 'artists', 'Artists', event.currentTarget);
   };
 
   if (loading) {
@@ -86,12 +125,14 @@ const ArtistsList = ({ onArtistClick }) => {
   }
 
   return (
-    <div className='space-y-0'>
+    <div className='space-y-0 list-none no-markers' style={listStyleReset}>
       {artists.map(artist => (
-        <Link
+        <div
           key={artist.id}
-          to={`/artist/${artist.id}`}
           className='group cursor-pointer bg-white border-b border-gray-200 p-6 hover:bg-gray-50 transition-all duration-300 block'
+          style={listStyleReset}
+          onClick={event => handleArtistClick(artist, event)}
+          data-artist-id={artist.id}
         >
           <div className='flex gap-4'>
             {/* Left Side - Artist Avatar */}
@@ -108,35 +149,48 @@ const ArtistsList = ({ onArtistClick }) => {
 
             {/* Right Side - Content */}
             <div className='flex-1 flex flex-col justify-center'>
-              {/* Artist Info */}
-              <div className='flex items-center mb-3'>
-                <img
-                  src={
-                    artist.avatar ||
-                    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face'
-                  }
-                  alt={artist.name}
-                  className='w-10 h-10 rounded-full mr-3'
-                />
-                <div>
-                  <span className='text-base font-medium text-gray-900'>
-                    {artist.name}
-                  </span>
-                  <span className='text-sm text-gray-500 ml-2'>
-                    {artist.role}
-                  </span>
-                </div>
-              </div>
-
-              {/* Bio */}
+              {/* Artist Name */}
               <h3 className='text-xl font-bold text-gray-900 mb-2 group-hover:text-tag-blue transition-colors duration-200'>
                 {artist.name}
               </h3>
 
+              {/* Role */}
+              <span className='text-sm text-gray-500 mb-2'>{artist.role}</span>
+
               {/* Description */}
-              <p className='text-sm text-gray-600 mb-4 leading-relaxed'>
-                {artist.bio || 'No bio available'}
-              </p>
+              <div className='mb-4'>
+                {artist.bio ? (
+                  <p className='text-sm text-gray-600 leading-relaxed'>
+                    {artist.bio}
+                  </p>
+                ) : (
+                  <div className='flex flex-wrap gap-2'>
+                    {/* Title */}
+                    <span className='bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full'>
+                      {artist.title || 'Artist'}
+                    </span>
+
+                    {/* School */}
+                    {artist.school && (
+                      <span className='bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full'>
+                        {artist.school}
+                      </span>
+                    )}
+
+                    {/* Majors */}
+                    {artist.majors &&
+                      artist.majors.length > 0 &&
+                      artist.majors.map((major, index) => (
+                        <span
+                          key={index}
+                          className='bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full'
+                        >
+                          {major}
+                        </span>
+                      ))}
+                  </div>
+                )}
+              </div>
 
               {/* Bottom Info Row */}
               <div className='flex items-center gap-6 text-sm text-gray-500'>
@@ -155,7 +209,7 @@ const ArtistsList = ({ onArtistClick }) => {
                       d='M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'
                     />
                   </svg>
-                  <span>{artist.works?.length || 0} works</span>
+                  <span>{artist.worksCount || 0} works</span>
                 </div>
 
                 {/* Followers */}
@@ -176,6 +230,24 @@ const ArtistsList = ({ onArtistClick }) => {
                   <span>{artist.followers || 0} followers</span>
                 </div>
 
+                {/* Following */}
+                <div className='flex items-center gap-1'>
+                  <svg
+                    className='w-4 h-4 text-gray-400'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+                    />
+                  </svg>
+                  <span>{artist.following || 0} following</span>
+                </div>
+
                 {/* Role Tag */}
                 <span
                   className={`px-2 py-1 text-xs font-medium text-white rounded-full ${getCategoryColor(
@@ -192,7 +264,7 @@ const ArtistsList = ({ onArtistClick }) => {
               </div>
             </div>
           </div>
-        </Link>
+        </div>
       ))}
     </div>
   );

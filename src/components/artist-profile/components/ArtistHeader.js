@@ -18,6 +18,7 @@ import { getFollowButtonStyle } from '../utils/artistHelpers';
  * @param {Function} toggleFollow - 关注切换事件
  * @param {Function} onFollowersClick - 关注者数量点击事件
  * @param {Function} onFollowingClick - 正在关注数量点击事件
+ * @param {string} from - 来源页面，用于确定返回按钮文本
  * @param {string} className - 额外的CSS类名
  */
 const ArtistHeader = ({
@@ -30,12 +31,29 @@ const ArtistHeader = ({
   onBackClick,
   onEditProfileClick,
   onPreviewAsVisitorClick,
-
+  onBackToOwnerViewClick,
   toggleFollow,
   onFollowersClick,
   onFollowingClick,
+  from = 'gallery',
   className = '',
 }) => {
+  // 根据来源确定返回按钮文本
+  const getBackButtonText = () => {
+    switch (from) {
+      case 'artists':
+        return 'Back to Artists';
+      case 'gallery':
+        return 'Back to Gallery';
+      case 'tagme':
+        return 'Back to TAGMe';
+      case 'search':
+        return 'Back to Search';
+      default:
+        return 'Back to Gallery';
+    }
+  };
+
   return (
     <div className={`${className}`}>
       {/* Back Button */}
@@ -58,7 +76,7 @@ const ArtistHeader = ({
                 d='M15 19l-7-7 7-7'
               />
             </svg>
-            Back to Gallery
+            {getBackButtonText()}
           </button>
         </div>
       </div>

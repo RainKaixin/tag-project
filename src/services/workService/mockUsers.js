@@ -222,16 +222,3 @@ export const mockUsersAdapter = {
     return { success: false, error: 'MockUsers does not support deletion' };
   },
 };
-
-
-
-
-
-
-
-
-
-
-
-
-

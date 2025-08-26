@@ -80,16 +80,3 @@ export const supabaseAdapter = {
     return { success: false, error: 'Supabase adapter not implemented yet' };
   },
 };
-
-
-
-
-
-
-
-
-
-
-
-
-

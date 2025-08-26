@@ -70,9 +70,28 @@ export const useNavigation = () => {
     actions.setSelectedArtist(artistId);
     actions.addToHistory({ path: location.pathname, from, activeTab });
 
-    // 保存当前Gallery页面的滚动位置
+    // 保存当前Gallery页面的滚动位置和元素信息
     if (location.pathname === '/') {
-      actions.saveScrollPosition('/', window.scrollY);
+      const currentScrollY = window.scrollY;
+      const elementInfo = document.querySelector(
+        `[data-artist-id="${artistId}"]`
+      );
+      const elementPosition = elementInfo
+        ? {
+            id: artistId,
+            type: 'artist',
+            scrollY: currentScrollY,
+            elementRect: elementInfo.getBoundingClientRect
+              ? elementInfo.getBoundingClientRect()
+              : null,
+            elementIndex: elementInfo.dataset?.index || null,
+          }
+        : null;
+
+      console.log('[Navigation] Saving scroll position:', currentScrollY);
+      console.log('[Navigation] Saving element info:', elementPosition);
+
+      actions.saveScrollPosition('/', currentScrollY, elementPosition);
     }
 
     // 预加载资源
@@ -162,6 +181,28 @@ export const useNavigation = () => {
       state.navigationHistory.length > 0
         ? state.navigationHistory[state.navigationHistory.length - 1]
         : { path: '/', from: 'home' };
+
+    console.log('[Navigation] goBack - previousHistory:', previousHistory);
+
+    // 处理从Artists板块返回的情况
+    if (previousHistory.from === 'artists') {
+      console.log('[Navigation] Returning from artists section');
+      actions.setLoading(true);
+
+      // 直接导航到主页并设置Artists标签页
+      navigate('/', {
+        state: {
+          from: 'artist-profile',
+          activeTab: 'Artists',
+          scrollToGallery: true,
+        },
+      });
+
+      setTimeout(() => {
+        actions.setLoading(false);
+      }, 100);
+      return;
+    }
 
     // 简化返回逻辑，让目标页面自己处理滚动恢复
     if (previousHistory.path === '/tagme') {

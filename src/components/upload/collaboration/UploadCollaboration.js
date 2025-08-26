@@ -76,25 +76,3 @@ const UploadCollaboration = () => {
 };
 
 export default UploadCollaboration;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

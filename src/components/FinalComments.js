@@ -1,4 +1,3 @@
-
 const FinalComments = ({ comments = [] }) => {
   const getSentimentColor = sentiment => {
     switch (sentiment) {
@@ -90,25 +89,3 @@ const FinalComments = ({ comments = [] }) => {
 };
 
 export default FinalComments;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

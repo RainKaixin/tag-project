@@ -1,4 +1,3 @@
-
 const FileUploadSection = ({ onFileUpload }) => {
   return (
     <div>
@@ -40,25 +39,3 @@ const FileUploadSection = ({ onFileUpload }) => {
 };
 
 export default FileUploadSection;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

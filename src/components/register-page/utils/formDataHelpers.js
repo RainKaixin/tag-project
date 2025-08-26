@@ -109,21 +109,3 @@ export const clearFieldError = (errors, fieldName) => {
   }
   return errors;
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

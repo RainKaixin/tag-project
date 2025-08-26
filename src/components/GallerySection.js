@@ -21,6 +21,24 @@ const GallerySection = () => {
 
   // 恢复Gallery页面的滚动位置和标签页状态
   useEffect(() => {
+    // 优先检查导航历史中的fromNavbar状态
+    if (state.navigationHistory.length > 0) {
+      const lastHistory =
+        state.navigationHistory[state.navigationHistory.length - 1];
+
+      console.log('[GallerySection] Navigation history:', lastHistory);
+
+      // 如果是从导航栏直接点击Gallery按钮，总是显示Works标签页
+      if (lastHistory.fromNavbar && lastHistory.from === 'gallery') {
+        console.log(
+          '[GallerySection] From navbar Gallery button, setting Works tab'
+        );
+        setActiveTab('Works');
+        setIsInitializing(false);
+        return; // 直接返回，不处理其他状态
+      }
+    }
+
     // 处理从UploadSuccess传递过来的状态
     if (location.state?.from === 'upload-success') {
       // 立即设置activeTab，避免状态变化导致的重新渲染
@@ -43,6 +61,94 @@ const GallerySection = () => {
       } else {
         setIsInitializing(false);
       }
+
+      // 清除状态，避免重复处理
+      window.history.replaceState({}, document.title);
+    }
+    // 处理从artist-profile返回的状态
+    else if (location.state?.from === 'artist-profile') {
+      console.log(
+        '[GallerySection] Returning from artist-profile, setting activeTab:',
+        location.state.activeTab
+      );
+
+      // 设置对应的标签页
+      setActiveTab(location.state.activeTab || 'Works');
+
+      // 处理滚动位置恢复
+      const savedPositionData = state.scrollPositions['/'];
+      if (savedPositionData) {
+        const savedPosition =
+          typeof savedPositionData === 'object'
+            ? savedPositionData.scrollY
+            : savedPositionData;
+        const elementInfo =
+          typeof savedPositionData === 'object'
+            ? savedPositionData.elementInfo
+            : null;
+
+        console.log(
+          '[GallerySection] Restoring saved position:',
+          savedPosition
+        );
+        console.log('[GallerySection] Element info:', elementInfo);
+
+        requestAnimationFrame(() => {
+          // 首先恢复滚动位置
+          window.scrollTo({ top: savedPosition, behavior: 'auto' });
+
+          // 如果有元素信息，尝试定位到具体元素
+          if (elementInfo && elementInfo.type === 'artist') {
+            setTimeout(() => {
+              const targetElement = document.querySelector(
+                `[data-artist-id="${elementInfo.id}"]`
+              );
+              console.log(
+                '[GallerySection] Target element found:',
+                !!targetElement
+              );
+              if (targetElement) {
+                // 滚动到元素位置并添加高亮效果
+                targetElement.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center',
+                });
+
+                // 添加临时高亮效果（淡蓝色）
+                targetElement.classList.add(
+                  'bg-blue-50',
+                  'border-2',
+                  'border-blue-300'
+                );
+                setTimeout(() => {
+                  targetElement.classList.remove(
+                    'bg-blue-50',
+                    'border-2',
+                    'border-blue-300'
+                  );
+                }, 2000);
+              }
+            }, 100);
+          }
+        });
+      } else {
+        // 如果没有保存的位置信息，滚动到Gallery标题
+        if (location.state.scrollToGallery) {
+          requestAnimationFrame(() => {
+            const gallerySection = document.querySelector(
+              '[data-section="gallery"]'
+            );
+            if (gallerySection) {
+              const rect = gallerySection.getBoundingClientRect();
+              const scrollTop = window.pageYOffset + rect.top - 80; // 减去80px避免遮挡按钮
+              window.scrollTo({ top: scrollTop, behavior: 'auto' });
+            }
+          });
+        }
+      }
+
+      // 完成初始化
+      setIsInitializing(false);
 
       // 清除状态，避免重复处理
       window.history.replaceState({}, document.title);

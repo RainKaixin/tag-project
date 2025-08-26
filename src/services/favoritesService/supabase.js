@@ -39,13 +39,3 @@ const supabaseAdapter = {
 };
 
 export default supabaseAdapter;
-
-
-
-
-
-
-
-
-
-

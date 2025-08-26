@@ -32,25 +32,3 @@ export const formatMilestoneStagesForSubmission = milestoneStages => {
     posterFiles: stage.posterFiles || [],
   }));
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

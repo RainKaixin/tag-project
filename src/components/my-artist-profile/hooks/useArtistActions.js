@@ -53,21 +53,3 @@ const useArtistActions = ({ state }) => {
 };
 
 export default useArtistActions;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

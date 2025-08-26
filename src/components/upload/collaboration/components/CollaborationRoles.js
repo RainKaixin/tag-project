@@ -1,4 +1,3 @@
-
 import { roleTypeOptions } from '../data/formOptions';
 
 const CollaborationRoles = ({
@@ -146,25 +145,3 @@ const CollaborationRoles = ({
 };
 
 export default CollaborationRoles;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

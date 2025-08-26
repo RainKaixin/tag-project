@@ -112,25 +112,3 @@ const FinalCommentModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
 };
 
 export default FinalCommentModal;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

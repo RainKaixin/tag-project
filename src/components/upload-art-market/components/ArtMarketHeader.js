@@ -37,21 +37,3 @@ const ArtMarketHeader = () => {
 };
 
 export default ArtMarketHeader;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -26,25 +26,3 @@ const useMilestonesState = () => {
 };
 
 export default useMilestonesState;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

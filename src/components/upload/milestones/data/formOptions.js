@@ -29,25 +29,3 @@ export const createNewStage = () => ({
   relatedSkills: '',
   whatsNext: '',
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

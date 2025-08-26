@@ -1,4 +1,3 @@
-
 const CollaborationHeader = () => {
   return (
     <div className='text-center mb-6'>
@@ -29,25 +28,3 @@ const CollaborationHeader = () => {
 };
 
 export default CollaborationHeader;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -80,25 +80,3 @@ const UploadMilestones = () => {
 };
 
 export default UploadMilestones;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

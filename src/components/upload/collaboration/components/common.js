@@ -1,4 +1,3 @@
-
 export const SectionCard = props => <div className='card' {...props} />;
 export const SectionTitle = ({ children, ...props }) => (
   <h3 {...props}>{children}</h3>
@@ -56,25 +55,3 @@ export const SelectField = ({
     </div>
   </div>
 );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
