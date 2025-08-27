@@ -75,6 +75,9 @@ export { StatusBadge } from './StatusBadge';
 // Splash组件
 export { Splash } from './Splash';
 
+// ValidationModal组件
+export { default as ValidationModal } from './ValidationModal';
+
 // 待添加的组件类别
 // export * from './Input';
 // export * from './Icon';

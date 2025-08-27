@@ -83,6 +83,7 @@ export const createCollaboration = async formData => {
 
         // 只保存圖片 key，不保存 blob URL
         collaborationData.heroImage = imageKey;
+        collaborationData.posterPreview = imageKey; // 添加 posterPreview 字段
         collaborationData.posterKey = imageKey;
 
         console.log(`[Collaboration] Stored image with key: ${imageKey}`);

@@ -151,7 +151,10 @@ class ImageStorage {
     }
 
     // 第三步：从 IndexedDB 读取 Blob 并创建 ObjectURL
-    if (filePath.startsWith('portfolio/')) {
+    if (
+      filePath.startsWith('portfolio/') ||
+      filePath.startsWith('collaboration_')
+    ) {
       try {
         console.log(`[ImageStorage] Looking up in IndexedDB: ${filePath}`);
         const result = await this.getImage(filePath);

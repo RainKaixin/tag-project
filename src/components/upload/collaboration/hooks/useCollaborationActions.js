@@ -92,7 +92,6 @@ const useCollaborationActions = ({ state, setters }) => {
         projectVision: 'Project Vision',
         contactEmail: 'Contact Email',
         teamSize: 'Team Size',
-        duration: 'Duration',
         meetingSchedule: 'Meeting Schedule',
         applicationDeadline: 'Application Deadline',
       };
@@ -119,18 +118,17 @@ const useCollaborationActions = ({ state, setters }) => {
 
       // 如果有缺失字段，显示错误
       if (missingFields.length > 0) {
-        alert(
-          `Please fill in the following required fields:\n\n${missingFields.join(
-            '\n'
-          )}`
-        );
+        // 使用自定义验证模态框而不是默认 alert
+        setters.setValidationErrors(missingFields);
+        setters.setShowValidationModal(true);
         return;
       }
 
       // 验证邮箱格式
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(state.formData.contactEmail)) {
-        alert('Please enter a valid email address');
+        setters.setValidationErrors(['Please enter a valid email address']);
+        setters.setShowValidationModal(true);
         return;
       }
 
