@@ -20,7 +20,9 @@ const MilestonesHeader = () => {
         Share Your Milestone Stages
       </h2>
       <p className='text-gray-600'>
-        Track your creative journey through multiple stages
+        You can only share your work in progress in milestone stages after
+        publishing a collaboration post and linking it to your existing
+        collaboration project.
       </p>
     </div>
   );

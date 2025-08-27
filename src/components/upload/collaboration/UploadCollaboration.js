@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { ValidationModal } from '../../ui';
 import UploadSuccess from '../UploadSuccess';
@@ -16,10 +16,43 @@ import useCollaborationState from './hooks/useCollaborationState';
 
 const UploadCollaboration = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const hasLoadedDraft = useRef(false);
 
   // Use custom hooks
   const { state, setters } = useCollaborationState();
   const actions = useCollaborationActions({ state, setters });
+
+  // 載入草稿數據（如果有的話）
+  useEffect(() => {
+    if (
+      location.state?.from === 'draft-edit' &&
+      location.state?.draftData &&
+      !hasLoadedDraft.current
+    ) {
+      console.log('Loading draft data:', location.state.draftData);
+
+      // 載入草稿數據到表單
+      const draftData = location.state.draftData;
+      setters.setFormData({
+        title: draftData.title || '',
+        description: draftData.description || '',
+        projectVision: draftData.projectVision || '',
+        whyThisMatters: draftData.whyThisMatters || '',
+        teamSize: draftData.teamSize || '',
+        duration: draftData.duration || '',
+        meetingSchedule: draftData.meetingSchedule || '',
+        contactEmail: draftData.contactEmail || '',
+        contactDiscord: draftData.contactDiscord || '',
+        roles: draftData.roles || [],
+        poster: null, // 不載入文件對象，只載入預覽URL
+        posterPreview: draftData.image || '',
+      });
+
+      hasLoadedDraft.current = true;
+      console.log('Draft data loaded successfully');
+    }
+  }, [location.state?.from, location.state?.draftData]);
 
   // 組件卸載時清理 blob URL
   useEffect(() => {
@@ -50,6 +83,32 @@ const UploadCollaboration = () => {
       />
 
       <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
+        {/* 返回按鈕（僅在編輯草稿時顯示） */}
+        {/* 返回按鈕（僅在編輯草稿時顯示） */}
+        {location.state?.from === 'draft-edit' && (
+          <div className='mb-6'>
+            <button
+              onClick={() => navigate(-1)}
+              className='flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 hover:bg-gray-50 px-3 py-2 rounded-md border border-gray-300'
+            >
+              <svg
+                className='w-5 h-5'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M10 19l-7-7m0 0l7-7m-7 7h18'
+                />
+              </svg>
+              <span className='font-medium'>Back to Drafts</span>
+            </button>
+          </div>
+        )}
+
         <CollaborationHeader />
 
         {/* Collaboration 表单 */}

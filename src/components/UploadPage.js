@@ -28,7 +28,8 @@ const UploadPage = () => {
       window.history.replaceState({}, document.title, newUrl);
     } else if (
       location.state?.activeUploadType &&
-      location.state?.from === 'upload-success'
+      (location.state?.from === 'upload-success' ||
+        location.state?.from === 'draft-edit')
     ) {
       setUploadType(location.state.activeUploadType);
 

@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import { createCollaboration } from '../../../../services/collaborationService';
+import draftService from '../../../../services/draftService';
 import { createNewRole } from '../data/formOptions';
 
 const useCollaborationActions = ({ state, setters }) => {
@@ -200,39 +201,67 @@ const useCollaborationActions = ({ state, setters }) => {
         // 设置保存状态
         setIsSaving(true);
 
+        // 檢查是否為編輯現有草稿
+        const urlParams = new URLSearchParams(window.location.search);
+        const draftId =
+          urlParams.get('draftId') || window.location.state?.draftId;
+
+        // 如果不是編輯現有草稿，檢查草稿數量限制
+        if (!draftId) {
+          const currentDrafts = await draftService.getDrafts({
+            type: 'collaboration',
+          });
+          if (currentDrafts.success && currentDrafts.data.items.length >= 3) {
+            alert(
+              'You have reached the maximum limit of 3 drafts. Please delete an existing draft before saving a new one.'
+            );
+            setIsSaving(false);
+            return;
+          }
+        }
+
         // 准备草稿数据
         const draftData = {
-          ...state.formData,
-          status: 'draft',
-          savedAt: new Date().toISOString(),
+          title: state.formData.title || 'Untitled Draft',
+          description: state.formData.description || '',
+          projectVision: state.formData.projectVision || '',
+          whyThisMatters: state.formData.whyThisMatters || '',
+          teamSize: state.formData.teamSize || '',
+          duration: state.formData.duration || '',
+          meetingSchedule: state.formData.meetingSchedule || '',
+          contactEmail: state.formData.contactEmail || '',
+          contactDiscord: state.formData.contactDiscord || '',
+          roles: state.formData.roles || [],
+          tags: [], // 可以從表單中提取標籤
+          image: state.formData.posterPreview || null,
         };
 
         console.log('Saving draft data:', draftData);
 
-        // 保存到 localStorage 作为草稿
-        const drafts = JSON.parse(
-          localStorage.getItem('collaboration_drafts') || '[]'
-        );
-        const newDraft = {
-          id: Date.now().toString(),
-          ...draftData,
-        };
+        let result;
+        if (draftId) {
+          // 更新現有草稿
+          result = await draftService.updateDraft(draftId, draftData);
+        } else {
+          // 創建新草稿
+          result = await draftService.saveDraft('collaboration', draftData);
+        }
 
-        // 添加到草稿列表
-        drafts.unshift(newDraft);
+        if (result.success) {
+          console.log('Draft saved successfully!', result.data);
 
-        // 只保留最近的10个草稿
-        const updatedDrafts = drafts.slice(0, 10);
+          // 觸發草稿保存事件，通知其他組件刷新
+          window.dispatchEvent(
+            new CustomEvent('draft:saved', {
+              detail: { draft: result.data },
+            })
+          );
 
-        localStorage.setItem(
-          'collaboration_drafts',
-          JSON.stringify(updatedDrafts)
-        );
-
-        console.log('Draft saved successfully!');
-
-        // 显示成功提示
-        alert('Draft saved successfully! You can continue editing later.');
+          // 显示成功提示
+          alert('Draft saved successfully! You can continue editing later.');
+        } else {
+          throw new Error(result.error || 'Failed to save draft');
+        }
       } catch (error) {
         console.error('Error saving draft:', error);
         alert('Failed to save draft. Please try again.');

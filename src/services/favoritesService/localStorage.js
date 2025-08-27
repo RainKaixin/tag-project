@@ -39,24 +39,9 @@ const localStorageAdapter = {
    * @returns {Object} 默认收藏数据
    */
   _getDefaultFavorites() {
-    return {
-      user1: [
-        {
-          id: this._generateId(),
-          userId: 'user1',
-          itemType: 'work',
-          itemId: '1', // 冬天的日本建筑
-          createdAt: new Date(Date.now() - 86400000).toISOString(), // 1天前
-        },
-        {
-          id: this._generateId(),
-          userId: 'user1',
-          itemType: 'collaboration',
-          itemId: '1', // Brand Identity项目
-          createdAt: new Date(Date.now() - 172800000).toISOString(), // 2天前
-        },
-      ],
-    };
+    // 完全移除默认收藏数据，让用户从空白开始
+    // 这样就不会显示任何未收藏的内容
+    return {};
   },
 
   /**
@@ -213,8 +198,8 @@ const localStorageAdapter = {
    */
   async removeFavorite(params) {
     const { userId, itemType, itemId } = params;
-    const storage = this._getStorage();
-    const counters = this._getCounters();
+    const storage = await this._getStorage();
+    const counters = await this._getCounters();
 
     const userFavorites = storage[userId] || [];
     const existingIndex = userFavorites.findIndex(
@@ -232,12 +217,12 @@ const localStorageAdapter = {
     // 移除收藏
     const removedFavorite = userFavorites.splice(existingIndex, 1)[0];
     storage[userId] = userFavorites;
-    this._setStorage(storage);
+    await this._setStorage(storage);
 
     // 更新计数
     const counterKey = `${itemType}_${itemId}`;
     counters[counterKey] = Math.max(0, (counters[counterKey] || 1) - 1);
-    this._setCounters(counters);
+    await this._setCounters(counters);
 
     // 模拟网络延迟
     await new Promise(resolve => setTimeout(resolve, 200));
@@ -255,7 +240,7 @@ const localStorageAdapter = {
    */
   async checkFavoriteStatus(params) {
     const { userId, itemType, itemId } = params;
-    const storage = this._getStorage();
+    const storage = await this._getStorage();
     const userFavorites = storage[userId] || [];
 
     const favorite = userFavorites.find(
@@ -281,7 +266,7 @@ const localStorageAdapter = {
    */
   async getFavoriteCount(params) {
     const { itemType, itemId } = params;
-    const counters = this._getCounters();
+    const counters = await this._getCounters();
     const counterKey = `${itemType}_${itemId}`;
 
     // 模拟网络延迟
@@ -302,7 +287,7 @@ const localStorageAdapter = {
    */
   async batchCheckFavoriteStatus(params) {
     const { userId, items } = params;
-    const storage = this._getStorage();
+    const storage = await this._getStorage();
     const userFavorites = storage[userId] || [];
 
     const result = {};
@@ -328,18 +313,18 @@ const localStorageAdapter = {
    * 清除用户所有收藏（用于测试）
    * @param {string} userId - 用户ID
    */
-  clearUserFavorites(userId) {
-    const storage = this._getStorage();
+  async clearUserFavorites(userId) {
+    const storage = await this._getStorage();
     delete storage[userId];
-    this._setStorage(storage);
+    await this._setStorage(storage);
   },
 
   /**
    * 获取所有收藏数据（用于调试）
-   * @returns {Object} 所有收藏数据
+   * @returns {Promise<Object>} 所有收藏数据
    */
-  getAllFavorites() {
-    return this._getStorage();
+  async getAllFavorites() {
+    return await this._getStorage();
   },
 };
 

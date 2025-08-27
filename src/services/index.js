@@ -1,4 +1,4 @@
-// services/index.js - 服务层主导出
+// services-index v1: 服務統一導出
 
 // 导出新的统一服务接口
 export { userService } from './userService/index.js';
@@ -31,6 +31,7 @@ export {
 
 // 导出收藏服务
 export { default as favoritesService } from './favoritesService/index.js';
+export { default as draftService } from './draftService/index.js';
 
 // 导出通知服务
 export { notificationService } from './notificationService/index.js';
