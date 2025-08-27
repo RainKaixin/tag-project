@@ -6,6 +6,14 @@ import { createNewRole } from '../data/formOptions';
 const useCollaborationActions = ({ state, setters }) => {
   const { setFormData, setIsSubmitting, setIsSaving } = setters;
 
+  // 清理 blob URL 的函數
+  const cleanupBlobUrl = useCallback(url => {
+    if (url && url.startsWith('blob:')) {
+      URL.revokeObjectURL(url);
+      console.log('[CollaborationActions] Revoked blob URL:', url);
+    }
+  }, []);
+
   const handleFormChange = useCallback(
     e => {
       const { name, value } = e.target;
@@ -39,18 +47,28 @@ const useCollaborationActions = ({ state, setters }) => {
           return;
         }
 
-        // 创建预览URL
+        // 清理之前的 blob URL
+        if (state.formData.posterPreview) {
+          cleanupBlobUrl(state.formData.posterPreview);
+        }
+
+        // 创建预览URL（仅用于预览，不存储到数据中）
         const previewUrl = URL.createObjectURL(file);
 
         // 更新表单数据
         setFormData(prev => ({
           ...prev,
           poster: file,
-          posterPreview: previewUrl,
+          posterPreview: previewUrl, // 仅用于预览
         }));
 
         console.log('File uploaded successfully:', file.name);
       } else {
+        // 清理之前的 blob URL
+        if (state.formData.posterPreview) {
+          cleanupBlobUrl(state.formData.posterPreview);
+        }
+
         // 清除文件数据
         setFormData(prev => ({
           ...prev,
@@ -59,7 +77,7 @@ const useCollaborationActions = ({ state, setters }) => {
         }));
       }
     },
-    [setFormData]
+    [setFormData, state.formData, cleanupBlobUrl]
   );
 
   const handleSubmit = useCallback(
@@ -73,6 +91,10 @@ const useCollaborationActions = ({ state, setters }) => {
         description: 'Project Description',
         projectVision: 'Project Vision',
         contactEmail: 'Contact Email',
+        teamSize: 'Team Size',
+        duration: 'Duration',
+        meetingSchedule: 'Meeting Schedule',
+        applicationDeadline: 'Application Deadline',
       };
 
       const missingFields = [];
@@ -116,9 +138,11 @@ const useCollaborationActions = ({ state, setters }) => {
         // 设置提交状态
         setIsSubmitting(true);
 
-        // 准备提交数据
+        // 准备提交数据 - 移除 blob URL，只保留文件对象
         const submissionData = {
           ...state.formData,
+          // 移除 blob URL，避免存储到数据库
+          posterPreview: null, // 不存储 blob URL
           // 添加当前用户信息
           author: {
             id: 'current_user', // 这里应该从context获取真实用户ID
@@ -141,6 +165,11 @@ const useCollaborationActions = ({ state, setters }) => {
         if (result.success) {
           console.log('Collaboration posted successfully!', result.data);
 
+          // 清理 blob URL
+          if (state.formData.posterPreview) {
+            cleanupBlobUrl(state.formData.posterPreview);
+          }
+
           // 触发新协作发布事件，通知TAGMe页面更新
           window.dispatchEvent(
             new CustomEvent('collaboration:created', {
@@ -161,7 +190,7 @@ const useCollaborationActions = ({ state, setters }) => {
         setIsSubmitting(false);
       }
     },
-    [state.formData, setters]
+    [state.formData, setters, cleanupBlobUrl]
   );
 
   const handleSaveDraft = useCallback(

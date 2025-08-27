@@ -198,62 +198,11 @@ export const storage = {
   },
 };
 
-// 图片存储策略：只存URL，不持久化二进制
-class ImageStorage {
-  constructor() {
-    this.cache = new Map();
-  }
+// 统一图片存储接口 - 重定向到 utils/indexedDB.js
+// 确保所有地方都通过统一的 imageStore.getImageUrl(key) 获取图片地址
+import imageStorage from '../../utils/indexedDB.js';
 
-  // 存储图片URL
-  async storeImageUrl(key, url) {
-    try {
-      this.cache.set(key, url);
-      return true;
-    } catch (error) {
-      console.warn(
-        `[ImageStorage] Failed to store image URL for ${key}:`,
-        error
-      );
-      return false;
-    }
-  }
-
-  // 获取图片URL
-  async getImageUrl(key) {
-    try {
-      return this.cache.get(key) || null;
-    } catch (error) {
-      console.warn(`[ImageStorage] Failed to get image URL for ${key}:`, error);
-      return null;
-    }
-  }
-
-  // 删除图片URL
-  async removeImageUrl(key) {
-    try {
-      return this.cache.delete(key);
-    } catch (error) {
-      console.warn(
-        `[ImageStorage] Failed to remove image URL for ${key}:`,
-        error
-      );
-      return false;
-    }
-  }
-
-  // 清空图片缓存
-  async clearCache() {
-    try {
-      this.cache.clear();
-      return true;
-    } catch (error) {
-      console.warn('[ImageStorage] Failed to clear cache:', error);
-      return false;
-    }
-  }
-}
-
-export const imageStorage = new ImageStorage();
+export { imageStorage };
 
 export default {
   getStorageAdapter,

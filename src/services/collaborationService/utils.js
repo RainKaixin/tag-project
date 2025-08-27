@@ -1,17 +1,82 @@
 // collaboration-service-utils v1: 數據轉換工具函數
 // 用於將表單數據轉換為統一的 API 格式，確保數據一致性
 
-import { getCurrentUserId } from '../../utils/currentUser';
+import { getCurrentUserId, getCurrentUser } from '../../utils/currentUser';
 import { MOCK_USERS } from '../../utils/mockUsers';
+
+/**
+ * 將 blob URL 轉換為 Data URL 並存儲到 IndexedDB
+ * @param {string} blobUrl - blob URL
+ * @param {string} collaborationId - 協作項目ID
+ * @returns {Promise<string>} 存儲的 key 或 null
+ */
+const storeDataUrlToIndexedDB = async (blobUrl, collaborationId) => {
+  if (!blobUrl) return null;
+
+  try {
+    // 如果已經是 Data URL，直接使用
+    if (blobUrl.startsWith('data:')) {
+      // 生成唯一的存儲 key
+      const imageKey = `collaboration_${collaborationId}_${Date.now()}`;
+
+      // 存儲到 IndexedDB
+      const { imageStorage } = await import('../../utils/indexedDB.js');
+      await imageStorage.storeImage(imageKey, blobUrl);
+
+      console.log(
+        `[Collaboration] Stored Data URL to IndexedDB with key: ${imageKey}`
+      );
+      return imageKey;
+    }
+
+    // 如果是 blob URL，轉換為 Data URL
+    if (blobUrl.startsWith('blob:')) {
+      const response = await fetch(blobUrl);
+      const blob = await response.blob();
+
+      // 將 Blob 轉換為 Data URL
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+
+      // 生成唯一的存儲 key
+      const imageKey = `collaboration_${collaborationId}_${Date.now()}`;
+
+      // 存儲到 IndexedDB
+      const { imageStorage } = await import('../../utils/indexedDB.js');
+      await imageStorage.storeImage(imageKey, dataUrl);
+
+      console.log(
+        `[Collaboration] Stored Data URL to IndexedDB with key: ${imageKey}`
+      );
+      return imageKey;
+    }
+
+    // 其他情況直接返回原值
+    return blobUrl;
+  } catch (error) {
+    console.warn(
+      '[Collaboration] Failed to store Data URL to IndexedDB:',
+      error
+    );
+    return null;
+  }
+};
 
 /**
  * 將表單數據轉換為創建協作項目的 API 格式
  * @param {Object} formData - 表單數據
  * @returns {Object} 格式化後的數據
  */
-export const formatFormDataForAPI = formData => {
+export const formatFormDataForAPI = async formData => {
   const currentUserId = getCurrentUserId();
-  const currentUser = MOCK_USERS[currentUserId];
+  const currentUser = getCurrentUser(); // 使用 getCurrentUser() 而不是 MOCK_USERS
+
+  // 生成臨時 ID 用於存儲圖片
+  const tempId = `temp_${Date.now()}`;
 
   return {
     // 基礎信息
@@ -26,6 +91,13 @@ export const formatFormDataForAPI = formData => {
     meetingSchedule: formData.meetingSchedule || '',
     applicationDeadline: formData.applicationDeadline || '',
     projectType: formData.projectType?.trim() || '',
+
+    // 圖片信息 - 修復：將 blob URL 轉換為 Data URL 並存儲到 IndexedDB
+    posterPreview: await storeDataUrlToIndexedDB(
+      formData.posterPreview,
+      tempId
+    ),
+    heroImage: await storeDataUrlToIndexedDB(formData.posterPreview, tempId),
 
     // 聯繫方式 - 修復：正確處理表單數據結構
     contactInfo: {
@@ -56,7 +128,7 @@ export const formatFormDataForAPI = formData => {
         }))
         .filter(role => role.title && role.description) || [],
 
-    // 作者信息
+    // 作者信息 - 修復：使用 getCurrentUser() 获取正确的头像数据
     author: {
       id: currentUserId,
       name: currentUser?.displayName || currentUser?.name || 'Unknown',
@@ -88,8 +160,8 @@ export const formatAPIDataForDetail = apiData => {
     author: {
       id: apiData.author?.id,
       title: apiData.title,
-      artist: apiData.author?.name,
-      artistAvatar: apiData.author?.avatar,
+      artist: apiData.author?.name || 'Unknown',
+      artistAvatar: apiData.author?.avatar || null,
       description: apiData.description,
       image: apiData.heroImage || null,
       category: apiData.projectType || 'Project',
@@ -102,7 +174,7 @@ export const formatAPIDataForDetail = apiData => {
     teamSize: apiData.teamSize,
     postedTime: formatTimeAgo(apiData.createdAt),
     tags: apiData.projectType ? [apiData.projectType] : [],
-    heroImage: apiData.heroImage || null,
+    heroImage: apiData.heroImage || apiData.posterPreview || null,
     description: apiData.description,
     meetingFrequency: apiData.meetingSchedule,
     deadline: apiData.applicationDeadline,
@@ -129,6 +201,7 @@ export const formatAPIDataForList = apiDataList => {
     title: item.title,
     subtitle: item.description,
     image: item.heroImage || null,
+    posterPreview: item.posterPreview || item.heroImage || null, // 添加 posterPreview 字段
     categories: item.projectType ? [item.projectType] : [],
     author: {
       name: item.author?.name || 'Unknown',

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import UploadSuccess from '../UploadSuccess';
@@ -19,6 +19,19 @@ const UploadCollaboration = () => {
   // Use custom hooks
   const { state, setters } = useCollaborationState();
   const actions = useCollaborationActions({ state, setters });
+
+  // 組件卸載時清理 blob URL
+  useEffect(() => {
+    return () => {
+      if (
+        state.formData.posterPreview &&
+        state.formData.posterPreview.startsWith('blob:')
+      ) {
+        URL.revokeObjectURL(state.formData.posterPreview);
+        console.log('[UploadCollaboration] Cleaned up blob URL on unmount');
+      }
+    };
+  }, [state.formData.posterPreview]);
 
   // 如果显示成功界面，则渲染UploadSuccess组件
   if (state.showSuccess) {

@@ -17,8 +17,7 @@ const useMilestoneActions = ({
         const newComment = {
           id: (comments?.length || 0) + 1,
           user: 'You',
-          avatar:
-            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
+          avatar: '/assets/placeholder.svg',
           role: 'Team Member',
           comment: state.comment,
           timestamp: 'Just now',
@@ -44,15 +43,12 @@ const useMilestoneActions = ({
       id: project.id,
       title: project.title,
       subtitle: project.description,
-      image:
-        project.images[0] ||
-        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
+      image: project.images[0] || '/assets/placeholder.svg',
       categories: project.tags,
       author: {
         name: project.teamMembers[0]?.artist || 'Project Lead',
         avatar:
-          project.teamMembers[0]?.artistAvatar ||
-          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+          project.teamMembers[0]?.artistAvatar || '/assets/placeholder.svg',
       },
       likes: '1.2k',
       views: '8.4k',

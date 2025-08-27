@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 
 import NavBar from './components/navbar/NavBar_refactored';
@@ -12,6 +12,13 @@ import AppRoutes from './routes/AppRoutes';
 // 应用内容组件
 function AppContent() {
   const { state } = useAppContext();
+
+  // 确保页面可以滚动
+  useEffect(() => {
+    // 恢复页面滚动
+    document.body.style.overflow = 'unset';
+    document.documentElement.style.overflow = 'unset';
+  }, []);
 
   // 如果应用未初始化，显示Splash
   if (!state.isInitialized) {

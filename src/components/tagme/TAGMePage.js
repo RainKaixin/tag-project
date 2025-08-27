@@ -51,19 +51,23 @@ const TAGMePage = ({ onBackClick, onMilestoneClick, onCollaborationClick }) => {
     }
   }, [location.state?.activeTab, location.state?.from, setters.setActiveTab]);
 
-  // Restore scroll position - 优化依赖项
+  // Restore scroll position - 優化依賴項，只在真正需要時執行
   useEffect(() => {
     const savedPosition =
       state.scrollPositions[`/tagme-${tagMeState.activeTab}`];
 
-    if (state.navigationHistory.length > 0 && savedPosition) {
+    // 只在有保存的位置且從 tagme 返回時恢復滾動位置
+    if (savedPosition && state.navigationHistory.length > 0) {
       const lastHistory =
         state.navigationHistory[state.navigationHistory.length - 1];
       if (lastHistory.from === 'tagme') {
-        window.scrollTo({ top: savedPosition, behavior: 'auto' });
+        // 使用 requestAnimationFrame 確保 DOM 已更新
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: savedPosition, behavior: 'auto' });
+        });
       }
     }
-  }, [tagMeState.activeTab, state.scrollPositions, state.navigationHistory]);
+  }, [tagMeState.activeTab]); // 只依賴 activeTab，避免頻繁觸發
 
   // Restore active tab - 只在真正从详情页返回时执行
   useEffect(() => {

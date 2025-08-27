@@ -68,8 +68,29 @@ export const createCollaboration = async formData => {
     }
 
     // 格式化數據
-    const collaborationData = formatFormDataForAPI(formData);
+    const collaborationData = await formatFormDataForAPI(formData);
     collaborationData.id = generateCollaborationId();
+
+    // 處理圖片：確保只保存圖片 key，不保存 blob URL
+    if (formData.poster && formData.poster instanceof File) {
+      // 生成圖片 key
+      const imageKey = `collaboration_${collaborationData.id}_poster`;
+
+      // 使用統一的圖片存儲服務
+      try {
+        const imageStorage = await import('../../utils/indexedDB.js');
+        await imageStorage.default.storeImage(imageKey, formData.poster);
+
+        // 只保存圖片 key，不保存 blob URL
+        collaborationData.heroImage = imageKey;
+        collaborationData.posterKey = imageKey;
+
+        console.log(`[Collaboration] Stored image with key: ${imageKey}`);
+      } catch (error) {
+        console.error('[Collaboration] Failed to store image:', error);
+        // 圖片存儲失敗不影響協作項目創建
+      }
+    }
 
     // 獲取現有數據
     const existingCollaborations = getCollaborationsFromStorage();

@@ -138,10 +138,7 @@ const ArtistsList = ({ onArtistClick }) => {
             {/* Left Side - Artist Avatar */}
             <div className='flex-shrink-0'>
               <img
-                src={
-                  artist.avatar ||
-                  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
-                }
+                src={artist.avatar || '/assets/placeholder.svg'}
                 alt={artist.name}
                 className='w-40 h-32 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300'
               />

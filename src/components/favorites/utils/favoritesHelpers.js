@@ -189,8 +189,7 @@ export const getWorkDataById = itemId => {
     // 为复杂ID提供一个固定的映射，确保一致性
     const mockIdToImageMap = {
       // 基于时间戳的哈希来确定使用哪张图片，确保同一个ID总是返回同一张图片
-      default:
-        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', // 冬天日本建筑
+      default: '/assets/placeholder.svg', // 本地占位图
     };
 
     // 使用itemId的哈希来选择图片，确保一致性
@@ -252,9 +251,30 @@ export const getWorkImageUrl = itemId => {
 /**
  * 获取协作图片URL
  */
-export const getCollaborationImageUrl = itemId => {
+export const getCollaborationImageUrl = async itemId => {
   const collaboration = getCollaborationDataById(itemId);
-  return (
-    collaboration?.image || null // 移除默认图片
-  );
+
+  if (!collaboration) {
+    return null;
+  }
+
+  // 優先使用 heroImage key
+  if (collaboration.heroImage) {
+    try {
+      const imageStorage = await import('../../../utils/indexedDB.js');
+      return await imageStorage.default.getImageUrl(collaboration.heroImage);
+    } catch (error) {
+      console.warn(
+        `[Favorites] Failed to get collaboration image: ${collaboration.heroImage}`,
+        error
+      );
+    }
+  }
+
+  // 回退到其他圖片字段
+  if (collaboration.image) {
+    return collaboration.image;
+  }
+
+  return null;
 };

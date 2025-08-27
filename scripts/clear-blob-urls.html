@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clear Blob URLs</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .result {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        font-family: monospace;
+        font-size: 14px;
+      }
+      .success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+      }
+      .info {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Clear Blob URLs</h1>
+      <p>
+        This tool will clean up blob URLs stored in localStorage that are
+        causing errors in TAGMe page.
+      </p>
+
+      <button onclick="runCleanup()">Run Cleanup</button>
+
+      <div id="result"></div>
+    </div>
+
+    <script>
+      // 清理 localStorage 中的 blob URL
+      const clearBlobUrls = () => {
+        try {
+          console.log('[ClearBlobUrls] Starting blob URL cleanup...');
+
+          // 協作數據的 localStorage key
+          const COLLABORATIONS_KEY = 'mock_collaborations';
+
+          // 讀取協作數據
+          const storedData = localStorage.getItem(COLLABORATIONS_KEY);
+          if (!storedData) {
+            console.log('[ClearBlobUrls] No collaboration data found');
+            return {
+              success: true,
+              cleanedCount: 0,
+              blobUrlCount: 0,
+              message: 'No collaboration data found',
+            };
+          }
+
+          const collaborations = JSON.parse(storedData);
+          console.log(
+            `[ClearBlobUrls] Found ${collaborations.length} collaborations`
+          );
+
+          let cleanedCount = 0;
+          let blobUrlCount = 0;
+
+          // 清理每個協作項目中的 blob URL
+          const cleanedCollaborations = collaborations.map(collaboration => {
+            let hasChanges = false;
+
+            // 檢查並清理 posterPreview
+            if (
+              collaboration.posterPreview &&
+              collaboration.posterPreview.startsWith('blob:')
+            ) {
+              console.log(
+                `[ClearBlobUrls] Found blob URL in posterPreview: ${collaboration.posterPreview.substring(
+                  0,
+                  50
+                )}...`
+              );
+              collaboration.posterPreview = null;
+              hasChanges = true;
+              blobUrlCount++;
+            }
+
+            // 檢查並清理 heroImage
+            if (
+              collaboration.heroImage &&
+              collaboration.heroImage.startsWith('blob:')
+            ) {
+              console.log(
+                `[ClearBlobUrls] Found blob URL in heroImage: ${collaboration.heroImage.substring(
+                  0,
+                  50
+                )}...`
+              );
+              collaboration.heroImage = null;
+              hasChanges = true;
+              blobUrlCount++;
+            }
+
+            // 檢查並清理 author.avatar
+            if (
+              collaboration.author &&
+              collaboration.author.avatar &&
+              collaboration.author.avatar.startsWith('blob:')
+            ) {
+              console.log(
+                `[ClearBlobUrls] Found blob URL in author.avatar: ${collaboration.author.avatar.substring(
+                  0,
+                  50
+                )}...`
+              );
+              collaboration.author.avatar = null;
+              hasChanges = true;
+              blobUrlCount++;
+            }
+
+            if (hasChanges) {
+              cleanedCount++;
+            }
+
+            return collaboration;
+          });
+
+          // 保存清理後的數據
+          if (cleanedCount > 0) {
+            localStorage.setItem(
+              COLLABORATIONS_KEY,
+              JSON.stringify(cleanedCollaborations)
+            );
+            console.log(
+              `[ClearBlobUrls] Cleaned ${cleanedCount} collaborations, removed ${blobUrlCount} blob URLs`
+            );
+          } else {
+            console.log(
+              '[ClearBlobUrls] No blob URLs found, no cleanup needed'
+            );
+          }
+
+          // 檢查其他可能的 blob URL 存儲位置
+          const allKeys = Object.keys(localStorage);
+          const blobUrlKeys = allKeys.filter(key => {
+            try {
+              const value = localStorage.getItem(key);
+              return value && value.includes('blob:');
+            } catch (error) {
+              return false;
+            }
+          });
+
+          let otherBlobUrlsCleaned = 0;
+          if (blobUrlKeys.length > 0) {
+            console.log(
+              '[ClearBlobUrls] Found other localStorage keys with blob URLs:',
+              blobUrlKeys
+            );
+
+            // 清理其他位置的 blob URL
+            blobUrlKeys.forEach(key => {
+              try {
+                const value = localStorage.getItem(key);
+                if (value && value.includes('blob:')) {
+                  console.log(
+                    `[ClearBlobUrls] Removing key with blob URL: ${key}`
+                  );
+                  localStorage.removeItem(key);
+                  otherBlobUrlsCleaned++;
+                }
+              } catch (error) {
+                console.warn(
+                  `[ClearBlobUrls] Failed to process key ${key}:`,
+                  error
+                );
+              }
+            });
+          }
+
+          console.log(
+            '[ClearBlobUrls] Blob URL cleanup completed successfully'
+          );
+          return {
+            success: true,
+            cleanedCount,
+            blobUrlCount,
+            otherBlobUrlsCleaned,
+            totalCollaborations: collaborations.length,
+            message: `Cleanup completed successfully`,
+          };
+        } catch (error) {
+          console.error('[ClearBlobUrls] Error during cleanup:', error);
+          return { success: false, error: error.message };
+        }
+      };
+
+      // 運行清理並顯示結果
+      const runCleanup = () => {
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = 'Running cleanup...';
+        resultDiv.className = 'result info';
+
+        setTimeout(() => {
+          const result = clearBlobUrls();
+
+          if (result.success) {
+            const message = `✅ Cleanup completed successfully!
+
+📊 Results:
+• Total collaborations: ${result.totalCollaborations}
+• Collaborations cleaned: ${result.cleanedCount}
+• Blob URLs removed: ${result.blobUrlCount}
+• Other blob URLs cleaned: ${result.otherBlobUrlsCleaned}
+
+🎯 Next steps:
+1. Refresh the TAGMe page
+2. The blob URL errors should be gone
+3. Images will show placeholder instead of errors`;
+
+            resultDiv.innerHTML = message;
+            resultDiv.className = 'result success';
+          } else {
+            resultDiv.innerHTML = `❌ Cleanup failed: ${result.error}`;
+            resultDiv.className = 'result error';
+          }
+        }, 100);
+      };
+
+      // 頁面加載時檢查當前狀態
+      window.onload = () => {
+        const resultDiv = document.getElementById('result');
+        const storedData = localStorage.getItem('mock_collaborations');
+
+        if (storedData) {
+          try {
+            const collaborations = JSON.parse(storedData);
+            let blobUrlCount = 0;
+
+            collaborations.forEach(collaboration => {
+              if (
+                collaboration.posterPreview &&
+                collaboration.posterPreview.startsWith('blob:')
+              )
+                blobUrlCount++;
+              if (
+                collaboration.heroImage &&
+                collaboration.heroImage.startsWith('blob:')
+              )
+                blobUrlCount++;
+              if (
+                collaboration.author &&
+                collaboration.author.avatar &&
+                collaboration.author.avatar.startsWith('blob:')
+              )
+                blobUrlCount++;
+            });
+
+            if (blobUrlCount > 0) {
+              resultDiv.innerHTML = `🔍 Current Status:
+• Found ${collaborations.length} collaborations
+• Found ${blobUrlCount} blob URLs that need cleaning
+
+Click "Run Cleanup" to fix the blob URL issues.`;
+              resultDiv.className = 'result info';
+            } else {
+              resultDiv.innerHTML = `✅ Status: No blob URLs found in collaboration data.`;
+              resultDiv.className = 'result success';
+            }
+          } catch (error) {
+            resultDiv.innerHTML = `⚠️ Status: Could not parse collaboration data: ${error.message}`;
+            resultDiv.className = 'result error';
+          }
+        } else {
+          resultDiv.innerHTML = `ℹ️ Status: No collaboration data found in localStorage.`;
+          resultDiv.className = 'result info';
+        }
+      };
+    </script>
+  </body>
+</html>

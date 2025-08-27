@@ -41,10 +41,11 @@ const CollaborationDetailPage = () => {
         state.navigationHistory[state.navigationHistory.length - 1].path ===
           '/tagme');
 
-    if (!isReturningFromBack) {
+    // 只在非返回情況下滾動到頂部，避免每次渲染都觸發
+    if (!isReturningFromBack && location.pathname !== '/tagme') {
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
-  }, [location.state, state.navigationHistory]);
+  }, [location.pathname]); // 只依賴 pathname，不依賴 location.state 和 state.navigationHistory
 
   return (
     <div className='min-h-screen bg-gray-50'>

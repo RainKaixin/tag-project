@@ -6,90 +6,78 @@ const MarketTemplate = () => {
   const products = [
     {
       id: 1,
-      image:
-        'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop',
+      image: '/assets/placeholder.svg',
       title: 'Auto Retopology Tool',
       description: 'Advanced mesh optimization plugin for Blender',
       price: '$15',
       originalPrice: '$25',
       author: 'Alex Chen',
-      authorAvatar:
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+      authorAvatar: '/assets/placeholder.svg',
       rating: 5,
       reviews: 24,
       downloads: '1.2k',
     },
     {
       id: 2,
-      image:
-        'https://images.unsplash.com/photo-1599305445671-ac291c9a87bb?w=400&h=300&fit=crop',
+      image: '/assets/placeholder.svg',
       title: 'Sci-Fi Character Pack',
       description: 'High-poly character models with PBR textures',
       price: '$45',
       originalPrice: null,
       author: 'Maya Rodriguez',
-      authorAvatar:
-        'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
+      authorAvatar: '/assets/placeholder.svg',
       rating: 4,
       reviews: 856,
       downloads: '856',
     },
     {
       id: 3,
-      image:
-        'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=400&h=300&fit=crop',
+      image: '/assets/placeholder.svg',
       title: 'Procedural Building Generator',
       description: 'Generate realistic buildings with customizable parameters',
       price: '$79',
       originalPrice: '$99',
       author: 'John Doe',
-      authorAvatar:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
+      authorAvatar: '/assets/placeholder.svg',
       rating: 4,
       reviews: 120,
       downloads: '3.5k',
     },
     {
       id: 4,
-      image:
-        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop',
+      image: '/assets/placeholder.svg',
       title: 'Ocean Shader Pack',
       description: 'Realistic ocean shaders for various rendering engines',
       price: '$29',
       originalPrice: null,
       author: 'Oceanic Arts',
-      authorAvatar:
-        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
+      authorAvatar: '/assets/placeholder.svg',
       rating: 5,
       reviews: 78,
       downloads: '900',
     },
     {
       id: 5,
-      image:
-        'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&h=300&fit=crop',
+      image: '/assets/placeholder.svg',
       title: 'UI Kit - Modern Dashboard',
       description: 'Complete UI kit for modern web applications',
       price: '$35',
       originalPrice: '$50',
       author: 'Design Studio',
-      authorAvatar:
-        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face',
+      authorAvatar: '/assets/placeholder.svg',
       rating: 5,
       reviews: 156,
       downloads: '2.1k',
     },
     {
       id: 6,
-      image:
-        'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
+      image: '/assets/placeholder.svg',
       title: 'Animation Rigging System',
       description: 'Professional character rigging for Maya and Blender',
       price: '$89',
       originalPrice: null,
       author: 'Animation Pro',
-      authorAvatar:
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
+      authorAvatar: '/assets/placeholder.svg',
       rating: 4,
       reviews: 203,
       downloads: '1.8k',

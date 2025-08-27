@@ -1,7 +1,10 @@
 import React from 'react';
 
+import imageStorage from '../../../utils/indexedDB.js';
 import ProjectProgressBar from '../../ProjectProgressBar';
 import { BackButton, SaveButton, PrimaryButton } from '../../ui';
+
+import CollaborationHeaderImage from './CollaborationHeaderImage';
 
 const CollaborationHeader = ({
   project,
@@ -32,20 +35,20 @@ const CollaborationHeader = ({
 
         {/* Hero Image Banner */}
         <div className='relative mb-6'>
-          <div className='w-full h-48 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg overflow-hidden'>
-            <img
-              src={project.heroImage}
-              alt={project.title}
-              className='w-full h-full object-cover opacity-20'
-            />
-            <div className='absolute inset-0 flex items-center justify-center'>
-              <div className='text-center text-white'>
-                <h1 className='text-3xl font-bold mb-2'>Learn</h1>
-                <p className='text-lg opacity-90'>
-                  Collaborate • Create • Grow
-                </p>
-              </div>
-            </div>
+          <div className='w-full h-48 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg overflow-hidden relative'>
+            {project.heroImage ? (
+              <>
+                {/* 用户上传的图片作为背景 */}
+                <CollaborationHeaderImage
+                  imageKey={project.heroImage}
+                  alt={project.title}
+                />
+                {/* 淡紫色覆盖层 */}
+                <div className='absolute inset-0 bg-gradient-to-r from-purple-600/30 to-purple-700/30'></div>
+              </>
+            ) : (
+              <div className='w-full h-full bg-gradient-to-r from-purple-600 to-purple-700'></div>
+            )}
           </div>
         </div>
 

@@ -81,7 +81,7 @@ const MilestoneMetadata = ({ project, onNavigateToArtist }) => {
             src={
               project.teamLead?.artistAvatar ||
               project.teamMembers[0]?.artistAvatar ||
-              'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
+              '/assets/placeholder.svg'
             }
             alt={
               project.teamLead?.artist ||

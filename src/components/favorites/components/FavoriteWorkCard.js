@@ -21,8 +21,7 @@ const FavoriteWorkCard = ({ favorite, isOwnProfile = false, onRemove }) => {
   const handleImageError = e => {
     console.error('[FavoriteWorkCard] Image failed to load:', e.target.src);
     // 如果图片加载失败，使用默认占位图片
-    e.target.src =
-      'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=400&fit=crop';
+    e.target.src = '/assets/placeholder.svg';
   };
 
   const handleRemoveClick = e => {
@@ -35,10 +34,7 @@ const FavoriteWorkCard = ({ favorite, isOwnProfile = false, onRemove }) => {
       {/* 作品图片链接 */}
       <Link to={`/work/${favorite.itemId}`} className='block w-full h-full'>
         <img
-          src={
-            workData?.image ||
-            'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=400&fit=crop'
-          }
+          src={workData?.image || '/assets/placeholder.svg'}
           alt={workData?.title || 'Work'}
           className='w-full h-full object-cover'
           onError={handleImageError}
