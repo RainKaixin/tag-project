@@ -26,6 +26,7 @@ const CollaborationsSection = ({
   const [activeTab, setActiveTab] = useState('published');
   const [draftPosts, setDraftPosts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   // 模擬數據 - 實際應該從 props 或 API 獲取
   const publishedPosts = [
@@ -175,7 +176,28 @@ const CollaborationsSection = ({
 
   return (
     <div className={`pt-8 mt-8 bg-purple-50 rounded-lg p-6 ${className}`}>
-      <h3 className='text-lg font-bold text-gray-900 mb-6'>Collaborations</h3>
+      <div className='flex items-center justify-between mb-6'>
+        <h3 className='text-lg font-bold text-gray-900'>Collaborations</h3>
+        <button
+          onClick={() => setShowHelpModal(true)}
+          className='p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-100 rounded-full transition-colors duration-200'
+          title='Learn about Collaborations'
+        >
+          <svg
+            className='w-5 h-5'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+            />
+          </svg>
+        </button>
+      </div>
 
       {/* 現有的 Collaboration 列表（簡歷版本） */}
       <div className='mb-8'>
@@ -272,6 +294,118 @@ const CollaborationsSection = ({
             <p className='text-orange-600 text-xs mt-1'>
               Delete an existing draft to save a new one
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Help Modal */}
+      {showHelpModal && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white rounded-lg p-8 max-w-4xl mx-4 shadow-xl'>
+            <div className='flex items-center justify-between mb-6'>
+              <h3 className='text-xl font-semibold text-gray-900'>
+                What is Collaboration?
+              </h3>
+              <button
+                onClick={() => setShowHelpModal(false)}
+                className='text-gray-400 hover:text-gray-600 transition-colors duration-200'
+              >
+                <svg
+                  className='w-6 h-6'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M6 18L18 6M6 6l12 12'
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className='space-y-8 text-base text-gray-700'>
+              <div className='flex items-start gap-5'>
+                <div className='flex-shrink-0 w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mt-0.5'>
+                  <span className='text-purple-600 text-base font-bold'>1</span>
+                </div>
+                <div className='flex-1'>
+                  <h4 className='font-bold text-gray-900 mb-3 text-lg'>
+                    Project Records
+                  </h4>
+                  <p className='text-gray-700 leading-relaxed'>
+                    Collaborations are shared project records that belong to all
+                    participants. Once published, they stay visible to ensure
+                    everyone's contributions are preserved.
+                  </p>
+                  <p className='text-gray-600 leading-relaxed mt-2 text-sm'>
+                    (You can always edit and update details, but the project
+                    itself remains as part of the team's history.)
+                  </p>
+                </div>
+              </div>
+
+              <div className='flex items-start gap-5'>
+                <div className='flex-shrink-0 w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mt-0.5'>
+                  <span className='text-purple-600 text-base font-bold'>2</span>
+                </div>
+                <div className='flex-1'>
+                  <h4 className='font-bold text-gray-900 mb-3 text-lg'>
+                    Responsibilities
+                  </h4>
+                  <p className='text-gray-700 leading-relaxed'>
+                    Each member can describe their own responsibilities within a
+                    project. These should be written based on the team's
+                    discussion, so that everyone's role is represented fairly
+                    and clearly.
+                  </p>
+                </div>
+              </div>
+
+              <div className='flex items-start gap-5'>
+                <div className='flex-shrink-0 w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mt-0.5'>
+                  <span className='text-purple-600 text-base font-bold'>3</span>
+                </div>
+                <div className='flex-1'>
+                  <h4 className='font-bold text-gray-900 mb-3 text-lg'>
+                    Reviews
+                  </h4>
+                  <p className='text-gray-700 leading-relaxed'>
+                    After a project is completed, each Initiator or Collaborator
+                    will receive a review under their Responsibilities. Reviews
+                    from your teammates or project lead highlight your
+                    strengths, teamwork, and impact on the project.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className='mt-8 border-t border-gray-200 pt-6'>
+              <div className='flex justify-between items-end'>
+                <div className='text-sm text-gray-600'>
+                  <p className='mb-2'>
+                    If you have other questions, feel free to reach out:
+                  </p>
+                  <div className='space-y-1'>
+                    <div className='font-medium'>Email: tag@rainwang.art</div>
+                    <div className='text-gray-500'>
+                      Founder of TAG:{' '}
+                      <span className='font-bold'>Rain Wang</span>
+                    </div>
+                  </div>
+                </div>
+                <div className='text-right'>
+                  <button
+                    onClick={() => setShowHelpModal(false)}
+                    className='px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 text-base font-medium'
+                  >
+                    Got it
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

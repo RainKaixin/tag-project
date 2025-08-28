@@ -591,7 +591,7 @@ export const getRoleBadgeStyle = isInitiator => {
   const baseStyle = 'px-2 py-1 text-xs font-medium rounded-full';
   return isInitiator
     ? `${baseStyle} bg-purple-100 text-purple-800 border border-purple-200`
-    : `${baseStyle} bg-gray-100 text-gray-700`;
+    : `${baseStyle} bg-blue-100 text-blue-700 border border-blue-200`;
 };
 
 /**
