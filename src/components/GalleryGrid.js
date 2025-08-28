@@ -185,10 +185,7 @@ const GalleryGrid = ({ currentUser }) => {
               <h3 className='text-lg font-bold mb-1 leading-tight'>
                 {artwork.title}
               </h3>
-              <p className='text-sm text-gray-200 mb-2'>by {artwork.artist}</p>
-              <span className='inline-block px-2 py-1 text-xs font-medium bg-tag-blue text-white rounded-full'>
-                {artwork.category}
-              </span>
+              <p className='text-sm text-gray-200'>{artwork.artist}</p>
             </div>
           </div>
         </Link>

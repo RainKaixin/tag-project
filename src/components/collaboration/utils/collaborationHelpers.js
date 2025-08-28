@@ -43,7 +43,7 @@ export const processProjectData = (projectData, location, state) => {
           likes: projectData.likes,
           views: projectData.views,
           timeAgo: '2 hours ago',
-          role: projectData.author?.role || 'Project Lead',
+          role: projectData.author?.role || 'Initiator',
         },
         duration: '3-4 months',
         teamSize: '5-6 people',
@@ -74,38 +74,41 @@ export const processProjectData = (projectData, location, state) => {
             email: 'project.lead@email.com',
           },
         },
-        milestones: [
-          {
-            id: 1,
-            title: 'Project Planning',
-            status: 'completed',
-            dueDate: 'Week 1',
-          },
-          {
-            id: 2,
-            title: 'Design Phase',
-            status: 'completed',
-            dueDate: 'Week 3',
-          },
-          {
-            id: 3,
-            title: 'Development Phase',
-            status: 'in-progress',
-            dueDate: 'Week 6',
-          },
-          {
-            id: 4,
-            title: 'Testing & QA',
-            status: 'pending',
-            dueDate: 'Week 8',
-          },
-          {
-            id: 5,
-            title: 'Launch Preparation',
-            status: 'pending',
-            dueDate: 'Week 10',
-          },
-        ],
+        milestones:
+          projectData.id === 2
+            ? []
+            : [
+                {
+                  id: 1,
+                  title: 'Project Planning',
+                  status: 'completed',
+                  dueDate: 'Week 1',
+                },
+                {
+                  id: 2,
+                  title: 'Design Phase',
+                  status: 'completed',
+                  dueDate: 'Week 3',
+                },
+                {
+                  id: 3,
+                  title: 'Development Phase',
+                  status: 'in-progress',
+                  dueDate: 'Week 6',
+                },
+                {
+                  id: 4,
+                  title: 'Testing & QA',
+                  status: 'pending',
+                  dueDate: 'Week 8',
+                },
+                {
+                  id: 5,
+                  title: 'Launch Preparation',
+                  status: 'pending',
+                  dueDate: 'Week 10',
+                },
+              ],
       }
     : {
         id: 1,
@@ -123,7 +126,7 @@ export const processProjectData = (projectData, location, state) => {
           likes: 128,
           views: 2048,
           timeAgo: '2 hours ago',
-          role: 'Project Lead',
+          role: 'Initiator',
         },
         duration: '3-4 months',
         teamSize: '5-6 people',

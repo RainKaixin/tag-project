@@ -94,12 +94,20 @@ const MilestoneMetadata = ({ project, onNavigateToArtist }) => {
             <div className='font-medium text-gray-900'>
               {project.teamLead?.artist ||
                 project.teamMembers[0]?.artist ||
-                'Project Lead'}
+                'Initiator'}
             </div>
             <div className='text-sm text-gray-500'>
-              {project.teamLead?.role ||
+              {(project.teamLead?.role ||
                 project.teamMembers[0]?.role ||
-                'Project Lead'}
+                'Initiator') === 'Initiator' ? (
+                <span className='inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full'>
+                  Initiator
+                </span>
+              ) : (
+                project.teamLead?.role ||
+                project.teamMembers[0]?.role ||
+                'Initiator'
+              )}
             </div>
           </div>
         </div>
@@ -124,7 +132,15 @@ const MilestoneMetadata = ({ project, onNavigateToArtist }) => {
                 <div className='text-sm font-medium text-gray-900 hover:text-tag-blue transition-colors duration-200'>
                   {member.artist}
                 </div>
-                <div className='text-xs text-gray-500'>{member.role}</div>
+                <div className='text-xs text-gray-500'>
+                  {member.role === 'Initiator' ? (
+                    <span className='inline-flex items-center px-1.5 py-0.5 bg-purple-100 text-purple-800 text-xs font-medium rounded-full'>
+                      Initiator
+                    </span>
+                  ) : (
+                    member.role
+                  )}
+                </div>
               </div>
             </Link>
           ))}

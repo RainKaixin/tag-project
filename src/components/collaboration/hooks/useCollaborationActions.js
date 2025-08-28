@@ -12,6 +12,9 @@ export const useCollaborationActions = (data, setters) => {
     positionComments,
     hasSubmittedApplication,
     showWarning,
+    showSuccessToast,
+    showCancelModal,
+    cancelPositionId,
   } = data;
 
   const {
@@ -21,6 +24,9 @@ export const useCollaborationActions = (data, setters) => {
     setPositionComments,
     setHasSubmittedApplication,
     setShowWarning,
+    setShowSuccessToast,
+    setShowCancelModal,
+    setCancelPositionId,
     setShowApplyModal,
     setApplyForm,
     setIsSaved,
@@ -44,7 +50,6 @@ export const useCollaborationActions = (data, setters) => {
 
   // 处理立即申请点击
   const handleApplyNowClick = () => {
-    setHasSubmittedApplication(true);
     setShowApplyModal(true);
   };
 
@@ -52,13 +57,22 @@ export const useCollaborationActions = (data, setters) => {
   const handleApplySubmit = e => {
     e.preventDefault();
 
+    // 設置申請已提交狀態
+    setHasSubmittedApplication(true);
+
+    // 關閉模態框
     setShowApplyModal(false);
+
+    // 重置表單
     setApplyForm({
       name: '',
       email: '',
       portfolio: '',
       message: '',
     });
+
+    // 顯示成功提示
+    setShowSuccessToast(true);
   };
 
   // 处理申请表单变化
@@ -68,6 +82,31 @@ export const useCollaborationActions = (data, setters) => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  // 处理取消申请点击
+  const handleCancelApplication = positionId => {
+    setCancelPositionId(positionId);
+    setShowCancelModal(true);
+  };
+
+  // 处理确认取消申请
+  const handleConfirmCancelApplication = () => {
+    if (cancelPositionId) {
+      setAppliedPositions(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(cancelPositionId);
+        return newSet;
+      });
+    }
+    setShowCancelModal(false);
+    setCancelPositionId(null);
+  };
+
+  // 处理关闭取消申请弹窗
+  const handleCloseCancelModal = () => {
+    setShowCancelModal(false);
+    setCancelPositionId(null);
   };
 
   // 处理查看里程碑
@@ -128,6 +167,9 @@ export const useCollaborationActions = (data, setters) => {
     handleApplyNowClick,
     handleApplySubmit,
     handleApplyFormChange,
+    handleCancelApplication,
+    handleConfirmCancelApplication,
+    handleCloseCancelModal,
     handleViewMilestones,
     handleSaveToggle,
     handleCommentSubmit,

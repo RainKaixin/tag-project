@@ -133,7 +133,7 @@ export const formatFormDataForAPI = async formData => {
       id: currentUserId,
       name: currentUser?.displayName || currentUser?.name || 'Unknown',
       avatar: currentUser?.avatar || null,
-      role: currentUser?.role || 'Project Lead',
+      role: currentUser?.role || 'Initiator',
     },
 
     // 狀態和統計
@@ -168,7 +168,7 @@ export const formatAPIDataForDetail = apiData => {
       likes: apiData.likes || 0,
       views: apiData.views || 0,
       timeAgo: formatTimeAgo(apiData.createdAt),
-      role: apiData.author?.role || 'Project Lead',
+      role: apiData.author?.role || 'Initiator',
     },
     duration: apiData.duration,
     teamSize: apiData.teamSize,
@@ -212,7 +212,7 @@ export const formatAPIDataForList = apiDataList => {
     isLiked: false, // 默認未點讚
     isBookmarked: false, // 默認未收藏
     isInitiator: false, // 默認非發起人
-    role: item.author?.role || 'Project Lead',
+    role: item.author?.role || 'Initiator',
     dateRange: item.duration || '',
     status: item.status === 'active' ? 'Open for Collaboration' : 'Closed',
     skills: item.roles?.map(role => role.title) || [],

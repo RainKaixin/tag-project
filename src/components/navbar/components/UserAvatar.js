@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
+import { getUnifiedAvatar } from '../../../services/avatarService';
 import { isUserLoggedIn, getUserAvatar } from '../utils/navbarHelpers';
 
 /**
@@ -61,7 +62,23 @@ const UserAvatar = ({ user, currentMockUser, onClick, className = '' }) => {
 
   // 當用戶或 currentMockUser 改變時，更新頭像
   useEffect(() => {
-    setAvatarUrl(getUserAvatar(user, currentMockUser));
+    const updateAvatar = async () => {
+      const userId = currentMockUser?.id || user?.id;
+      if (userId) {
+        // 使用統一的頭像服務
+        const unifiedAvatar = await getUnifiedAvatar(userId);
+        if (unifiedAvatar) {
+          setAvatarUrl(unifiedAvatar);
+        } else {
+          // 回退到原有邏輯
+          setAvatarUrl(getUserAvatar(user, currentMockUser));
+        }
+      } else {
+        setAvatarUrl(getUserAvatar(user, currentMockUser));
+      }
+    };
+
+    updateAvatar();
   }, [user?.id, currentMockUser?.id]);
 
   if (isLoggedIn && avatarUrl) {

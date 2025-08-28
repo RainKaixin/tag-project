@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { invalidate } from '../../components/artist-profile/utils/artistHelpers';
 import { saveProfile, getProfile } from '../../services';
+import { updateCurrentUserAvatar } from '../../services/avatarService';
 import {
   getMyPortfolio,
   updatePortfolioItem,
@@ -310,81 +311,24 @@ const EditProfile = () => {
         // 清除艺术家数据缓存，确保下次访问时获取最新数据
         invalidate(['artist', userId]);
 
-        // 如果有頭像更新，觸發頭像更新事件
+        // 如果有頭像更新，使用統一的頭像服務
         if (
           profileData.avatar &&
           profileData.avatar.startsWith('data:image/')
         ) {
-          const avatarUpdatedAt = new Date().toISOString();
-
-          // 清除头像缓存，确保新头像能立即显示
-          if (typeof window !== 'undefined') {
-            clearAvatarCache(userId);
-
-            // 检查 localStorage 状态
-            const storageStatus = checkLocalStorageStatus();
-            console.log('[EditProfile] localStorage status:', storageStatus);
-
-            // 调试：检查 localStorage 数据
-            console.log(
-              '[EditProfile] Debug - localStorage keys:',
-              Object.keys(localStorage)
-            );
-            console.log('[EditProfile] Debug - avatar data saved:', {
-              userId,
-              avatarUrl: profileData.avatar?.substring(0, 50) + '...',
-              avatarUpdatedAt,
-              avatarSize: profileData.avatar?.length || 0,
-              browser: navigator.userAgent,
-            });
-
-            // 强制刷新头像缓存
-            try {
-              // 清除所有相关的缓存
-              localStorage.removeItem(`tag.avatars.${userId}`);
-              localStorage.removeItem(`tag.avatar.${userId}`);
-
-              // 重新存储到 IndexedDB
-              const result = await avatarStorage.storeAvatar(
-                userId,
-                profileData.avatar
-              );
-              console.log(
-                '[EditProfile] Re-stored avatar in IndexedDB:',
-                result
-              );
-
-              // 重新存储到 localStorage，确保右上角头像能正确显示
-              const avatarData = {
-                avatarUrl: profileData.avatar,
-                timestamp: Date.now(),
-              };
-              localStorage.setItem(
-                `tag.avatars.${userId}`,
-                JSON.stringify(avatarData)
-              );
-              console.log(
-                '[EditProfile] Re-stored avatar in localStorage for top-right display'
-              );
-            } catch (error) {
-              console.error('[EditProfile] Error re-storing avatar:', error);
+          try {
+            const success = await updateCurrentUserAvatar(profileData.avatar);
+            if (success) {
+              console.log('[EditProfile] Successfully updated unified avatar');
+            } else {
+              console.error('[EditProfile] Failed to update unified avatar');
             }
-
-            window.dispatchEvent(
-              new CustomEvent('avatar:updated', {
-                detail: {
-                  userId,
-                  avatarUrl: profileData.avatar,
-                  avatarUpdatedAt,
-                },
-              })
+          } catch (error) {
+            console.error(
+              '[EditProfile] Error updating unified avatar:',
+              error
             );
           }
-
-          console.log(
-            '[EditProfile] Triggered avatar update event for user:',
-            userId
-          );
         }
 
         setIsDirty(false);

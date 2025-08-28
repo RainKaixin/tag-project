@@ -31,6 +31,9 @@ export const useCollaborationData = () => {
   });
   const [hasSubmittedApplication, setHasSubmittedApplication] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelPositionId, setCancelPositionId] = useState(null);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
 
   // 评论数据
@@ -145,6 +148,9 @@ export const useCollaborationData = () => {
     applyForm,
     hasSubmittedApplication,
     showWarning,
+    showSuccessToast,
+    showCancelModal,
+    cancelPositionId,
     currentUser,
     positionComments,
 
@@ -163,6 +169,9 @@ export const useCollaborationData = () => {
     setApplyForm,
     setHasSubmittedApplication,
     setShowWarning,
+    setShowSuccessToast,
+    setShowCancelModal,
+    setCancelPositionId,
     setCurrentUser,
     setPositionComments,
   };

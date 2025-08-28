@@ -401,7 +401,7 @@ export const collaborations = [
     isLiked: false,
     isBookmarked: false,
     isInitiator: true,
-    role: 'Project Lead',
+    role: 'Initiator',
     dateRange: 'February 2023 - Present',
     status: 'Open for Collaboration',
     skills: ['Frontend Development', 'UI/UX Design', 'Storytelling'],

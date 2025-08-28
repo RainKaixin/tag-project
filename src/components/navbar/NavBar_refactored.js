@@ -80,7 +80,7 @@ const NavBar = () => {
                   window.open('/', '_blank');
                 }
               }}
-              className='bg-tag-blue text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors duration-200 min-w-[80px] text-center'
+              className='bg-tag-blue text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition-colors duration-200 min-w-[80px] text-center'
             >
               Gallery
             </button>
@@ -88,7 +88,7 @@ const NavBar = () => {
             {/* TAGMe Button - Same size as Gallery */}
             <Link
               to='/tagme'
-              className='bg-tag-purple text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors duration-200 min-w-[80px] text-center'
+              className='bg-tag-purple text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-purple-700 transition-colors duration-200 min-w-[80px] text-center'
             >
               TAGMe
             </Link>

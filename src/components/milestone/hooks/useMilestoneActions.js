@@ -46,7 +46,7 @@ const useMilestoneActions = ({
       image: project.images[0] || '/assets/placeholder.svg',
       categories: project.tags,
       author: {
-        name: project.teamMembers[0]?.artist || 'Project Lead',
+        name: project.teamMembers[0]?.artist || 'Initiator',
         avatar:
           project.teamMembers[0]?.artistAvatar || '/assets/placeholder.svg',
       },

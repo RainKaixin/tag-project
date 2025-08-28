@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 
 import AvatarCropModal from '../../../components/avatar-crop/AvatarCropModal_refactored';
 import { getAvatarUrlWithCacheBust } from '../../../services';
+import { updateCurrentUserAvatar } from '../../../services/avatarService';
 import { clearAvatarCache } from '../../../utils/avatarCache';
 import styles from '../EditProfile.module.css';
 import type { ProfilePhotoCardProps } from '../types';
@@ -70,7 +71,7 @@ const ProfilePhotoCard: React.FC<ProfilePhotoCardProps> = ({
 
   // 处理头像更新
   const handleAvatarUpdate = useCallback(
-    (newAvatarUrl: string, newAvatarUpdatedAt: string) => {
+    async (newAvatarUrl: string, newAvatarUpdatedAt: string) => {
       // 调试日志
       console.log(
         '[ProfilePhotoCard] Received new avatar URL:',
@@ -95,28 +96,23 @@ const ProfilePhotoCard: React.FC<ProfilePhotoCardProps> = ({
       // 传递新的头像URL给父组件
       onAvatarChange(newAvatarUrl);
 
-      // 立即觸發頭像更新事件，通知其他組件（如導航欄）
-      const userId = 'alice'; // 當前用戶ID
-      if (typeof window !== 'undefined') {
-        // 清除头像缓存，确保新头像能立即显示
-        clearAvatarCache(userId);
-
-        window.dispatchEvent(
-          new CustomEvent('avatar:updated', {
-            detail: {
-              userId,
-              avatarUrl: newAvatarUrl,
-              avatarUpdatedAt: newAvatarUpdatedAt,
-            },
-          })
+      // 使用統一的頭像更新服務
+      try {
+        const success = await updateCurrentUserAvatar(newAvatarUrl);
+        if (success) {
+          console.log('[ProfilePhotoCard] Successfully updated unified avatar');
+        } else {
+          console.error('[ProfilePhotoCard] Failed to update unified avatar');
+        }
+      } catch (error) {
+        console.error(
+          '[ProfilePhotoCard] Error updating unified avatar:',
+          error
         );
       }
 
       console.log('[onAvatarUpdate] prefix:', newAvatarUrl?.substring(0, 4));
-      console.log(
-        '[ProfilePhotoCard] Triggered immediate avatar update event for user:',
-        userId
-      );
+      console.log('[ProfilePhotoCard] Successfully updated avatar');
 
       // 关闭裁剪模态框
       setShowCropModal(false);

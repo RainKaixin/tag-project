@@ -1,5 +1,6 @@
 // artist-helpers v1: 艺术家档案工具函数集合
 
+import { getUnifiedAvatar } from '../../../services/avatarService.js';
 import { getProfile } from '../../../services/mock/userProfileService.js';
 import { getCachedAvatar } from '../../../utils/avatarCache.js';
 import avatarStorage from '../../../utils/avatarStorage.js';
@@ -171,77 +172,18 @@ export const getArtistById = async userId => {
     const profileResult = await getProfile(mappedId);
     const profile = profileResult.success ? profileResult.data : null;
 
-    // 优先从 localStorage 获取最新的头像数据（与右上角头像使用相同数据源）
+    // 使用統一的頭像服務獲取頭像數據
     let avatar = null;
-    if (typeof window !== 'undefined') {
-      try {
-        // 首先尝试从 localStorage 获取头像（与 getCurrentUser 使用相同逻辑）
-        const avatarData = window.localStorage.getItem(
-          `tag.avatars.${mappedId}`
-        );
-        if (avatarData) {
-          const parsedData = JSON.parse(avatarData);
-          if (parsedData && parsedData.avatarUrl) {
-            avatar = parsedData.avatarUrl;
-            console.log(
-              '[getArtistById] Using avatar from localStorage:',
-              avatar?.substring(0, 50)
-            );
-          }
-        }
-
-        // 如果没有 localStorage 数据，尝试从 IndexedDB 获取
-        if (!avatar) {
-          const avatarUrl = await avatarStorage.getAvatarUrl(mappedId);
-          if (avatarUrl) {
-            avatar = avatarUrl;
-            console.log(
-              '[getArtistById] Using avatar from IndexedDB:',
-              avatar?.substring(0, 50)
-            );
-          } else {
-            console.log(
-              '[getArtistById] No avatar found in IndexedDB for:',
-              mappedId
-            );
-          }
-        }
-
-        // 如果仍然没有头像，尝试从 profile 数据获取（兼容性）
-        if (!avatar && profile && profile.avatar) {
-          avatar = profile.avatar;
-          console.log(
-            '[getArtistById] Using avatar from profile data:',
-            avatar?.substring(0, 30)
-          );
-        }
-
-        // 最后回退到 mockUser 的默认头像
-        if (!avatar) {
-          avatar = mockUser.avatar;
-          console.log('[getArtistById] Using default mockUser avatar');
-        }
-
-        // 调试：记录浏览器信息
-        console.log(
-          '[getArtistById] Avatar resolution for Chrome compatibility:',
-          {
-            userId: mappedId,
-            hasLocalStorageAvatar: !!window.localStorage.getItem(
-              `tag.avatars.${mappedId}`
-            ),
-            hasIndexedDBAvatar: !!(await avatarStorage.getAvatarUrl(mappedId)),
-            hasProfileAvatar: !!(profile && profile.avatar),
-            hasMockUserAvatar: !!mockUser.avatar,
-            finalAvatar: avatar ? 'found' : 'null',
-            browser: navigator.userAgent,
-          }
-        );
-      } catch (error) {
-        console.warn('[getArtistById] Failed to read avatar data:', error);
-        avatar = mockUser.avatar;
-      }
-    } else {
+    try {
+      avatar = await getUnifiedAvatar(mappedId);
+      console.log(
+        '[getArtistById] Using unified avatar service for:',
+        mappedId,
+        avatar ? 'found' : 'not found'
+      );
+    } catch (error) {
+      console.warn('[getArtistById] Failed to get unified avatar:', error);
+      // 回退到 mockUser 的默認頭像
       avatar = mockUser.avatar;
     }
 

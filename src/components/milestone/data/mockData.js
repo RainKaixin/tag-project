@@ -16,7 +16,7 @@ export const createProjectData = (milestoneData, milestoneId) => {
           artist: 'Alex Chen',
           artistAvatar:
             'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-          role: 'Project Lead',
+          role: 'Initiator',
         },
         teamMembers: milestoneData.teamMembers || [
           {
@@ -75,7 +75,7 @@ export const createProjectData = (milestoneData, milestoneId) => {
           artist: 'Alex Chen',
           artistAvatar:
             'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-          role: 'Project Lead',
+          role: 'Initiator',
         },
         teamMembers: [
           {
