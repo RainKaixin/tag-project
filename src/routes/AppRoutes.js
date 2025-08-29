@@ -20,6 +20,7 @@ import UploadGuidelines from '../components/upload-guidelines/UploadGuidelines_r
 import UploadFormGuard from '../components/UploadFormGuard';
 import UploadPage from '../components/UploadPage';
 import WorkDetailPage from '../components/work-detail/WorkDetailPage_refactored';
+import AdminPanel from '../pages/AdminPanel';
 import CoFuture2025 from '../pages/competitions/CoFuture2025';
 import MajorAggregationPage from '../pages/MajorAggregationPage';
 import EditProfile from '../pages/settings/EditProfile.tsx';
@@ -221,6 +222,9 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+
+      {/* 超级管理员面板 - 特殊权限 */}
+      <Route path='/admin-panel' element={<AdminPanel />} />
 
       {/* 默认重定向到主页 */}
       <Route path='*' element={<Navigate to='/' replace />} />

@@ -1,95 +1,74 @@
-// 清理 Collaboration Posts 脚本
-// 删除除了有图片的 Collaboration 之外的所有其他 Posts
+// clear-collaborations.js - 清理Collaborations测试数据
+// 用于删除所有Collaborations相关的localStorage数据，以便进行新的测试
 
-console.log('🧹 开始清理 Collaboration Posts...');
+console.log('🧹 开始清理Collaborations测试数据...');
 
-// 获取所有 Collaboration 数据
-const getCollaborationsFromStorage = () => {
+// 定义需要清理的存储键
+const COLLABORATION_KEYS = [
+  'mock_collaborations',
+  'mock_collaboration_applications',
+  'mock_collaboration_likes',
+  'mock_collaboration_views',
+  'mock_collaboration_favorites',
+  'tag.collaboration_requests',
+];
+
+// 清理函数
+function clearCollaborationData() {
   try {
-    const stored = localStorage.getItem('collaborations');
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    console.error('Error reading collaborations from storage:', error);
-    return [];
-  }
-};
+    let clearedCount = 0;
 
-// 保存 Collaboration 数据
-const saveCollaborationsToStorage = collaborations => {
-  try {
-    localStorage.setItem('collaborations', JSON.stringify(collaborations));
-    console.log('✅ 数据已保存到 localStorage');
-  } catch (error) {
-    console.error('Error saving collaborations to storage:', error);
-  }
-};
-
-// 检查 Collaboration 是否有图片
-const hasImage = collaboration => {
-  return (
-    collaboration.heroImage ||
-    collaboration.posterPreview ||
-    collaboration.posterKey
-  );
-};
-
-// 主清理函数
-const cleanCollaborations = () => {
-  console.log('📋 获取当前 Collaboration 数据...');
-
-  const collaborations = getCollaborationsFromStorage();
-  console.log(`📊 当前共有 ${collaborations.length} 个 Collaboration Posts`);
-
-  // 显示所有 Collaboration 的信息
-  collaborations.forEach((collab, index) => {
-    console.log(
-      `${index + 1}. "${collab.title}" - 作者: ${
-        collab.author?.name || 'Unknown'
-      } - 有图片: ${hasImage(collab) ? '✅' : '❌'}`
-    );
-  });
-
-  // 保留有图片的 Collaboration
-  const collaborationsWithImages = collaborations.filter(hasImage);
-  console.log(
-    `\n🖼️ 有图片的 Collaboration: ${collaborationsWithImages.length} 个`
-  );
-
-  // 删除没有图片的 Collaboration
-  const collaborationsToDelete = collaborations.filter(
-    collab => !hasImage(collab)
-  );
-  console.log(`🗑️ 要删除的 Collaboration: ${collaborationsToDelete.length} 个`);
-
-  if (collaborationsToDelete.length > 0) {
-    console.log('\n🗑️ 要删除的 Collaboration 列表:');
-    collaborationsToDelete.forEach((collab, index) => {
-      console.log(
-        `${index + 1}. "${collab.title}" - 作者: ${
-          collab.author?.name || 'Unknown'
-        }`
-      );
+    // 清理指定的Collaborations键
+    COLLABORATION_KEYS.forEach(key => {
+      if (localStorage.getItem(key)) {
+        localStorage.removeItem(key);
+        console.log(`✅ 已删除: ${key}`);
+        clearedCount++;
+      } else {
+        console.log(`ℹ️  未找到: ${key}`);
+      }
     });
 
-    // 执行删除
-    saveCollaborationsToStorage(collaborationsWithImages);
-    console.log('\n✅ 清理完成！');
-    console.log(
-      `📊 清理后剩余 ${collaborationsWithImages.length} 个 Collaboration Posts`
+    // 清理所有包含collaboration的键（兜底清理）
+    const allKeys = Object.keys(localStorage);
+    const collaborationKeys = allKeys.filter(key =>
+      key.toLowerCase().includes('collaboration')
     );
-  } else {
-    console.log('\n✅ 没有需要删除的 Collaboration Posts');
-  }
 
-  // 刷新页面以显示更新
-  console.log('\n🔄 建议刷新页面以查看更新效果');
-};
+    collaborationKeys.forEach(key => {
+      if (!COLLABORATION_KEYS.includes(key)) {
+        localStorage.removeItem(key);
+        console.log(`✅ 已删除额外键: ${key}`);
+        clearedCount++;
+      }
+    });
+
+    console.log(`\n🎉 清理完成！共删除 ${clearedCount} 个数据项`);
+    console.log('📝 现在可以开始新的Collaborations测试了');
+
+    return { success: true, clearedCount };
+  } catch (error) {
+    console.error('❌ 清理过程中发生错误:', error);
+    return { success: false, error: error.message };
+  }
+}
 
 // 执行清理
-cleanCollaborations();
+const result = clearCollaborationData();
 
-// 导出函数供手动调用
-window.cleanCollaborations = cleanCollaborations;
-console.log(
-  '\n💡 您也可以手动调用 window.cleanCollaborations() 来重新执行清理'
+// 显示当前状态
+console.log('\n📊 当前localStorage状态:');
+const remainingKeys = Object.keys(localStorage).filter(key =>
+  key.toLowerCase().includes('collaboration')
 );
+if (remainingKeys.length === 0) {
+  console.log('✅ 所有Collaborations数据已清理完毕');
+} else {
+  console.log('⚠️  仍有以下Collaborations相关数据:');
+  remainingKeys.forEach(key => console.log(`  - ${key}`));
+}
+
+// 导出结果供其他脚本使用
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { clearCollaborationData, result };
+}

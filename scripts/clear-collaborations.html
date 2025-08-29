@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clear Collaborations Data</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .button {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 10px;
+        transition: background 0.3s;
+      }
+      .button:hover {
+        background: #c82333;
+      }
+      .button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+      .success {
+        background: #28a745;
+      }
+      .success:hover {
+        background: #218838;
+      }
+      .log {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 20px 0;
+        max-height: 400px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 14px;
+        white-space: pre-wrap;
+      }
+      .status {
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+      }
+      .status.info {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+      }
+      .status.success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+      }
+      .status.warning {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+      }
+      .status.error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🧹 Clear Collaborations Data</h1>
+
+      <div class="status info">
+        <strong>说明：</strong
+        >此工具将清理所有Collaborations相关的测试数据，包括：
+        <ul>
+          <li>mock_collaborations</li>
+          <li>mock_collaboration_applications</li>
+          <li>mock_collaboration_likes</li>
+          <li>mock_collaboration_views</li>
+          <li>mock_collaboration_favorites</li>
+          <li>tag.collaboration_requests</li>
+        </ul>
+      </div>
+
+      <div style="text-align: center">
+        <button class="button" onclick="clearCollaborations()">
+          🗑️ Clear All Collaborations Data
+        </button>
+        <button class="button success" onclick="checkStatus()">
+          📊 Check Current Status
+        </button>
+        <button class="button" onclick="clearLog()">🧹 Clear Log</button>
+      </div>
+
+      <div id="status" class="status info" style="display: none"></div>
+
+      <div class="log" id="log">Ready to clear collaborations data...</div>
+    </div>
+
+    <script>
+      function log(message) {
+        const logElement = document.getElementById('log');
+        const timestamp = new Date().toLocaleTimeString();
+        logElement.textContent += `[${timestamp}] ${message}\n`;
+        logElement.scrollTop = logElement.scrollHeight;
+      }
+
+      function clearLog() {
+        document.getElementById('log').textContent = '';
+      }
+
+      function showStatus(message, type = 'info') {
+        const statusElement = document.getElementById('status');
+        statusElement.className = `status ${type}`;
+        statusElement.textContent = message;
+        statusElement.style.display = 'block';
+      }
+
+      function clearCollaborations() {
+        log('🧹 开始清理Collaborations测试数据...');
+
+        // 定义需要清理的存储键
+        const COLLABORATION_KEYS = [
+          'mock_collaborations',
+          'mock_collaboration_applications',
+          'mock_collaboration_likes',
+          'mock_collaboration_views',
+          'mock_collaboration_favorites',
+          'tag.collaboration_requests',
+        ];
+
+        let clearedCount = 0;
+
+        try {
+          // 清理指定的Collaborations键
+          COLLABORATION_KEYS.forEach(key => {
+            if (localStorage.getItem(key)) {
+              localStorage.removeItem(key);
+              log(`✅ 已删除: ${key}`);
+              clearedCount++;
+            } else {
+              log(`ℹ️  未找到: ${key}`);
+            }
+          });
+
+          // 清理所有包含collaboration的键（兜底清理）
+          const allKeys = Object.keys(localStorage);
+          const collaborationKeys = allKeys.filter(key =>
+            key.toLowerCase().includes('collaboration')
+          );
+
+          collaborationKeys.forEach(key => {
+            if (!COLLABORATION_KEYS.includes(key)) {
+              localStorage.removeItem(key);
+              log(`✅ 已删除额外键: ${key}`);
+              clearedCount++;
+            }
+          });
+
+          log(`\n🎉 清理完成！共删除 ${clearedCount} 个数据项`);
+          log('📝 现在可以开始新的Collaborations测试了');
+
+          showStatus(`✅ 清理完成！共删除 ${clearedCount} 个数据项`, 'success');
+        } catch (error) {
+          log(`❌ 清理过程中发生错误: ${error.message}`);
+          showStatus(`❌ 清理失败: ${error.message}`, 'error');
+        }
+      }
+
+      function checkStatus() {
+        log('📊 检查当前localStorage状态...');
+
+        const allKeys = Object.keys(localStorage);
+        const collaborationKeys = allKeys.filter(key =>
+          key.toLowerCase().includes('collaboration')
+        );
+
+        if (collaborationKeys.length === 0) {
+          log('✅ 所有Collaborations数据已清理完毕');
+          showStatus('✅ 所有Collaborations数据已清理完毕', 'success');
+        } else {
+          log(`⚠️  发现 ${collaborationKeys.length} 个Collaborations相关数据:`);
+          collaborationKeys.forEach(key => log(`  - ${key}`));
+          showStatus(
+            `⚠️  发现 ${collaborationKeys.length} 个Collaborations相关数据`,
+            'warning'
+          );
+        }
+
+        // 显示所有localStorage键的数量
+        log(`📈 当前localStorage共有 ${allKeys.length} 个键`);
+      }
+
+      // 页面加载时自动检查状态
+      window.onload = function () {
+        log('🚀 页面加载完成，自动检查状态...');
+        checkStatus();
+      };
+    </script>
+  </body>
+</html>
