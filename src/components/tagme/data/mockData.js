@@ -370,6 +370,7 @@ export const collaborations = [
     image: null, // 移除默认图片
     categories: ['Branding', 'Graphic Design'],
     author: {
+      id: 'alice',
       name: 'Alice Chen',
       avatar: null, // 移除默认头像
     },
@@ -393,6 +394,7 @@ export const collaborations = [
     image: null, // 移除默认图片
     categories: ['UI/UX Design', 'Interactive'],
     author: {
+      id: 'maya',
       name: 'Maya Kim',
       avatar: null, // 移除默认头像
     },
@@ -416,6 +418,7 @@ export const collaborations = [
     image: null, // 移除默认图片
     categories: ['3D Design', 'Animation'],
     author: {
+      id: 'david',
       name: 'David Lee',
       avatar: null, // 移除默认头像
     },

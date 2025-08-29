@@ -28,13 +28,17 @@ export const commentService = {
       // 如果是回复，需要获取父评论信息
       let parentComment = null;
       if (parentCommentId) {
-        // 获取父评论信息来确定rootId
-        const allComments = await localStorageAdapter.getAllComments();
-        parentComment = allComments.find(c => c.id === parentCommentId);
+        // 获取父评论信息来确定rootId（仅在当前作品内查找）
+        parentComment = await localStorageAdapter.findParentComment(
+          workId,
+          parentCommentId
+        );
       }
 
       const comment = {
-        id: `comment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `comment_${workId}_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`,
         workId,
         authorId,
         authorName,
@@ -42,7 +46,7 @@ export const commentService = {
         parentId: parentCommentId, // 新增：父评论ID
         rootId: parentComment ? parentComment.rootId || parentComment.id : null, // 新增：根评论ID
         likes: 0,
-        replies: [],
+        likedBy: [],
         isDeleted: false,
         createdAt: Date.now(), // 改为数字时间戳
         updatedAt: Date.now(),

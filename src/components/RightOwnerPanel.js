@@ -11,7 +11,13 @@ import FinalCommentModal from './FinalCommentModal';
 import FinalComments from './FinalComments';
 import ProjectVision from './ProjectVision';
 
-const RightOwnerPanel = ({ project, owner, currentUser, eligibility }) => {
+const RightOwnerPanel = ({
+  project,
+  owner,
+  currentUser,
+  eligibility,
+  onFinalReviewClick,
+}) => {
   const [reviewRequests, setReviewRequests] = useState([]);
   const [finalComments, setFinalComments] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -180,7 +186,12 @@ const RightOwnerPanel = ({ project, owner, currentUser, eligibility }) => {
       {isProjectCompleted ? (
         <FinalComments comments={finalComments} />
       ) : (
-        <ProjectVision vision={project.vision} owner={owner} />
+        <ProjectVision
+          vision={project.vision}
+          owner={owner}
+          currentUser={currentUser}
+          onFinalReviewClick={onFinalReviewClick}
+        />
       )}
 
       {/* Action Button */}

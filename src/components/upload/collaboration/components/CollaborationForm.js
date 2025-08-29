@@ -128,7 +128,7 @@ const CollaborationForm = ({ formData, onFormChange }) => {
         {/* Application Deadline */}
         <div>
           <label className='block text-sm font-medium text-gray-700 mb-2'>
-            Application Deadline
+            Application Deadline <span className='text-red-500'>*</span>
           </label>
           <input
             type='date'

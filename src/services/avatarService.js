@@ -18,17 +18,26 @@ export const getUnifiedAvatar = async userId => {
   }
 
   try {
+    console.log(`[avatarService] Getting unified avatar for user: ${userId}`);
+
     // 1. 優先從 localStorage 獲取（與右上角頭像使用相同邏輯）
     if (typeof window !== 'undefined') {
       const avatarData = window.localStorage.getItem(`tag.avatars.${userId}`);
       if (avatarData) {
-        const parsedData = JSON.parse(avatarData);
-        if (parsedData && parsedData.avatarUrl) {
-          console.log(
-            '[avatarService] Using avatar from localStorage:',
-            parsedData.avatarUrl?.substring(0, 30)
+        try {
+          const parsedData = JSON.parse(avatarData);
+          if (parsedData && parsedData.avatarUrl) {
+            console.log(
+              `[avatarService] Found avatar in localStorage for ${userId}:`,
+              parsedData.avatarUrl?.substring(0, 30)
+            );
+            return parsedData.avatarUrl;
+          }
+        } catch (parseError) {
+          console.warn(
+            `[avatarService] Failed to parse localStorage avatar data for ${userId}:`,
+            parseError
           );
-          return parsedData.avatarUrl;
         }
       }
     }
@@ -37,7 +46,7 @@ export const getUnifiedAvatar = async userId => {
     const avatarUrl = await avatarStorage.getAvatarUrl(userId);
     if (avatarUrl) {
       console.log(
-        '[avatarService] Using avatar from IndexedDB:',
+        `[avatarService] Found avatar in IndexedDB for ${userId}:`,
         avatarUrl?.substring(0, 30)
       );
       return avatarUrl;
@@ -46,12 +55,17 @@ export const getUnifiedAvatar = async userId => {
     // 3. 從 profile 數據獲取（如果需要）
     // 這裡可以添加從 profile 服務獲取的邏輯
 
-    // 4. 回退到 mockUser 的默認頭像
-    console.log('[avatarService] No avatar found, using default');
-    return null;
+    // 4. 回退到默認頭像（使用統一的默認頭像）
+    console.log(
+      `[avatarService] No avatar found for user ${userId}, using default`
+    );
+    return getDefaultAvatar();
   } catch (error) {
-    console.error('[avatarService] Error getting unified avatar:', error);
-    return null;
+    console.error(
+      `[avatarService] Error getting unified avatar for ${userId}:`,
+      error
+    );
+    return getDefaultAvatar();
   }
 };
 
@@ -128,4 +142,13 @@ export const getCurrentUserAvatar = async () => {
 export const updateCurrentUserAvatar = async avatarUrl => {
   const userId = getCurrentUserId();
   return await updateUnifiedAvatar(userId, avatarUrl);
+};
+
+/**
+ * 獲取默認頭像
+ * @returns {string} 默認頭像的 Data URL
+ */
+const getDefaultAvatar = () => {
+  // 使用統一的默認頭像 SVG
+  return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiByeD0iNjQiIGZpbGw9IiNGM0Y0RjYiLz4KPHN2ZyB4PSIzMiIgeT0iMjQiIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjOEM5Q0E2Ij4KPHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPgo8L3N2Zz4KPC9zdmc+';
 };

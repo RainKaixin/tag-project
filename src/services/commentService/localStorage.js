@@ -1,6 +1,16 @@
 // commentService/localStorage.js - LocalStorage 适配器
 
 /**
+ * 初始化默认评论数据（已禁用，不再创建测试数据）
+ * @param {string} workId - 作品ID
+ */
+const initializeDefaultComments = async workId => {
+  // 禁用测试数据初始化，避免在所有作品中创建相同的测试评论
+  // 每个作品应该有自己的独立评论区域
+  return;
+};
+
+/**
  * LocalStorage 评论数据适配器
  * 在本地存储中管理评论数据
  */
@@ -53,6 +63,9 @@ export const localStorageAdapter = {
    */
   getWorkComments: async workId => {
     try {
+      // 首先尝试初始化默认评论数据（仅用于开发测试）
+      await initializeDefaultComments(workId);
+
       const key = `comments_${workId}`;
       const comments = JSON.parse(localStorage.getItem(key) || '[]');
 
@@ -110,6 +123,28 @@ export const localStorageAdapter = {
     } catch (error) {
       console.error('[localStorageAdapter] Error getting all comments:', error);
       return [];
+    }
+  },
+
+  /**
+   * 根据评论ID查找父评论（仅在当前作品内查找）
+   * @param {string} workId - 作品ID
+   * @param {string} parentCommentId - 父评论ID
+   * @returns {Object|null} 父评论对象或null
+   */
+  findParentComment: async (workId, parentCommentId) => {
+    try {
+      const key = `comments_${workId}`;
+      const comments = JSON.parse(localStorage.getItem(key) || '[]');
+
+      const parentComment = comments.find(c => c.id === parentCommentId);
+      return parentComment || null;
+    } catch (error) {
+      console.error(
+        '[localStorageAdapter] Error finding parent comment:',
+        error
+      );
+      return null;
     }
   },
 

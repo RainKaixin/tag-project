@@ -28,12 +28,15 @@ export const getStatusText = status => {
 
 // 项目数据处理
 export const processProjectData = (projectData, location, state) => {
+  console.log('[processProjectData] Input projectData:', projectData);
+  console.log('[processProjectData] projectData.author:', projectData?.author);
+
   const project = projectData
     ? {
         id: projectData.id,
         title: projectData.title,
         author: {
-          id: projectData.author?.id || projectData.id,
+          id: projectData.author?.id || null,
           title: projectData.title,
           artist: projectData.author?.name || 'Unknown',
           artistAvatar: projectData.author?.avatar || null,
@@ -45,70 +48,43 @@ export const processProjectData = (projectData, location, state) => {
           timeAgo: '2 hours ago',
           role: projectData.author?.role || 'Initiator',
         },
-        duration: '3-4 months',
-        teamSize: '5-6 people',
+        duration: projectData.duration || 'Not specified',
+        teamSize: projectData.teamSize || 'Not specified',
         postedTime: '2 hours ago',
         tags: projectData.categories || ['Project'],
         heroImage: projectData.posterPreview || projectData.image,
         description:
           projectData.subtitle +
           ". We're looking for passionate designers and developers to join our team and create something amazing together.",
-        meetingFrequency: '2-3 times/week',
-        deadline: 'Dec 15, 2024',
+        meetingFrequency: projectData.meetingSchedule || 'Not specified',
+        deadline:
+          projectData.applicationDeadline ||
+          projectData.deadline ||
+          'Not specified',
         contactInfo: {
-          discord: 'project_lead#1234',
-          email: 'project.lead@email.com',
+          discord: projectData.contactDiscord || null,
+          email: projectData.contactEmail || null,
         },
         status: 'in_progress',
         vision: {
-          tagline: 'Building the future of creative collaboration',
+          tagline:
+            projectData.projectVision ||
+            'Building the future of creative collaboration',
           narrative:
+            projectData.projectDescription ||
             "We're creating a platform that connects talented designers and developers to build amazing digital experiences together. Our vision is to make collaboration seamless, inspiring, and productive.\n\nThis project will showcase the power of interdisciplinary teamwork and innovative design thinking. We're looking for passionate individuals who share our vision and want to make a real impact.",
-          hiringTargets: [
-            'UI/UX Designer',
-            'Frontend Developer',
-            'Motion Designer',
-          ],
+          lookingFor: projectData.projectType
+            ? projectData.projectType
+                .split(',')
+                .map(tag => tag.trim())
+                .filter(tag => tag.length > 0)
+            : [],
           contact: {
-            discord: 'project_lead#1234',
-            email: 'project.lead@email.com',
+            discord: projectData.contactDiscord || null,
+            email: projectData.contactEmail || null,
           },
         },
-        milestones:
-          projectData.id === 2
-            ? []
-            : [
-                {
-                  id: 1,
-                  title: 'Project Planning',
-                  status: 'completed',
-                  dueDate: 'Week 1',
-                },
-                {
-                  id: 2,
-                  title: 'Design Phase',
-                  status: 'completed',
-                  dueDate: 'Week 3',
-                },
-                {
-                  id: 3,
-                  title: 'Development Phase',
-                  status: 'in-progress',
-                  dueDate: 'Week 6',
-                },
-                {
-                  id: 4,
-                  title: 'Testing & QA',
-                  status: 'pending',
-                  dueDate: 'Week 8',
-                },
-                {
-                  id: 5,
-                  title: 'Launch Preparation',
-                  status: 'pending',
-                  dueDate: 'Week 10',
-                },
-              ],
+        milestones: projectData.milestones || [],
       }
     : {
         id: 1,
@@ -128,70 +104,49 @@ export const processProjectData = (projectData, location, state) => {
           timeAgo: '2 hours ago',
           role: 'Initiator',
         },
-        duration: '3-4 months',
-        teamSize: '5-6 people',
+        duration: projectData.duration || 'Not specified',
+        teamSize: projectData.teamSize || 'Not specified',
         postedTime: '2 hours ago',
         tags: ['Mobile App', 'E-commerce', 'React Native'],
         heroImage:
           'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop',
         description:
           "We're building a modern e-commerce mobile app that will revolutionize the shopping experience. Our vision is to create a seamless, intuitive, and engaging platform that connects customers with amazing products.\n\nWe're looking for passionate designers and developers to join our team and create something amazing together.",
-        meetingFrequency: '2-3 times/week',
-        deadline: 'Dec 15, 2024',
+        meetingFrequency: projectData.meetingSchedule || 'Not specified',
+        deadline:
+          projectData.applicationDeadline ||
+          projectData.deadline ||
+          'Not specified',
         contactInfo: {
-          discord: 'project_lead#1234',
-          email: 'project.lead@email.com',
+          discord: projectData.contactDiscord || null,
+          email: projectData.contactEmail || null,
         },
         status: 'in_progress',
         vision: {
-          tagline: 'Building the future of creative collaboration',
+          tagline:
+            projectData.projectVision ||
+            'Building the future of creative collaboration',
           narrative:
+            projectData.projectDescription ||
             "We're creating a platform that connects talented designers and developers to build amazing digital experiences together. Our vision is to make collaboration seamless, inspiring, and productive.\n\nThis project will showcase the power of interdisciplinary teamwork and innovative design thinking. We're looking for passionate individuals who share our vision and want to make a real impact.",
-          hiringTargets: [
-            'UI/UX Designer',
-            'Frontend Developer',
-            'Motion Designer',
-          ],
+          lookingFor: projectData.projectType
+            ? projectData.projectType
+                .split(',')
+                .map(tag => tag.trim())
+                .filter(tag => tag.length > 0)
+            : [],
           contact: {
-            discord: 'project_lead#1234',
-            email: 'project.lead@email.com',
+            discord: projectData.contactDiscord || null,
+            email: projectData.contactEmail || null,
           },
         },
-        milestones: [
-          {
-            id: 1,
-            title: 'Project Planning',
-            status: 'completed',
-            dueDate: 'Week 1',
-          },
-          {
-            id: 2,
-            title: 'Design Phase',
-            status: 'completed',
-            dueDate: 'Week 3',
-          },
-          {
-            id: 3,
-            title: 'Development Phase',
-            status: 'in-progress',
-            dueDate: 'Week 6',
-          },
-          {
-            id: 4,
-            title: 'Testing & QA',
-            status: 'pending',
-            dueDate: 'Week 8',
-          },
-          {
-            id: 5,
-            title: 'Launch Preparation',
-            status: 'pending',
-            dueDate: 'Week 10',
-          },
-        ],
+        milestones: projectData.milestones || [],
       };
 
-  return project;
+  console.log('[processProjectData] Output project:', project);
+  console.log('[processProjectData] Output project.author:', project?.author);
+
+  return project || null;
 };
 
 // 职位数据

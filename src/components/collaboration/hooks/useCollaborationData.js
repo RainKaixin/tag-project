@@ -16,6 +16,13 @@ export const useCollaborationData = () => {
   // 从Context、路由状态或URL参数获取项目数据
   const projectData = state.selectedCollaboration || location.state?.project;
 
+  // 调试信息
+  console.log('[useCollaborationData] projectData:', projectData);
+  console.log(
+    '[useCollaborationData] projectData.author:',
+    projectData?.author
+  );
+
   // 状态管理
   const [appliedPositions, setAppliedPositions] = useState(new Set());
   const [isSaved, setIsSaved] = useState(false);
@@ -35,6 +42,7 @@ export const useCollaborationData = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelPositionId, setCancelPositionId] = useState(null);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
+  const [positions, setPositions] = useState(getPositionsData());
 
   // 评论数据
   const [positionComments, setPositionComments] = useState({
@@ -92,9 +100,6 @@ export const useCollaborationData = () => {
 
   // 处理项目数据
   const project = processProjectData(projectData, location, state);
-
-  // 获取职位数据
-  const positions = getPositionsData();
 
   // 功能开关
   const enableProjectProgressBar = true;
@@ -174,5 +179,6 @@ export const useCollaborationData = () => {
     setCancelPositionId,
     setCurrentUser,
     setPositionComments,
+    setPositions,
   };
 };

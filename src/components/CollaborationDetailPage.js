@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import { useAppContext } from '../context/AppContext';
@@ -36,7 +36,36 @@ const CollaborationDetailPage = () => {
     setApplyForm: data.setApplyForm,
     setIsSaved: data.setIsSaved,
     setActivePositionTab: data.setActivePositionTab,
+    setPositions: data.setPositions,
   });
+
+  // 添加 Final Review 状态管理
+  const [selectedCollaboratorForReview, setSelectedCollaboratorForReview] =
+    useState(null);
+
+  // 处理 Final Review 点击
+  const handleFinalReviewClick = collaborator => {
+    setSelectedCollaboratorForReview(collaborator);
+  };
+
+  // 处理针对合作者的评价提交
+  const handleCollaboratorReviewSubmit = async commentText => {
+    if (!selectedCollaboratorForReview) return;
+
+    const newReview = {
+      collaboratorId: selectedCollaboratorForReview.id,
+      collaboratorName: selectedCollaboratorForReview.name,
+      reviewerId: data.currentUser?.id || 'bryan',
+      reviewerName: data.currentUser?.name || 'Bryan',
+      text: commentText,
+      timestamp: new Date().toISOString(),
+    };
+
+    console.log('Submitted review for collaborator:', newReview);
+
+    // 清空选中状态
+    setSelectedCollaboratorForReview(null);
+  };
 
   // 页面初始化时判断是否需要滚动到顶部
   useEffect(() => {
@@ -51,6 +80,18 @@ const CollaborationDetailPage = () => {
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
   }, [location.pathname]); // 只依賴 pathname，不依賴 location.state 和 state.navigationHistory
+
+  // 如果没有项目数据，显示加载状态
+  if (!data.project) {
+    return (
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4'></div>
+          <p className='text-gray-600'>Loading collaboration details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-gray-50'>
@@ -81,12 +122,14 @@ const CollaborationDetailPage = () => {
             positionComments={data.positionComments}
             onApply={actions.handleApply}
             onCancelApplication={actions.handleCancelApplication}
+            onFillPosition={actions.handleFillPosition}
             onPositionTabClick={actions.handlePositionTabClick}
             onCommentChange={e => data.setComment(e.target.value)}
             onSubmitComment={actions.handleCommentSubmit}
             navigateToArtist={actions.navigateToArtist}
             getStatusColor={actions.getStatusColor}
             getStatusText={actions.getStatusText}
+            currentUser={data.currentUser}
           />
 
           {/* Right Column - Project Owner Panel (Upgraded) */}
@@ -95,8 +138,9 @@ const CollaborationDetailPage = () => {
             <RightOwnerPanel
               project={data.project}
               owner={data.project.author}
-              currentUser={null} // 暂时为null，实际项目中会传入真实用户
+              currentUser={data.currentUser} // 传递当前用户信息
               eligibility={{ isMemberCompleted: true }} // Mock eligibility
+              onFinalReviewClick={handleFinalReviewClick}
             />
 
             {/* after-finished-review v1 (dev panel) - 开发审批面板 */}
@@ -129,6 +173,8 @@ const CollaborationDetailPage = () => {
             }
             onSendRequest={() => {}}
             onSubmitComment={text => {}}
+            selectedCollaborator={selectedCollaboratorForReview}
+            onCollaboratorReviewSubmit={handleCollaboratorReviewSubmit}
           />
         </div>
       </div>

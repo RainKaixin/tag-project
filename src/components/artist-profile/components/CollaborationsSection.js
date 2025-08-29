@@ -28,27 +28,8 @@ const CollaborationsSection = ({
   const [loading, setLoading] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
 
-  // 模擬數據 - 實際應該從 props 或 API 獲取
-  const publishedPosts = [
-    {
-      id: 1,
-      title: 'Mobile App Design Collaboration',
-      author: 'Bryan',
-      date: 'Dec 15, 2024',
-      image:
-        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
-      tags: ['UI/UX', 'Mobile', 'Design'],
-    },
-    {
-      id: 2,
-      title: 'Brand Identity Project',
-      author: 'Bryan',
-      date: 'Dec 10, 2024',
-      image:
-        'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
-      tags: ['Branding', 'Logo', 'Identity'],
-    },
-  ];
+  // 真實發布的 Collaboration Posts - 從 props 或 API 獲取
+  const publishedPosts = [];
 
   // 載入草稿數據
   const loadDrafts = async () => {

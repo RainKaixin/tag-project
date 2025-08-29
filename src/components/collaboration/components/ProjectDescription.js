@@ -103,13 +103,17 @@ const ProjectDescription = ({
   positionComments,
   onApply,
   onCancelApplication,
+  onFillPosition,
   onPositionTabClick,
   onCommentChange,
   onSubmitComment,
   navigateToArtist,
   getStatusColor,
   getStatusText,
+  currentUser,
 }) => {
+  // 判断当前用户是否为项目发起人
+  const isInitiator = currentUser?.id === project?.author?.id;
   return (
     <div className='lg:col-span-2'>
       <InfoCard className='mb-8'>
@@ -181,7 +185,7 @@ const ProjectDescription = ({
             </svg>
             <span className='text-sm text-gray-600'>
               <span className='font-medium'>Meeting Schedule:</span>{' '}
-              {project.meetingSchedule || 'Not specified'}
+              {project.meetingFrequency || 'Not specified'}
             </span>
           </div>
         </div>
@@ -191,7 +195,7 @@ const ProjectDescription = ({
           <h2 className='text-xl font-bold text-gray-900 mb-6'>
             Open Positions
           </h2>
-          {!hasSubmittedApplication && (
+          {!hasSubmittedApplication && !isInitiator && (
             <div className='bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6'>
               <div className='flex items-center gap-2'>
                 <svg
@@ -259,30 +263,51 @@ const ProjectDescription = ({
                     </span>
                   </div>
                   <div className='flex gap-2'>
-                    <button
-                      onClick={() => onApply(position.id)}
-                      disabled={
-                        !hasSubmittedApplication ||
-                        appliedPositions.has(position.id)
-                      }
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                        appliedPositions.has(position.id)
-                          ? 'bg-green-100 text-green-800 cursor-not-allowed'
-                          : !hasSubmittedApplication
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-purple-600 text-white hover:bg-purple-700'
-                      }`}
-                    >
-                      {appliedPositions.has(position.id) ? 'Applied' : 'Apply'}
-                    </button>
-
-                    {appliedPositions.has(position.id) && (
+                    {isInitiator ? (
+                      // 发起人视角：显示 Fill Position 按钮
                       <button
-                        onClick={() => onCancelApplication(position.id)}
-                        className='px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors duration-200'
+                        onClick={() => onFillPosition(position.id)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                          position.status === 'filled'
+                            ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            : 'bg-purple-600 text-white hover:bg-purple-700'
+                        }`}
                       >
-                        Cancel
+                        {position.status === 'filled'
+                          ? 'Reopen Position'
+                          : 'Fill Position'}
                       </button>
+                    ) : (
+                      // 合作者/访客视角：显示 Apply 按钮
+                      <>
+                        <button
+                          onClick={() => onApply(position.id)}
+                          disabled={
+                            !hasSubmittedApplication ||
+                            appliedPositions.has(position.id)
+                          }
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                            appliedPositions.has(position.id)
+                              ? 'bg-green-100 text-green-800 cursor-not-allowed'
+                              : !hasSubmittedApplication
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              : 'bg-purple-600 text-white hover:bg-purple-700'
+                          }`}
+                        >
+                          {appliedPositions.has(position.id)
+                            ? 'Applied'
+                            : 'Apply'}
+                        </button>
+
+                        {appliedPositions.has(position.id) && (
+                          <button
+                            onClick={() => onCancelApplication(position.id)}
+                            className='px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors duration-200'
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

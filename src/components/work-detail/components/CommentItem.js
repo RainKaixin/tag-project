@@ -9,6 +9,123 @@ import { getArtistById } from '../../artist-profile/utils/artistHelpers';
 import CommentReplyForm from './CommentReplyForm';
 
 /**
+ * 回复项组件
+ */
+const ReplyItem = ({
+  reply,
+  currentUser,
+  onUserClick,
+  onLikeClick,
+  onDeleteClick,
+  formatTime,
+}) => {
+  const [replyAuthorInfo, setReplyAuthorInfo] = useState(null);
+  const [isLoadingReply, setIsLoadingReply] = useState(true);
+
+  // 获取回复作者的真实信息
+  useEffect(() => {
+    const fetchReplyAuthorInfo = async () => {
+      if (reply.authorId) {
+        try {
+          setIsLoadingReply(true);
+          const author = await getArtistById(reply.authorId);
+          setReplyAuthorInfo(author);
+        } catch (error) {
+          console.warn(
+            `[ReplyItem] Failed to get reply author info for ${reply.authorId}:`,
+            error
+          );
+          setReplyAuthorInfo(null);
+        } finally {
+          setIsLoadingReply(false);
+        }
+      } else {
+        setIsLoadingReply(false);
+      }
+    };
+
+    fetchReplyAuthorInfo();
+  }, [reply.authorId]);
+
+  // 获取回复作者的头像
+  const getReplyAuthorAvatar = () => {
+    if (isLoadingReply) {
+      return getCurrentUserAvatar(); // 加载时显示默认头像
+    }
+
+    if (replyAuthorInfo?.avatar) {
+      return replyAuthorInfo.avatar;
+    }
+
+    return getCurrentUserAvatar(); // 回退到默认头像
+  };
+
+  return (
+    <div className='flex space-x-3'>
+      <img
+        src={getReplyAuthorAvatar()}
+        alt={reply.authorName || 'Reply author'}
+        className='w-8 h-8 rounded-full cursor-pointer hover:opacity-80 transition-opacity duration-200'
+        onClick={() => onUserClick(reply.authorId)}
+      />
+      <div className='flex-1'>
+        <div className='bg-gray-50 rounded-lg p-3'>
+          <div className='flex items-center justify-between mb-1'>
+            <span
+              className='font-medium text-gray-900 cursor-pointer hover:text-tag-blue transition-colors duration-200'
+              onClick={() => onUserClick(reply.authorId)}
+            >
+              {reply.authorName}
+            </span>
+            <span className='text-sm text-gray-500'>
+              {formatTime(reply.createdAt)}
+            </span>
+          </div>
+          <p className='text-gray-700'>{reply.text || reply.content}</p>
+        </div>
+        <div className='flex items-center space-x-4 mt-2 text-sm'>
+          <button
+            onClick={() => onLikeClick(reply.id)}
+            className={`flex items-center gap-1 ${
+              reply.likedBy?.includes(currentUser?.id)
+                ? 'text-red-500'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <svg
+              className='w-4 h-4'
+              fill={
+                reply.likedBy?.includes(currentUser?.id)
+                  ? 'currentColor'
+                  : 'none'
+              }
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+              strokeWidth='2'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                d='M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z'
+              />
+            </svg>
+            <span>{reply.likes || 0}</span>
+          </button>
+          {currentUser && reply.authorId === currentUser.id && (
+            <button
+              onClick={() => onDeleteClick(reply.id)}
+              className='text-red-500 hover:text-red-700'
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
  * 评论项组件
  * @param {Object} comment - 评论数据
  * @param {Array} comments - 所有评论数组（用于查找子回复）
@@ -213,69 +330,15 @@ const CommentItem = ({
         {replies.length > 0 && (
           <div className='mt-3 border-l-2 border-gray-200 pl-4 space-y-3'>
             {replies.map(reply => (
-              <div key={reply.id} className='flex space-x-3'>
-                <img
-                  src={getCurrentUserAvatar()} // 这里应该获取回复作者的真实头像
-                  alt='Reply author'
-                  className='w-8 h-8 rounded-full cursor-pointer hover:opacity-80 transition-opacity duration-200'
-                  onClick={() => onUserClick(reply.authorId)}
-                />
-                <div className='flex-1'>
-                  <div className='bg-gray-50 rounded-lg p-3'>
-                    <div className='flex items-center justify-between mb-1'>
-                      <span
-                        className='font-medium text-gray-900 cursor-pointer hover:text-tag-blue transition-colors duration-200'
-                        onClick={() => onUserClick(reply.authorId)}
-                      >
-                        {reply.authorName}
-                      </span>
-                      <span className='text-sm text-gray-500'>
-                        {formatTime(reply.createdAt)}
-                      </span>
-                    </div>
-                    <p className='text-gray-700'>
-                      {reply.text || reply.content}
-                    </p>
-                  </div>
-                  <div className='flex items-center space-x-4 mt-2 text-sm'>
-                    <button
-                      onClick={() => onLikeClick(reply.id)}
-                      className={`flex items-center gap-1 ${
-                        reply.likedBy?.includes(currentUser?.id)
-                          ? 'text-red-500'
-                          : 'text-gray-500 hover:text-gray-700'
-                      }`}
-                    >
-                      <svg
-                        className='w-4 h-4'
-                        fill={
-                          reply.likedBy?.includes(currentUser?.id)
-                            ? 'currentColor'
-                            : 'none'
-                        }
-                        stroke='currentColor'
-                        viewBox='0 0 24 24'
-                        strokeWidth='2'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          d='M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z'
-                        />
-                      </svg>
-                      <span>{reply.likes || 0}</span>
-                    </button>
-                    {currentUser && reply.authorId === currentUser.id && (
-                      <button
-                        onClick={() => onDeleteClick(reply.id)}
-                        className='text-red-500 hover:text-red-700'
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <ReplyItem
+                key={reply.id}
+                reply={reply}
+                currentUser={currentUser}
+                onUserClick={onUserClick}
+                onLikeClick={onLikeClick}
+                onDeleteClick={onDeleteClick}
+                formatTime={formatTime}
+              />
             ))}
           </div>
         )}

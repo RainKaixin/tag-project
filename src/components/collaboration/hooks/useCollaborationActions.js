@@ -31,6 +31,7 @@ export const useCollaborationActions = (data, setters) => {
     setApplyForm,
     setIsSaved,
     setActivePositionTab,
+    setPositions,
   } = setters;
 
   // 处理申请职位
@@ -156,6 +157,20 @@ export const useCollaborationActions = (data, setters) => {
     setActivePositionTab(tab);
   };
 
+  // 处理填满职位 - 切换功能
+  const handleFillPosition = positionId => {
+    setPositions(prevPositions =>
+      prevPositions.map(position =>
+        position.id === positionId
+          ? {
+              ...position,
+              status: position.status === 'filled' ? 'available' : 'filled',
+            }
+          : position
+      )
+    );
+  };
+
   return {
     // 导航函数
     goBack,
@@ -174,6 +189,7 @@ export const useCollaborationActions = (data, setters) => {
     handleSaveToggle,
     handleCommentSubmit,
     handlePositionTabClick,
+    handleFillPosition,
 
     // 工具函数
     getStatusColor,

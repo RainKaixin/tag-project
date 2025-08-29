@@ -19,13 +19,22 @@ const ProjectProgressBar = ({
     ? `Completed ${completed} / ${total} milestones`
     : 'No milestones created yet';
 
-  const buttonText = hasMilestones ? 'View Milestones' : 'Create Milestones';
-  const isButtonDisabled = !hasMilestones;
+  const buttonText = hasMilestones
+    ? 'View Milestones'
+    : isInitiator
+    ? 'Create Milestones'
+    : 'Milestones Locked';
+  const isButtonDisabled = !hasMilestones && !isInitiator;
 
   // 點擊處理
   const handleClick = () => {
     if (hasMilestones && onViewMilestones && !isMilestonePage) {
       onViewMilestones(projectId);
+    } else if (!hasMilestones && isInitiator) {
+      // 发起人可以创建 milestones
+      console.log('Initiator can create milestones for project:', projectId);
+      // 直接跳转到 Upload 页面的 Milestone 区块
+      window.location.href = '/upload/form?tab=milestones';
     }
   };
 
@@ -35,7 +44,7 @@ const ProjectProgressBar = ({
       {/* 原样式: w-full lg:w-5/6 */}
       <div className='flex items-center justify-between mb-4'>
         <h3 className='text-lg font-bold text-gray-900'>Project Progress</h3>
-        {dueDate && (
+        {dueDate && dueDate !== 'Not specified' && dueDate !== '' && (
           <span className='text-sm text-gray-600 mr-4'>
             Deadline: {dueDate}
           </span>
@@ -110,7 +119,7 @@ const ProjectProgressBar = ({
         </div>
       ) : (
         // 沒有 Milestones 時的禁用狀態
-        <div className='flex items-center gap-4 opacity-60'>
+        <div className='flex items-center gap-4'>
           {/* 進度條區域 - 禁用狀態 */}
           <div className='flex-1'>
             <div className='flex items-center justify-between mb-2'>
@@ -136,12 +145,26 @@ const ProjectProgressBar = ({
             </div>
           </div>
 
-          {/* 右側按鈕 - 禁用狀態 */}
+          {/* 右側按鈕 - 禁用狀態或发起人可点击 */}
           {!isMilestonePage && (
             <button
-              disabled={true}
-              className='px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-              aria-label='No milestones available'
+              disabled={isButtonDisabled}
+              onClick={e => {
+                e.stopPropagation();
+                handleClick();
+              }}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                isInitiator && !hasMilestones
+                  ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1'
+                  : isButtonDisabled
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1'
+              }`}
+              aria-label={
+                isButtonDisabled
+                  ? 'No milestones available'
+                  : 'Create milestones'
+              }
             >
               {buttonText}
             </button>
@@ -167,14 +190,9 @@ const ProjectProgressBar = ({
               />
             </svg>
             <div>
-              <p className='text-yellow-800 text-sm font-medium mb-1'>
+              <p className='text-yellow-800 text-base font-semibold mb-1'>
                 Set up Milestones now to unlock Project Progress and open the
-                Discussion Board!
-              </p>
-              <p className='text-yellow-700 text-xs'>
-                Milestones are the core switch for your project. Without
-                milestones, project progress tracking and team discussions are
-                disabled.
+                Discussion Board! (Only Initiator can create milestones)
               </p>
             </div>
           </div>

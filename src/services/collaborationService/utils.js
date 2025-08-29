@@ -177,12 +177,13 @@ export const formatAPIDataForDetail = apiData => {
     heroImage: apiData.heroImage || apiData.posterPreview || null,
     description: apiData.description,
     meetingFrequency: apiData.meetingSchedule,
-    deadline: apiData.applicationDeadline,
+    deadline: apiData.applicationDeadline || apiData.deadline,
     contactInfo: apiData.contactInfo,
     status: apiData.status,
     vision: {
       tagline: apiData.projectVision,
       narrative: apiData.description,
+      lookingFor: apiData.roles?.map(role => role.title) || [],
       hiringTargets: apiData.roles?.map(role => role.title) || [],
       contact: apiData.contactInfo,
     },
@@ -204,6 +205,7 @@ export const formatAPIDataForList = apiDataList => {
     posterPreview: item.posterPreview || item.heroImage || null, // 添加 posterPreview 字段
     categories: item.projectType ? [item.projectType] : [],
     author: {
+      id: item.author?.id || null,
       name: item.author?.name || 'Unknown',
       avatar: item.author?.avatar || null,
     },
@@ -213,7 +215,8 @@ export const formatAPIDataForList = apiDataList => {
     isBookmarked: false, // 默認未收藏
     isInitiator: false, // 默認非發起人
     role: item.author?.role || 'Initiator',
-    dateRange: item.duration || '',
+    duration: item.duration || '',
+    meetingSchedule: item.meetingSchedule || '',
     status: item.status === 'active' ? 'Open for Collaboration' : 'Closed',
     skills: item.roles?.map(role => role.title) || [],
     teamSize: item.teamSize || '',
