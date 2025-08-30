@@ -62,8 +62,18 @@ const FavoriteCollabCard = ({ favorite, isOwnProfile = false, onRemove }) => {
   };
 
   const handleCardClick = () => {
-    // 跳转到协作详情页
-    navigate(`/collab/${favorite.itemId}`);
+    // 跳转到协作详情页，传递完整的协作数据
+    if (collaboration) {
+      navigate(`/tagme/collaboration/${favorite.itemId}`, {
+        state: { project: collaboration },
+      });
+    } else {
+      // 如果没有协作数据，仍然跳转但可能显示错误
+      console.warn(
+        '[FavoriteCollabCard] No collaboration data available for navigation'
+      );
+      navigate(`/tagme/collaboration/${favorite.itemId}`);
+    }
   };
 
   if (loading) {

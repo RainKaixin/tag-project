@@ -109,6 +109,7 @@ const CollaborationDetailPage = () => {
         onApplyNow={actions.handleApplyNowClick}
         onViewMilestones={actions.handleViewMilestones}
         enableProjectProgressBar={data.enableProjectProgressBar}
+        hasSubmittedApplication={data.hasSubmittedApplication}
       />
 
       {/* Main Content */}
@@ -121,17 +122,9 @@ const CollaborationDetailPage = () => {
             hasSubmittedApplication={data.hasSubmittedApplication}
             showWarning={data.showWarning}
             appliedPositions={data.appliedPositions}
-            selectedPosition={data.selectedPosition}
-            activePositionTab={data.activePositionTab}
-            comment={data.comment}
-            positionComments={data.positionComments}
             onApply={actions.handleApply}
             onCancelApplication={actions.handleCancelApplication}
             onFillPosition={actions.handleFillPosition}
-            onPositionTabClick={actions.handlePositionTabClick}
-            onCommentChange={e => data.setComment(e.target.value)}
-            onSubmitComment={actions.handleCommentSubmit}
-            navigateToArtist={actions.navigateToArtist}
             getStatusColor={actions.getStatusColor}
             getStatusText={actions.getStatusText}
             currentUser={data.currentUser}

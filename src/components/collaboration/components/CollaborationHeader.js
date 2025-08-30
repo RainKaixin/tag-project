@@ -15,6 +15,7 @@ const CollaborationHeader = ({
   onApplyNow,
   onViewMilestones,
   enableProjectProgressBar = true,
+  hasSubmittedApplication = false,
 }) => {
   // 获取当前用户信息
   const currentUser = getCurrentUser();
@@ -197,9 +198,32 @@ const CollaborationHeader = ({
                 <PrimaryButton
                   onClick={onApplyNow}
                   size='lg'
-                  className='w-full sm:w-auto'
+                  className={`w-full sm:w-auto transition-all duration-300 ${
+                    hasSubmittedApplication
+                      ? 'bg-green-600 hover:bg-green-700 border-green-600'
+                      : 'bg-purple-600 hover:bg-purple-700 border-purple-600'
+                  }`}
                 >
-                  Apply Now
+                  {hasSubmittedApplication ? (
+                    <div className='flex items-center gap-2'>
+                      <svg
+                        className='w-5 h-5'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M5 13l4 4L19 7'
+                        />
+                      </svg>
+                      Application Saved
+                    </div>
+                  ) : (
+                    'Apply Now'
+                  )}
                 </PrimaryButton>
               )}
             </div>

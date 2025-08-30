@@ -42,7 +42,7 @@ const ApplicationsWall = ({ applications = [] }) => {
         </span>
       </div>
 
-      <div className='grid grid-cols-6 gap-3'>
+      <div className='grid grid-cols-8 gap-3'>
         {applications.map((application, index) => (
           <div key={index} className='text-center'>
             <div className='relative group'>
@@ -70,12 +70,6 @@ const ApplicationsWall = ({ applications = [] }) => {
                 </div>
               )}
             </div>
-            <p
-              className='text-xs text-gray-600 mt-1 truncate'
-              title={application.name}
-            >
-              {application.name}
-            </p>
           </div>
         ))}
       </div>
@@ -97,17 +91,9 @@ const ProjectDescription = ({
   hasSubmittedApplication,
   showWarning,
   appliedPositions,
-  selectedPosition,
-  activePositionTab,
-  comment,
-  positionComments,
   onApply,
   onCancelApplication,
   onFillPosition,
-  onPositionTabClick,
-  onCommentChange,
-  onSubmitComment,
-  navigateToArtist,
   getStatusColor,
   getStatusText,
   currentUser,
@@ -282,34 +268,47 @@ const ProjectDescription = ({
                           : 'Fill Position'}
                       </button>
                     ) : (
-                      // 合作者/访客视角：显示 Apply 按钮
+                      // 合作者/访客视角：显示 Apply 按钮或 Position Filled
                       <>
-                        <button
-                          onClick={() => onApply(position.id)}
-                          disabled={
-                            !hasSubmittedApplication ||
-                            appliedPositions.has(position.id)
-                          }
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                            appliedPositions.has(position.id)
-                              ? 'bg-green-100 text-green-800 cursor-not-allowed'
-                              : !hasSubmittedApplication
-                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              : 'bg-purple-600 text-white hover:bg-purple-700'
-                          }`}
-                        >
-                          {appliedPositions.has(position.id)
-                            ? 'Applied'
-                            : 'Apply'}
-                        </button>
-
-                        {appliedPositions.has(position.id) && (
+                        {position.status === 'filled' ? (
+                          // 职位已满，显示灰色禁用按钮
                           <button
-                            onClick={() => onCancelApplication(position.id)}
-                            className='px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors duration-200'
+                            disabled
+                            className='px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed'
                           >
-                            Cancel
+                            Position Filled
                           </button>
+                        ) : (
+                          // 职位可用，显示 Apply 按钮
+                          <>
+                            <button
+                              onClick={() => onApply(position.id)}
+                              disabled={
+                                !hasSubmittedApplication ||
+                                appliedPositions.has(position.id)
+                              }
+                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                                appliedPositions.has(position.id)
+                                  ? 'bg-green-100 text-green-800 cursor-not-allowed'
+                                  : !hasSubmittedApplication
+                                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                  : 'bg-purple-600 text-white hover:bg-purple-700'
+                              }`}
+                            >
+                              {appliedPositions.has(position.id)
+                                ? 'Applied'
+                                : 'Apply'}
+                            </button>
+
+                            {appliedPositions.has(position.id) && (
+                              <button
+                                onClick={() => onCancelApplication(position.id)}
+                                className='px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors duration-200'
+                              >
+                                Cancel
+                              </button>
+                            )}
+                          </>
                         )}
                       </>
                     )}
@@ -337,56 +336,11 @@ const ProjectDescription = ({
                   </div>
                 </div>
 
-                {/* Tabs */}
-                <div className='flex border-b border-gray-200'>
-                  <button
-                    onClick={() =>
-                      onPositionTabClick(position.id, 'applications')
-                    }
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-200 ${
-                      selectedPosition === position.id &&
-                      activePositionTab === 'applications'
-                        ? 'border-purple-500 text-purple-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    Applications
-                  </button>
-                  <button
-                    onClick={() => onPositionTabClick(position.id, 'comments')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-200 ${
-                      selectedPosition === position.id &&
-                      activePositionTab === 'comments'
-                        ? 'border-purple-500 text-purple-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    Discussion Board
-                  </button>
-                </div>
-
-                {/* Tab Content */}
+                {/* Applications Section */}
                 <div className='p-6'>
-                  {/* Applications Tab */}
-                  {selectedPosition === position.id &&
-                    activePositionTab === 'applications' && (
-                      <ApplicationsWall
-                        applications={position.applications || []}
-                      />
-                    )}
-
-                  {/* Comments Tab */}
-                  {selectedPosition === position.id &&
-                    activePositionTab === 'comments' && (
-                      <CommentsSection
-                        comment={comment}
-                        onCommentChange={onCommentChange}
-                        onSubmitComment={onSubmitComment}
-                        positionComments={positionComments}
-                        positionId={position.id}
-                        navigateToArtist={navigateToArtist}
-                      />
-                    )}
+                  <ApplicationsWall
+                    applications={position.applications || []}
+                  />
                 </div>
               </div>
             ))}

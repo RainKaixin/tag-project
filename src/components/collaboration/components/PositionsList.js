@@ -42,7 +42,7 @@ const ApplicationsWall = ({ applications = [] }) => {
         </span>
       </div>
 
-      <div className='grid grid-cols-6 gap-3'>
+      <div className='grid grid-cols-8 gap-3'>
         {applications.map((application, index) => (
           <div key={index} className='text-center'>
             <div className='relative group'>
@@ -70,12 +70,6 @@ const ApplicationsWall = ({ applications = [] }) => {
                 </div>
               )}
             </div>
-            <p
-              className='text-xs text-gray-600 mt-1 truncate'
-              title={application.name}
-            >
-              {application.name}
-            </p>
           </div>
         ))}
       </div>
@@ -101,12 +95,15 @@ const PositionsList = ({
   comment,
   positionComments,
   onApply,
+  onFillPosition,
   onPositionTabClick,
   onCommentChange,
   onSubmitComment,
   navigateToArtist,
   getStatusColor,
   getStatusText,
+  currentUser,
+  project,
 }) => {
   return (
     <div className='mt-8'>
@@ -185,33 +182,59 @@ const PositionsList = ({
                   </div>
                 </div>
 
-                {/* Apply Button */}
-                {position.status === 'available' ? (
-                  <PrimaryButton
-                    onClick={() => onApply(position.id)}
-                    disabled={
-                      !hasSubmittedApplication ||
-                      appliedPositions.has(position.id)
+                {/* Apply/Fill Position Button */}
+                {(() => {
+                  // 检查当前用户是否为Initiator
+                  const isInitiator = currentUser?.id === project?.author?.id;
+
+                  if (position.status === 'available') {
+                    if (isInitiator) {
+                      // Initiator看到"Fill Position"按钮
+                      return (
+                        <PrimaryButton
+                          onClick={() => onFillPosition(position.id)}
+                          size='sm'
+                          className='bg-purple-600 hover:bg-purple-700'
+                        >
+                          Fill Position
+                        </PrimaryButton>
+                      );
+                    } else {
+                      // 普通用户看到"Apply"按钮
+                      return (
+                        <PrimaryButton
+                          onClick={() => onApply(position.id)}
+                          disabled={
+                            !hasSubmittedApplication ||
+                            appliedPositions.has(position.id)
+                          }
+                          size='sm'
+                          className={
+                            appliedPositions.has(position.id)
+                              ? 'bg-green-100 text-green-800 cursor-not-allowed'
+                              : !hasSubmittedApplication
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              : ''
+                          }
+                        >
+                          {appliedPositions.has(position.id)
+                            ? 'Applied'
+                            : 'Apply'}
+                        </PrimaryButton>
+                      );
                     }
-                    size='sm'
-                    className={
-                      appliedPositions.has(position.id)
-                        ? 'bg-green-100 text-green-800 cursor-not-allowed'
-                        : !hasSubmittedApplication
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : ''
-                    }
-                  >
-                    {appliedPositions.has(position.id) ? 'Applied' : 'Apply'}
-                  </PrimaryButton>
-                ) : (
-                  <button
-                    disabled
-                    className='px-6 py-2 bg-gray-100 text-gray-500 rounded-lg font-medium cursor-not-allowed'
-                  >
-                    Position Filled
-                  </button>
-                )}
+                  } else {
+                    // 职位已满，显示灰色按钮
+                    return (
+                      <button
+                        disabled
+                        className='px-6 py-2 bg-gray-100 text-gray-500 rounded-lg font-medium cursor-not-allowed'
+                      >
+                        Position Filled
+                      </button>
+                    );
+                  }
+                })()}
               </div>
 
               {/* Tab Navigation */}

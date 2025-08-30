@@ -1,9 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 
 import { useAppContext } from '../../../context/AppContext';
 import { favoritesService } from '../../../services';
+import { getApplicationsData } from '../../../services/applicationService';
+import {
+  getApplyFormData,
+  hasCompleteApplyFormData,
+} from '../../../services/applyFormService';
+import { getAllPositionStatus } from '../../../services/positionService';
 import { getCurrentUser } from '../../../utils/currentUser';
+import { getCollaborationDataById } from '../../favorites/utils/favoritesHelpers';
 import {
   processProjectData,
   getPositionsData,
@@ -12,16 +19,36 @@ import {
 export const useCollaborationData = () => {
   const { state } = useAppContext();
   const location = useLocation();
+  const { id } = useParams();
 
-  // 从Context、路由状态或URL参数获取项目数据
-  const projectData = state.selectedCollaboration || location.state?.project;
+  // 从Context、路由状态、URL参数或localStorage获取项目数据
+  let projectData = state.selectedCollaboration || location.state?.project;
+
+  // 如果前两种方式都没有数据，尝试从localStorage获取
+  if (!projectData && id) {
+    console.log(
+      '[useCollaborationData] No data from context/state, trying localStorage for id:',
+      id
+    );
+    projectData = getCollaborationDataById(id);
+    console.log('[useCollaborationData] Data from localStorage:', projectData);
+  }
+
+  // 调试信息
+  console.log('[useCollaborationData] Final projectData:', projectData);
+  console.log('[useCollaborationData] ID from URL:', id);
+  console.log(
+    '[useCollaborationData] Context data:',
+    state.selectedCollaboration
+  );
+  console.log(
+    '[useCollaborationData] Location state:',
+    location.state?.project
+  );
 
   // 状态管理
   const [appliedPositions, setAppliedPositions] = useState(new Set());
   const [isSaved, setIsSaved] = useState(false);
-  const [activePositionTab, setActivePositionTab] = useState('applications');
-  const [selectedPosition, setSelectedPosition] = useState(null);
-  const [comment, setComment] = useState('');
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [applyForm, setApplyForm] = useState({
     name: '',
@@ -35,61 +62,7 @@ export const useCollaborationData = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelPositionId, setCancelPositionId] = useState(null);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
-  const [positions, setPositions] = useState(getPositionsData());
-
-  // 评论数据
-  const [positionComments, setPositionComments] = useState({
-    1: [
-      {
-        id: 1,
-        user: 'Alex Chen',
-        avatar:
-          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-        role: 'UI/UX Designer',
-        comment:
-          'This position looks perfect for my skill set! I have 3 years of experience with Figma and user research. Would love to discuss the project details.',
-        timestamp: '2 hours ago',
-        likes: 2,
-      },
-      {
-        id: 2,
-        user: 'Maya Rodriguez',
-        avatar:
-          'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
-        role: 'Product Designer',
-        comment:
-          "Great opportunity! I'm particularly interested in the AR try-on feature. Have you considered accessibility considerations for the interface?",
-        timestamp: '4 hours ago',
-        likes: 1,
-      },
-    ],
-    2: [
-      {
-        id: 1,
-        user: 'David Lee',
-        avatar:
-          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
-        role: 'Graphic Designer',
-        comment:
-          'I specialize in branding and have worked on several fashion projects. Would love to contribute to the visual identity!',
-        timestamp: '1 day ago',
-        likes: 3,
-      },
-    ],
-    3: [
-      {
-        id: 1,
-        user: 'Sophie Wilson',
-        avatar:
-          'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
-        role: 'Motion Designer',
-        comment:
-          'Position filled! Looking forward to working with the team on the animations.',
-        timestamp: '3 days ago',
-        likes: 5,
-      },
-    ],
-  });
+  const [positions, setPositions] = useState([]);
 
   // 处理项目数据
   const project = processProjectData(projectData, location, state);
@@ -110,6 +83,67 @@ export const useCollaborationData = () => {
       window.removeEventListener('user:changed', handleUserChange);
     };
   }, []);
+
+  // 加载职位数据并应用持久化状态
+  useEffect(() => {
+    if (!project?.id) return;
+
+    const loadPositionsWithStatus = () => {
+      try {
+        // 获取默认职位数据
+        const defaultPositions = getPositionsData();
+
+        // 获取持久化的职位状态
+        const savedStatus = getAllPositionStatus(project.id);
+
+        // 加载申请记录
+        const savedApplications = getApplicationsData(project.id);
+
+        // 应用保存的状态和申请记录到职位数据
+        const positionsWithStatus = defaultPositions.map(position => ({
+          ...position,
+          status: savedStatus[position.id] || position.status,
+          // 合并保存的申请记录
+          applications:
+            savedApplications?.[position.id] || position.applications || [],
+        }));
+
+        setPositions(positionsWithStatus);
+        console.log(
+          '[useCollaborationData] Loaded positions with saved status and applications:',
+          positionsWithStatus
+        );
+      } catch (error) {
+        console.error('Failed to load positions with status:', error);
+        setPositions(getPositionsData());
+      }
+    };
+
+    loadPositionsWithStatus();
+  }, [project?.id]);
+
+  // 加载Apply Now表单数据
+  useEffect(() => {
+    if (!project?.id) return;
+
+    const loadApplyFormData = () => {
+      try {
+        const savedFormData = getApplyFormData(project.id);
+        if (savedFormData) {
+          setApplyForm(savedFormData);
+          setHasSubmittedApplication(hasCompleteApplyFormData(project.id));
+          console.log(
+            '[useCollaborationData] Loaded saved apply form data:',
+            savedFormData
+          );
+        }
+      } catch (error) {
+        console.error('Failed to load apply form data:', error);
+      }
+    };
+
+    loadApplyFormData();
+  }, [project?.id]);
 
   // 检查收藏状态
   useEffect(() => {
@@ -139,9 +173,6 @@ export const useCollaborationData = () => {
     positions,
     appliedPositions,
     isSaved,
-    activePositionTab,
-    selectedPosition,
-    comment,
     showApplyModal,
     applyForm,
     hasSubmittedApplication,
@@ -150,7 +181,6 @@ export const useCollaborationData = () => {
     showCancelModal,
     cancelPositionId,
     currentUser,
-    positionComments,
 
     // 功能开关
     enableProjectProgressBar,
@@ -160,9 +190,6 @@ export const useCollaborationData = () => {
     // 状态更新函数
     setAppliedPositions,
     setIsSaved,
-    setActivePositionTab,
-    setSelectedPosition,
-    setComment,
     setShowApplyModal,
     setApplyForm,
     setHasSubmittedApplication,
@@ -171,7 +198,6 @@ export const useCollaborationData = () => {
     setShowCancelModal,
     setCancelPositionId,
     setCurrentUser,
-    setPositionComments,
     setPositions,
   };
 };
