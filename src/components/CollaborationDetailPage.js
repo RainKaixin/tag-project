@@ -81,6 +81,11 @@ const CollaborationDetailPage = () => {
     }
   }, [location.pathname]); // 只依賴 pathname，不依賴 location.state 和 state.navigationHistory
 
+  // 调试：检查项目数据
+
+  // 添加调试组件显示
+  const showDebugInfo = process.env.NODE_ENV === 'development';
+
   // 如果没有项目数据，显示加载状态
   if (!data.project) {
     return (

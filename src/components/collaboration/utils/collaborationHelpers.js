@@ -28,9 +28,6 @@ export const getStatusText = status => {
 
 // 项目数据处理
 export const processProjectData = (projectData, location, state) => {
-  console.log('[processProjectData] Input projectData:', projectData);
-  console.log('[processProjectData] projectData.author:', projectData?.author);
-
   const project = projectData
     ? {
         id: projectData.id,
@@ -53,14 +50,12 @@ export const processProjectData = (projectData, location, state) => {
         postedTime: '2 hours ago',
         tags: projectData.categories || ['Project'],
         heroImage: projectData.posterPreview || projectData.image,
-        description:
-          projectData.subtitle +
-          ". We're looking for passionate designers and developers to join our team and create something amazing together.",
+        description: projectData.subtitle || '',
         meetingFrequency: projectData.meetingSchedule || 'Not specified',
         deadline:
-          projectData.applicationDeadline ||
-          projectData.deadline ||
-          'Not specified',
+          projectData.applicationDeadline || projectData.deadline || null, // 直接使用用户输入的文本
+        applicationDeadline:
+          projectData.applicationDeadline || projectData.deadline || null, // 确保applicationDeadline字段也被设置
         contactInfo: {
           discord: projectData.contactDiscord || null,
           email: projectData.contactEmail || null,
@@ -69,10 +64,14 @@ export const processProjectData = (projectData, location, state) => {
         vision: {
           tagline:
             projectData.projectVision ||
-            'Building the future of creative collaboration',
+            projectData.vision?.tagline ||
+            projectData.vision?.narrative ||
+            '',
           narrative:
-            projectData.projectDescription ||
-            "We're creating a platform that connects talented designers and developers to build amazing digital experiences together. Our vision is to make collaboration seamless, inspiring, and productive.\n\nThis project will showcase the power of interdisciplinary teamwork and innovative design thinking. We're looking for passionate individuals who share our vision and want to make a real impact.",
+            projectData.whyThisMatters ||
+            projectData.vision?.narrative ||
+            projectData.vision?.whyThisMatters ||
+            '',
           lookingFor: projectData.projectType
             ? projectData.projectType
                 .split(',')
@@ -110,13 +109,12 @@ export const processProjectData = (projectData, location, state) => {
         tags: ['Mobile App', 'E-commerce', 'React Native'],
         heroImage:
           'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop',
-        description:
-          "We're building a modern e-commerce mobile app that will revolutionize the shopping experience. Our vision is to create a seamless, intuitive, and engaging platform that connects customers with amazing products.\n\nWe're looking for passionate designers and developers to join our team and create something amazing together.",
+        description: '',
         meetingFrequency: projectData.meetingSchedule || 'Not specified',
         deadline:
-          projectData.applicationDeadline ||
-          projectData.deadline ||
-          'Not specified',
+          projectData.applicationDeadline || projectData.deadline || null, // 直接使用用户输入的文本
+        applicationDeadline:
+          projectData.applicationDeadline || projectData.deadline || null, // 确保applicationDeadline字段也被设置
         contactInfo: {
           discord: projectData.contactDiscord || null,
           email: projectData.contactEmail || null,
@@ -125,10 +123,14 @@ export const processProjectData = (projectData, location, state) => {
         vision: {
           tagline:
             projectData.projectVision ||
-            'Building the future of creative collaboration',
+            projectData.vision?.tagline ||
+            projectData.vision?.narrative ||
+            '',
           narrative:
-            projectData.projectDescription ||
-            "We're creating a platform that connects talented designers and developers to build amazing digital experiences together. Our vision is to make collaboration seamless, inspiring, and productive.\n\nThis project will showcase the power of interdisciplinary teamwork and innovative design thinking. We're looking for passionate individuals who share our vision and want to make a real impact.",
+            projectData.whyThisMatters ||
+            projectData.vision?.narrative ||
+            projectData.vision?.whyThisMatters ||
+            '',
           lookingFor: projectData.projectType
             ? projectData.projectType
                 .split(',')
@@ -142,9 +144,6 @@ export const processProjectData = (projectData, location, state) => {
         },
         milestones: projectData.milestones || [],
       };
-
-  console.log('[processProjectData] Output project:', project);
-  console.log('[processProjectData] Output project.author:', project?.author);
 
   return project || null;
 };

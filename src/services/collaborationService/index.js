@@ -27,7 +27,9 @@ import {
 const getCollaborationsFromStorage = () => {
   try {
     const stored = localStorage.getItem(MOCK_STORAGE_KEYS.COLLABORATIONS);
-    return stored ? JSON.parse(stored) : allMockCollaborations;
+    const parsed = stored ? JSON.parse(stored) : allMockCollaborations;
+
+    return parsed;
   } catch (error) {
     console.error('Error reading collaborations from storage:', error);
     return allMockCollaborations;

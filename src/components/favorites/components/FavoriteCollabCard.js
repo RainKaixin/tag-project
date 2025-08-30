@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 import {
@@ -15,40 +15,84 @@ import {
  */
 const FavoriteCollabCard = ({ favorite, isOwnProfile = false, onRemove }) => {
   const navigate = useNavigate();
+  const [imageUrl, setImageUrl] = useState(null);
+  const [collaboration, setCollaboration] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // 根据itemId获取正确的协作图片
-  const getCollabImage = itemId => {
-    console.log(
-      '[FavoriteCollabCard] Getting image for itemId:',
-      itemId,
-      'type:',
-      typeof itemId
-    );
+  // 加载协作数据和图片
+  useEffect(() => {
+    const loadCollaborationData = async () => {
+      try {
+        console.log(
+          '[FavoriteCollabCard] Loading data for itemId:',
+          favorite.itemId
+        );
 
-    const collaboration = getCollaborationDataById(itemId);
-    const imageUrl = getCollaborationImageUrl(itemId);
+        // 获取协作数据
+        const collabData = getCollaborationDataById(favorite.itemId);
+        setCollaboration(collabData);
 
-    console.log('[FavoriteCollabCard] Selected collaboration:', collaboration);
-    console.log('[FavoriteCollabCard] Selected image URL:', imageUrl);
+        if (collabData) {
+          // 获取图片URL
+          const imgUrl = await getCollaborationImageUrl(favorite.itemId);
+          setImageUrl(imgUrl);
+          console.log('[FavoriteCollabCard] Loaded image URL:', imgUrl);
+        } else {
+          console.warn(
+            '[FavoriteCollabCard] No collaboration data found for itemId:',
+            favorite.itemId
+          );
+        }
+      } catch (error) {
+        console.error(
+          '[FavoriteCollabCard] Error loading collaboration data:',
+          error
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return imageUrl;
-  };
+    loadCollaborationData();
+  }, [favorite.itemId]);
 
   const handleRemoveClick = e => {
     e.stopPropagation();
     onRemove();
   };
 
+  const handleCardClick = () => {
+    // 跳转到协作详情页
+    navigate(`/collab/${favorite.itemId}`);
+  };
+
+  if (loading) {
+    return (
+      <div className='relative aspect-[4/3] bg-gray-200 rounded-lg shadow-sm overflow-hidden'>
+        <div className='w-full h-full flex items-center justify-center'>
+          <div className='text-gray-500'>Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className='relative aspect-[4/3] bg-tag-purple rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden'>
-      {/* 协作图片链接 */}
-      <Link to={`/collab/${favorite.itemId}`} className='block w-full h-full'>
+    <div
+      className='relative aspect-[4/3] bg-tag-purple rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden cursor-pointer'
+      onClick={handleCardClick}
+    >
+      {/* 协作图片 */}
+      {imageUrl ? (
         <img
-          src={getCollabImage(favorite.itemId)}
-          alt='Collaboration'
+          src={imageUrl}
+          alt={collaboration?.title || 'Collaboration'}
           className='w-full h-full object-cover'
         />
-      </Link>
+      ) : (
+        <div className='w-full h-full bg-gray-200 flex items-center justify-center'>
+          <div className='text-gray-500 text-sm'>No Image</div>
+        </div>
+      )}
 
       {/* 紫色识别条 */}
       <div className='absolute bottom-0 left-0 right-0 h-2 bg-tag-purple'></div>

@@ -16,13 +16,6 @@ export const useCollaborationData = () => {
   // 从Context、路由状态或URL参数获取项目数据
   const projectData = state.selectedCollaboration || location.state?.project;
 
-  // 调试信息
-  console.log('[useCollaborationData] projectData:', projectData);
-  console.log(
-    '[useCollaborationData] projectData.author:',
-    projectData?.author
-  );
-
   // 状态管理
   const [appliedPositions, setAppliedPositions] = useState(new Set());
   const [isSaved, setIsSaved] = useState(false);

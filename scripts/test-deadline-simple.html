@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deadline Display Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .test-case {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+      }
+      .failure {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+      }
+      .result {
+        margin-top: 10px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Deadline Display Logic Test</h1>
+
+    <div id="results"></div>
+
+    <script>
+      // 模拟processProjectData函数
+      const processProjectData = projectData => {
+        return {
+          id: projectData.id,
+          title: projectData.title,
+          deadline:
+            projectData.applicationDeadline || projectData.deadline || null,
+          applicationDeadline:
+            projectData.applicationDeadline || projectData.deadline || null,
+          author: projectData.author,
+        };
+      };
+
+      // 模拟CollaborationHeader组件的显示逻辑
+      const testDeadlineDisplay = project => {
+        const deadlineValue =
+          project?.deadline || project?.applicationDeadline || '';
+        const shouldShowDeadline =
+          !!deadlineValue && deadlineValue.trim() !== '';
+        const deadlineDisplayText = deadlineValue || '';
+
+        return {
+          shouldShowDeadline,
+          deadlineDisplayText,
+          debug: {
+            rawDeadline: project?.deadline,
+            applicationDeadline: project?.applicationDeadline,
+            deadlineValue,
+            hasDeadline: !!deadlineValue,
+            notEmpty: deadlineValue?.trim() !== '',
+            deadlineType: typeof deadlineValue,
+            deadlineLength: deadlineValue?.length,
+          },
+        };
+      };
+
+      // 测试用例
+      const testCases = [
+        {
+          name: '有applicationDeadline数据',
+          input: {
+            id: 'test-1',
+            title: 'Test Collaboration',
+            applicationDeadline: 'Dec 31, 2024',
+            deadline: null,
+            author: { id: 'alice', name: 'Alice Chen' },
+          },
+          expected: { shouldShow: true, text: 'Dec 31, 2024' },
+        },
+        {
+          name: '只有deadline数据',
+          input: {
+            id: 'test-2',
+            title: 'Test Collaboration',
+            applicationDeadline: null,
+            deadline: 'Jan 15, 2025',
+            author: { id: 'alice', name: 'Alice Chen' },
+          },
+          expected: { shouldShow: true, text: 'Jan 15, 2025' },
+        },
+        {
+          name: '没有deadline数据',
+          input: {
+            id: 'test-3',
+            title: 'Test Collaboration',
+            applicationDeadline: null,
+            deadline: null,
+            author: { id: 'alice', name: 'Alice Chen' },
+          },
+          expected: { shouldShow: false, text: '' },
+        },
+        {
+          name: '空字符串deadline',
+          input: {
+            id: 'test-4',
+            title: 'Test Collaboration',
+            applicationDeadline: '',
+            deadline: '',
+            author: { id: 'alice', name: 'Alice Chen' },
+          },
+          expected: { shouldShow: false, text: '' },
+        },
+      ];
+
+      // 运行测试
+      const resultsDiv = document.getElementById('results');
+
+      testCases.forEach((testCase, index) => {
+        const processedData = processProjectData(testCase.input);
+        const result = testDeadlineDisplay(processedData);
+
+        const isSuccess =
+          result.shouldShowDeadline === testCase.expected.shouldShow &&
+          result.deadlineDisplayText === testCase.expected.text;
+
+        const testDiv = document.createElement('div');
+        testDiv.className = `test-case ${isSuccess ? 'success' : 'failure'}`;
+
+        testDiv.innerHTML = `
+                <h3>测试 ${index + 1}: ${testCase.name}</h3>
+                <p><strong>输入:</strong> ${JSON.stringify(
+                  testCase.input,
+                  null,
+                  2
+                )}</p>
+                <p><strong>期望:</strong> 显示=${
+                  testCase.expected.shouldShow
+                }, 文本="${testCase.expected.text}"</p>
+                <p><strong>实际:</strong> 显示=${
+                  result.shouldShowDeadline
+                }, 文本="${result.deadlineDisplayText}"</p>
+                <div class="result">${isSuccess ? '✅ 通过' : '❌ 失败'}</div>
+                <details>
+                    <summary>调试信息</summary>
+                    <pre>${JSON.stringify(result.debug, null, 2)}</pre>
+                </details>
+            `;
+
+        resultsDiv.appendChild(testDiv);
+      });
+
+      console.log('=== Deadline Display Test Completed ===');
+    </script>
+  </body>
+</html>

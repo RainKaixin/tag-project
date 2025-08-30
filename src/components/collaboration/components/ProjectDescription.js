@@ -117,12 +117,16 @@ const ProjectDescription = ({
   return (
     <div className='lg:col-span-2'>
       <InfoCard className='mb-8'>
-        <h2 className='text-xl font-bold text-gray-900 mb-4'>
-          Project Description
-        </h2>
-        <p className='text-gray-700 leading-relaxed mb-6'>
-          {project.description}
-        </p>
+        {project.description && (
+          <>
+            <h2 className='text-xl font-bold text-gray-900 mb-4'>
+              Project Description
+            </h2>
+            <p className='text-gray-700 leading-relaxed mb-6'>
+              {project.description}
+            </p>
+          </>
+        )}
 
         {/* Project Basic Information */}
         <div className='flex flex-wrap gap-6 mt-6 pt-6 border-t border-gray-200'>

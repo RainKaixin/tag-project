@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Favorites Debug Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      button {
+        margin: 5px;
+        padding: 8px 12px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .log {
+        background: #f8f9fa;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 3px;
+        font-family: monospace;
+        white-space: pre-wrap;
+      }
+      .error {
+        color: red;
+      }
+      .success {
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Favorites Service Debug Test</h1>
+
+    <div class="test-section">
+      <h3>1. 设置当前用户</h3>
+      <button onclick="setCurrentUser()">设置为 Alice (alice_123)</button>
+      <button onclick="setCurrentUser('bryan_456')">
+        设置为 Bryan (bryan_456)
+      </button>
+      <button onclick="clearCurrentUser()">清除用户</button>
+      <div id="userStatus" class="log"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>2. 测试收藏操作</h3>
+      <button onclick="testAddFavorite()">
+        添加收藏 (collaboration, test_collab_1)
+      </button>
+      <button onclick="testRemoveFavorite()">
+        移除收藏 (collaboration, test_collab_1)
+      </button>
+      <button onclick="testToggleFavorite()">
+        切换收藏 (collaboration, test_collab_2)
+      </button>
+      <div id="favoriteResult" class="log"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>3. 检查收藏状态</h3>
+      <button onclick="testCheckStatus()">
+        检查状态 (collaboration, test_collab_1)
+      </button>
+      <button onclick="testCheckStatus2()">
+        检查状态 (collaboration, test_collab_2)
+      </button>
+      <div id="statusResult" class="log"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>4. 获取所有收藏</h3>
+      <button onclick="testGetFavorites()">获取所有收藏</button>
+      <div id="favoritesList" class="log"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>5. 查看 localStorage</h3>
+      <button onclick="viewLocalStorage()">查看 localStorage 内容</button>
+      <button onclick="clearLocalStorage()">清除 localStorage</button>
+      <div id="storageContent" class="log"></div>
+    </div>
+
+    <script>
+      // 模拟 favoritesService
+      const favoritesService = {
+        async addFavorite(itemType, itemId) {
+          const currentUser = getCurrentUser();
+          if (!currentUser?.id) {
+            throw new Error('User not authenticated');
+          }
+
+          const storage = await this._getStorage();
+          const userFavorites = storage[currentUser.id] || [];
+
+          // 检查是否已收藏
+          const existingIndex = userFavorites.findIndex(
+            fav => fav.itemType === itemType && fav.itemId === itemId
+          );
+
+          if (existingIndex !== -1) {
+            return {
+              success: true,
+              data: userFavorites[existingIndex],
+            };
+          }
+
+          // 创建新的收藏记录
+          const newFavorite = {
+            id: this._generateId(),
+            userId: currentUser.id,
+            itemType,
+            itemId,
+            createdAt: new Date().toISOString(),
+          };
+
+          // 保存到存储
+          userFavorites.push(newFavorite);
+          storage[currentUser.id] = userFavorites;
+          await this._setStorage(storage);
+
+          return {
+            success: true,
+            data: newFavorite,
+          };
+        },
+
+        async removeFavorite(itemType, itemId) {
+          const currentUser = getCurrentUser();
+          if (!currentUser?.id) {
+            throw new Error('User not authenticated');
+          }
+
+          const storage = await this._getStorage();
+          const userFavorites = storage[currentUser.id] || [];
+          const existingIndex = userFavorites.findIndex(
+            fav => fav.itemType === itemType && fav.itemId === itemId
+          );
+
+          if (existingIndex === -1) {
+            return {
+              success: true,
+              data: null,
+            };
+          }
+
+          // 移除收藏
+          const removedFavorite = userFavorites.splice(existingIndex, 1)[0];
+          storage[currentUser.id] = userFavorites;
+          await this._setStorage(storage);
+
+          return {
+            success: true,
+            data: removedFavorite,
+          };
+        },
+
+        async toggleFavorite(itemType, itemId, shouldFavorite) {
+          if (shouldFavorite) {
+            return this.addFavorite(itemType, itemId);
+          } else {
+            return this.removeFavorite(itemType, itemId);
+          }
+        },
+
+        async checkFavoriteStatus(itemType, itemId) {
+          const currentUser = getCurrentUser();
+          if (!currentUser?.id) {
+            return {
+              success: true,
+              data: { isFavorited: false, favoriteId: null },
+            };
+          }
+
+          const storage = await this._getStorage();
+          const userFavorites = storage[currentUser.id] || [];
+
+          const favorite = userFavorites.find(
+            fav => fav.itemType === itemType && fav.itemId === itemId
+          );
+
+          return {
+            success: true,
+            data: {
+              isFavorited: !!favorite,
+              favoriteId: favorite?.id || null,
+            },
+          };
+        },
+
+        async getFavorites(params = {}) {
+          const currentUser = getCurrentUser();
+          const userId = params.userId || currentUser?.id;
+
+          if (!userId) {
+            throw new Error('User not authenticated');
+          }
+
+          const storage = await this._getStorage();
+          const userFavorites = storage[userId] || [];
+
+          return {
+            success: true,
+            data: {
+              items: userFavorites,
+              pagination: {
+                cursor: null,
+                hasMore: false,
+                total: userFavorites.length,
+              },
+            },
+          };
+        },
+
+        async _getStorage() {
+          try {
+            const data = localStorage.getItem('tag_favorites');
+            return data ? JSON.parse(data) : {};
+          } catch (error) {
+            console.error('Failed to get favorites from storage:', error);
+            return {};
+          }
+        },
+
+        async _setStorage(data) {
+          try {
+            localStorage.setItem('tag_favorites', JSON.stringify(data));
+          } catch (error) {
+            console.error('Failed to save favorites to storage:', error);
+          }
+        },
+
+        _generateId() {
+          return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        },
+      };
+
+      // 模拟 getCurrentUser
+      function getCurrentUser() {
+        const userId = localStorage.getItem('tag.currentUserId');
+        return userId ? { id: userId } : null;
+      }
+
+      // 设置当前用户
+      function setCurrentUser(userId = 'alice_123') {
+        localStorage.setItem('tag.currentUserId', userId);
+        updateUserStatus();
+      }
+
+      // 清除当前用户
+      function clearCurrentUser() {
+        localStorage.removeItem('tag.currentUserId');
+        updateUserStatus();
+      }
+
+      // 更新用户状态显示
+      function updateUserStatus() {
+        const user = getCurrentUser();
+        document.getElementById('userStatus').textContent = user
+          ? `当前用户: ${user.id}`
+          : '未登录';
+      }
+
+      // 测试添加收藏
+      async function testAddFavorite() {
+        try {
+          const result = await favoritesService.addFavorite(
+            'collaboration',
+            'test_collab_1'
+          );
+          document.getElementById(
+            'favoriteResult'
+          ).innerHTML = `<span class="success">添加收藏成功:</span>\n${JSON.stringify(
+            result,
+            null,
+            2
+          )}`;
+        } catch (error) {
+          document.getElementById(
+            'favoriteResult'
+          ).innerHTML = `<span class="error">添加收藏失败:</span>\n${error.message}`;
+        }
+      }
+
+      // 测试移除收藏
+      async function testRemoveFavorite() {
+        try {
+          const result = await favoritesService.removeFavorite(
+            'collaboration',
+            'test_collab_1'
+          );
+          document.getElementById(
+            'favoriteResult'
+          ).innerHTML = `<span class="success">移除收藏成功:</span>\n${JSON.stringify(
+            result,
+            null,
+            2
+          )}`;
+        } catch (error) {
+          document.getElementById(
+            'favoriteResult'
+          ).innerHTML = `<span class="error">移除收藏失败:</span>\n${error.message}`;
+        }
+      }
+
+      // 测试切换收藏
+      async function testToggleFavorite() {
+        try {
+          // 先检查当前状态
+          const statusResult = await favoritesService.checkFavoriteStatus(
+            'collaboration',
+            'test_collab_2'
+          );
+          const currentState = statusResult.data.isFavorited;
+
+          // 切换状态
+          const result = await favoritesService.toggleFavorite(
+            'collaboration',
+            'test_collab_2',
+            !currentState
+          );
+          document.getElementById(
+            'favoriteResult'
+          ).innerHTML = `<span class="success">切换收藏成功 (${
+            currentState ? '取消' : '添加'
+          }):</span>\n${JSON.stringify(result, null, 2)}`;
+        } catch (error) {
+          document.getElementById(
+            'favoriteResult'
+          ).innerHTML = `<span class="error">切换收藏失败:</span>\n${error.message}`;
+        }
+      }
+
+      // 测试检查状态
+      async function testCheckStatus() {
+        try {
+          const result = await favoritesService.checkFavoriteStatus(
+            'collaboration',
+            'test_collab_1'
+          );
+          document.getElementById(
+            'statusResult'
+          ).innerHTML = `<span class="success">检查状态成功:</span>\n${JSON.stringify(
+            result,
+            null,
+            2
+          )}`;
+        } catch (error) {
+          document.getElementById(
+            'statusResult'
+          ).innerHTML = `<span class="error">检查状态失败:</span>\n${error.message}`;
+        }
+      }
+
+      // 测试检查状态2
+      async function testCheckStatus2() {
+        try {
+          const result = await favoritesService.checkFavoriteStatus(
+            'collaboration',
+            'test_collab_2'
+          );
+          document.getElementById(
+            'statusResult'
+          ).innerHTML = `<span class="success">检查状态成功:</span>\n${JSON.stringify(
+            result,
+            null,
+            2
+          )}`;
+        } catch (error) {
+          document.getElementById(
+            'statusResult'
+          ).innerHTML = `<span class="error">检查状态失败:</span>\n${error.message}`;
+        }
+      }
+
+      // 测试获取所有收藏
+      async function testGetFavorites() {
+        try {
+          const result = await favoritesService.getFavorites();
+          document.getElementById(
+            'favoritesList'
+          ).innerHTML = `<span class="success">获取收藏成功:</span>\n${JSON.stringify(
+            result,
+            null,
+            2
+          )}`;
+        } catch (error) {
+          document.getElementById(
+            'favoritesList'
+          ).innerHTML = `<span class="error">获取收藏失败:</span>\n${error.message}`;
+        }
+      }
+
+      // 查看 localStorage
+      function viewLocalStorage() {
+        const favorites = localStorage.getItem('tag_favorites');
+        const currentUser = localStorage.getItem('tag.currentUserId');
+        document.getElementById('storageContent').innerHTML = `当前用户: ${
+          currentUser || '未设置'
+        }\n\n收藏数据:\n${favorites || '无数据'}`;
+      }
+
+      // 清除 localStorage
+      function clearLocalStorage() {
+        localStorage.removeItem('tag_favorites');
+        localStorage.removeItem('tag.currentUserId');
+        document.getElementById('storageContent').textContent =
+          '已清除所有数据';
+        updateUserStatus();
+      }
+
+      // 初始化
+      updateUserStatus();
+    </script>
+  </body>
+</html>

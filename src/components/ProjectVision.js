@@ -3,6 +3,12 @@ import React from 'react';
 import { useNavigation } from '../utils/navigation';
 
 const ProjectVision = ({ vision, owner, currentUser, onFinalReviewClick }) => {
+  // 安全地提取数据，提供多个备选方案
+  const safeVision = vision || {};
+  const projectVision = safeVision.tagline || safeVision.narrative || '';
+  const whyThisMatters =
+    safeVision.narrative || safeVision.whyThisMatters || '';
+
   // 判断当前用户是否为项目发起人
   const isInitiator = currentUser?.id === owner?.id;
 
@@ -95,23 +101,23 @@ const ProjectVision = ({ vision, owner, currentUser, onFinalReviewClick }) => {
       </div>
 
       {/* Tagline */}
-      {vision.tagline && (
+      {projectVision && (
         <div>
           <h4 className='text-lg font-semibold text-gray-900 mb-2'>
             Project Vision
           </h4>
-          <p className='text-gray-700 italic'>"{vision.tagline}"</p>
+          <p className='text-gray-700 italic'>"{projectVision}"</p>
         </div>
       )}
 
       {/* Narrative */}
-      {vision.narrative && (
+      {whyThisMatters && (
         <div>
           <h4 className='text-lg font-semibold text-gray-900 mb-2'>
             Why This Matters
           </h4>
           <div className='text-gray-700 leading-relaxed whitespace-pre-wrap'>
-            {vision.narrative}
+            {whyThisMatters}
           </div>
         </div>
       )}

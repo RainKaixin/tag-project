@@ -18,6 +18,7 @@ const useCollaborationActions = ({ state, setters }) => {
   const handleFormChange = useCallback(
     e => {
       const { name, value } = e.target;
+
       setFormData(prev => ({
         ...prev,
         [name]: value,
@@ -104,6 +105,22 @@ const useCollaborationActions = ({ state, setters }) => {
         }
       }
 
+      // 调试：检查验证结果
+      console.log('[CollaborationForm] 字段验证结果:', {
+        requiredFields,
+        missingFields,
+        projectVisionValue: state.formData.projectVision,
+        whyThisMattersValue: state.formData.whyThisMatters,
+        projectVisionValid: !!(
+          state.formData.projectVision &&
+          state.formData.projectVision.trim() !== ''
+        ),
+        whyThisMattersValid: !!(
+          state.formData.whyThisMatters &&
+          state.formData.whyThisMatters.trim() !== ''
+        ),
+      });
+
       // 验证角色信息
       if (!state.formData.roles || state.formData.roles.length === 0) {
         missingFields.push('At least one Team Role');
@@ -140,6 +157,9 @@ const useCollaborationActions = ({ state, setters }) => {
         // 准备提交数据 - 移除 blob URL，只保留文件对象
         const submissionData = {
           ...state.formData,
+          // 强制设置 applicationDeadline 用于测试
+          applicationDeadline:
+            state.formData.applicationDeadline || 'TEST DEADLINE',
           // 移除 blob URL，避免存储到数据库
           posterPreview: null, // 不存储 blob URL
           // 添加当前用户信息
@@ -157,6 +177,10 @@ const useCollaborationActions = ({ state, setters }) => {
         };
 
         console.log('Submitting collaboration data:', submissionData);
+        console.log('Application Deadline check:', {
+          applicationDeadline: submissionData.applicationDeadline,
+          formDataKeys: Object.keys(submissionData),
+        });
 
         // 调用真实的API服务
         const result = await createCollaboration(submissionData);

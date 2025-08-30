@@ -78,7 +78,7 @@ export const formatFormDataForAPI = async formData => {
   // 生成臨時 ID 用於存儲圖片
   const tempId = `temp_${Date.now()}`;
 
-  return {
+  const result = {
     // 基礎信息
     title: formData.title?.trim() || '',
     description: formData.description?.trim() || '',
@@ -89,7 +89,7 @@ export const formatFormDataForAPI = async formData => {
     teamSize: formData.teamSize || '',
     duration: formData.duration || '',
     meetingSchedule: formData.meetingSchedule || '',
-    applicationDeadline: formData.applicationDeadline || '',
+    applicationDeadline: formData.applicationDeadline || '', // 直接保存用户输入的文本
     projectType: formData.projectType?.trim() || '',
 
     // 圖片信息 - 修復：將 blob URL 轉換為 Data URL 並存儲到 IndexedDB
@@ -146,6 +146,10 @@ export const formatFormDataForAPI = async formData => {
     // 申請相關
     applications: [],
   };
+
+  // 调试信息：检查输出数据
+
+  return result;
 };
 
 /**
@@ -154,7 +158,9 @@ export const formatFormDataForAPI = async formData => {
  * @returns {Object} 詳情頁格式數據
  */
 export const formatAPIDataForDetail = apiData => {
-  return {
+  // 调试信息：检查输入数据
+
+  const result = {
     id: apiData.id,
     title: apiData.title,
     author: {
@@ -177,18 +183,25 @@ export const formatAPIDataForDetail = apiData => {
     heroImage: apiData.heroImage || apiData.posterPreview || null,
     description: apiData.description,
     meetingFrequency: apiData.meetingSchedule,
-    deadline: apiData.applicationDeadline || apiData.deadline,
+    deadline: apiData.applicationDeadline || apiData.deadline, // 直接使用 applicationDeadline
     contactInfo: apiData.contactInfo,
     status: apiData.status,
+    // 保留原始字段，确保 processProjectData 能读取到
+    projectVision: apiData.projectVision,
+    whyThisMatters: apiData.whyThisMatters,
     vision: {
       tagline: apiData.projectVision,
-      narrative: apiData.description,
+      narrative: apiData.whyThisMatters,
       lookingFor: apiData.roles?.map(role => role.title) || [],
       hiringTargets: apiData.roles?.map(role => role.title) || [],
       contact: apiData.contactInfo,
     },
     milestones: [], // 暫時為空，後續可擴展
   };
+
+  // 调试信息：检查输出数据
+
+  return result;
 };
 
 /**
@@ -201,6 +214,9 @@ export const formatAPIDataForList = apiDataList => {
     id: item.id,
     title: item.title,
     subtitle: item.description,
+    description: item.description, // 添加 description 字段
+    projectVision: item.projectVision, // 添加 projectVision 字段
+    whyThisMatters: item.whyThisMatters, // 添加 whyThisMatters 字段
     image: item.heroImage || null,
     posterPreview: item.posterPreview || item.heroImage || null, // 添加 posterPreview 字段
     categories: item.projectType ? [item.projectType] : [],
@@ -217,6 +233,7 @@ export const formatAPIDataForList = apiDataList => {
     role: item.author?.role || 'Initiator',
     duration: item.duration || '',
     meetingSchedule: item.meetingSchedule || '',
+    applicationDeadline: item.applicationDeadline || '', // 添加 applicationDeadline 字段
     status: item.status === 'active' ? 'Open for Collaboration' : 'Closed',
     skills: item.roles?.map(role => role.title) || [],
     teamSize: item.teamSize || '',

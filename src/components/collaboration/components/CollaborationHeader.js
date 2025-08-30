@@ -19,6 +19,30 @@ const CollaborationHeader = ({
   // 获取当前用户信息
   const currentUser = getCurrentUser();
 
+  // 调试信息：检查deadline数据
+  console.log('[CollaborationHeader] project:', project);
+  console.log(
+    '[CollaborationHeader] project.deadline (raw):',
+    project?.deadline
+  );
+
+  // 改进显示逻辑：检查多个可能的deadline字段
+  const deadlineValue = project?.deadline || project?.applicationDeadline || '';
+  const shouldShowDeadline = !!deadlineValue && deadlineValue.trim() !== '';
+  const deadlineDisplayText = deadlineValue || '';
+
+  console.log('[CollaborationHeader] deadline显示条件:', {
+    rawDeadline: project?.deadline,
+    applicationDeadline: project?.applicationDeadline,
+    deadlineValue,
+    deadlineDisplayText,
+    shouldShowDeadline,
+    hasDeadline: !!deadlineValue,
+    notEmpty: deadlineValue?.trim() !== '',
+    deadlineType: typeof deadlineValue,
+    deadlineLength: deadlineValue?.length,
+  });
+
   // 判断当前用户是否为项目发起人
   const isInitiator = currentUser?.id === project.author?.id;
   return (
@@ -81,6 +105,29 @@ const CollaborationHeader = ({
                 />
               </svg>
               <span>Posted {project.postedTime}</span>
+            </div>
+
+            {/* Deadline - 强制显示测试 */}
+            <div className='flex items-center gap-2'>
+              <svg
+                className='w-4 h-4'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+                />
+              </svg>
+              <span>
+                Deadline:{' '}
+                {project?.applicationDeadline ||
+                  project?.deadline ||
+                  'Flexible'}
+              </span>
             </div>
 
             {/* Contact Info */}

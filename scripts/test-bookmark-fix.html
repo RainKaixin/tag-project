@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bookmark Fix Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .test-card {
+        border: 1px solid #ccc;
+        padding: 20px;
+        margin: 10px 0;
+        border-radius: 5px;
+        position: relative;
+      }
+      .bookmark-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .bookmark-btn.favorited {
+        color: purple;
+      }
+      .bookmark-btn:not(.favorited) {
+        color: gray;
+      }
+      .log {
+        background: #f8f9fa;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 3px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>收藏功能修复测试</h1>
+
+    <div class="test-card">
+      <h3>测试协作 1</h3>
+      <p>ID: collab_test_1</p>
+      <button
+        class="bookmark-btn"
+        onclick="toggleBookmark('collab_test_1')"
+        id="btn_collab_test_1"
+      >
+        ❤
+      </button>
+    </div>
+
+    <div class="test-card">
+      <h3>测试协作 2</h3>
+      <p>ID: collab_test_2</p>
+      <button
+        class="bookmark-btn"
+        onclick="toggleBookmark('collab_test_2')"
+        id="btn_collab_test_2"
+      >
+        ❤
+      </button>
+    </div>
+
+    <div>
+      <button onclick="checkAllStatus()">检查所有收藏状态</button>
+      <button onclick="clearLog()">清除日志</button>
+      <button onclick="clearStorage()">清除存储</button>
+    </div>
+
+    <div class="log" id="log"></div>
+
+    <script>
+      // 模拟收藏服务
+      const favoritesService = {
+        async toggleFavorite(itemType, itemId, shouldFavorite) {
+          const currentUser = getCurrentUser();
+          if (!currentUser?.id) {
+            throw new Error('User not authenticated');
+          }
+
+          const storage = await this._getStorage();
+          const userFavorites = storage[currentUser.id] || [];
+
+          if (shouldFavorite) {
+            // 添加收藏
+            const existingIndex = userFavorites.findIndex(
+              fav => fav.itemType === itemType && fav.itemId === itemId
+            );
+
+            if (existingIndex === -1) {
+              const newFavorite = {
+                id: this._generateId(),
+                userId: currentUser.id,
+                itemType,
+                itemId,
+                createdAt: new Date().toISOString(),
+              };
+
+              userFavorites.push(newFavorite);
+              storage[currentUser.id] = userFavorites;
+              await this._setStorage(storage);
+
+              log(`✅ 添加收藏成功: ${itemId}`);
+              return { success: true, data: newFavorite };
+            } else {
+              log(`ℹ️ 已收藏，无需重复添加: ${itemId}`);
+              return { success: true, data: userFavorites[existingIndex] };
+            }
+          } else {
+            // 移除收藏
+            const existingIndex = userFavorites.findIndex(
+              fav => fav.itemType === itemType && fav.itemId === itemId
+            );
+
+            if (existingIndex !== -1) {
+              const removedFavorite = userFavorites.splice(existingIndex, 1)[0];
+              storage[currentUser.id] = userFavorites;
+              await this._setStorage(storage);
+
+              log(`✅ 移除收藏成功: ${itemId}`);
+              return { success: true, data: removedFavorite };
+            } else {
+              log(`ℹ️ 未收藏，无需移除: ${itemId}`);
+              return { success: true, data: null };
+            }
+          }
+        },
+
+        async checkFavoriteStatus(itemType, itemId) {
+          const currentUser = getCurrentUser();
+          if (!currentUser?.id) {
+            return {
+              success: true,
+              data: { isFavorited: false, favoriteId: null },
+            };
+          }
+
+          const storage = await this._getStorage();
+          const userFavorites = storage[currentUser.id] || [];
+
+          const favorite = userFavorites.find(
+            fav => fav.itemType === itemType && fav.itemId === itemId
+          );
+
+          return {
+            success: true,
+            data: {
+              isFavorited: !!favorite,
+              favoriteId: favorite?.id || null,
+            },
+          };
+        },
+
+        async _getStorage() {
+          try {
+            const data = localStorage.getItem('tag_favorites');
+            return data ? JSON.parse(data) : {};
+          } catch (error) {
+            console.error('Failed to get favorites from storage:', error);
+            return {};
+          }
+        },
+
+        async _setStorage(data) {
+          try {
+            localStorage.setItem('tag_favorites', JSON.stringify(data));
+          } catch (error) {
+            console.error('Failed to save favorites to storage:', error);
+          }
+        },
+
+        _generateId() {
+          return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        },
+      };
+
+      function getCurrentUser() {
+        const userId = localStorage.getItem('tag.currentUserId');
+        return userId ? { id: userId } : null;
+      }
+
+      function log(message) {
+        const logDiv = document.getElementById('log');
+        const timestamp = new Date().toLocaleTimeString();
+        logDiv.textContent += `[${timestamp}] ${message}\n`;
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
+
+      function updateButtonState(itemId, isFavorited) {
+        const btn = document.getElementById(`btn_${itemId}`);
+        if (isFavorited) {
+          btn.classList.add('favorited');
+          btn.textContent = '❤';
+        } else {
+          btn.classList.remove('favorited');
+          btn.textContent = '🤍';
+        }
+      }
+
+      async function toggleBookmark(itemId) {
+        try {
+          log(`🔄 开始切换收藏: ${itemId}`);
+
+          // 先检查当前状态
+          const statusResult = await favoritesService.checkFavoriteStatus(
+            'collaboration',
+            itemId
+          );
+          const currentState = statusResult.data.isFavorited;
+
+          log(`📊 当前收藏状态: ${currentState ? '已收藏' : '未收藏'}`);
+
+          // 切换状态
+          const result = await favoritesService.toggleFavorite(
+            'collaboration',
+            itemId,
+            !currentState
+          );
+
+          if (result.success) {
+            // 验证新状态
+            const verifyResult = await favoritesService.checkFavoriteStatus(
+              'collaboration',
+              itemId
+            );
+            const newState = verifyResult.data.isFavorited;
+
+            log(`✅ 切换完成，验证状态: ${newState ? '已收藏' : '未收藏'}`);
+
+            // 更新按钮状态
+            updateButtonState(itemId, newState);
+
+            // 检查状态是否一致
+            if (newState === !currentState) {
+              log(`🎉 状态验证成功！`);
+            } else {
+              log(`❌ 状态验证失败！期望: ${!currentState}, 实际: ${newState}`);
+            }
+          } else {
+            log(`❌ 切换失败: ${result.error}`);
+          }
+        } catch (error) {
+          log(`❌ 操作出错: ${error.message}`);
+        }
+      }
+
+      async function checkAllStatus() {
+        log('🔍 检查所有收藏状态...');
+
+        const items = ['collab_test_1', 'collab_test_2'];
+
+        for (const itemId of items) {
+          try {
+            const result = await favoritesService.checkFavoriteStatus(
+              'collaboration',
+              itemId
+            );
+            const isFavorited = result.data.isFavorited;
+
+            log(`📊 ${itemId}: ${isFavorited ? '已收藏' : '未收藏'}`);
+            updateButtonState(itemId, isFavorited);
+          } catch (error) {
+            log(`❌ 检查 ${itemId} 状态失败: ${error.message}`);
+          }
+        }
+      }
+
+      function clearLog() {
+        document.getElementById('log').textContent = '';
+      }
+
+      function clearStorage() {
+        localStorage.removeItem('tag_favorites');
+        localStorage.removeItem('tag.currentUserId');
+        log('🗑️ 已清除所有存储数据');
+
+        // 重置按钮状态
+        updateButtonState('collab_test_1', false);
+        updateButtonState('collab_test_2', false);
+      }
+
+      // 初始化
+      (async function () {
+        // 设置测试用户
+        localStorage.setItem('tag.currentUserId', 'test_user_123');
+        log('👤 设置测试用户: test_user_123');
+
+        // 检查初始状态
+        await checkAllStatus();
+      })();
+    </script>
+  </body>
+</html>

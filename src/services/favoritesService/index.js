@@ -155,7 +155,10 @@ class FavoritesService {
     const currentUser = getCurrentUser();
 
     if (!currentUser?.id) {
-      return { isFavorited: false, favoriteId: null };
+      return {
+        success: true,
+        data: { isFavorited: false, favoriteId: null },
+      };
     }
 
     if (!itemType || !itemId) {

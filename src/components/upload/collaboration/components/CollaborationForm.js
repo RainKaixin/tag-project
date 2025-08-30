@@ -131,12 +131,16 @@ const CollaborationForm = ({ formData, onFormChange }) => {
             Application Deadline <span className='text-red-500'>*</span>
           </label>
           <input
-            type='date'
+            type='text'
             name='applicationDeadline'
             value={formData.applicationDeadline}
             onChange={onFormChange}
+            placeholder='e.g., Aug 31, 2025 or To be determined'
             className='w-full bg-gray-50 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-tag-purple focus:border-tag-purple'
           />
+          <p className='text-xs text-gray-500 mt-1'>
+            Enter deadline in any format you prefer
+          </p>
         </div>
 
         {/* Looking For */}

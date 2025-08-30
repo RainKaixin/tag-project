@@ -212,30 +212,32 @@ export const getWorkDataById = itemId => {
 
 /**
  * 获取协作数据映射
- * 与TAGMe中的collaborations数据保持一致
+ * 从localStorage获取真实的协作数据
  */
 export const getCollaborationDataById = itemId => {
-  // 真实协作数据映射 - 与TAGMe中的collaborations数据保持一致
-  const collaborations = [
-    {
-      id: 1,
-      title: 'Brand Identity with Studio X',
-      image: null, // 移除默认图片
-    },
-    {
-      id: 2,
-      title: 'Interactive Web Experience',
-      image: null, // 移除默认图片
-    },
-    {
-      id: 3,
-      title: '3D Character Animation',
-      image: null, // 移除默认图片
-    },
-  ];
+  try {
+    // 从localStorage获取真实的协作数据 - 使用正确的存储键名
+    const stored = localStorage.getItem('mock_collaborations');
+    if (stored) {
+      const collaborations = JSON.parse(stored);
+      // 查找匹配的协作项目
+      const collaboration = collaborations.find(collab => collab.id === itemId);
+      if (collaboration) {
+        console.log('[Favorites] Found collaboration data:', collaboration);
+        return collaboration;
+      }
+    }
 
-  // 根据itemId查找对应的协作项目 - 保持字符串类型匹配
-  return collaborations.find(collab => collab.id.toString() === itemId);
+    // 如果localStorage中没有数据，尝试从默认数据中查找
+    console.warn(
+      '[Favorites] No collaboration data found in localStorage for itemId:',
+      itemId
+    );
+    return null;
+  } catch (error) {
+    console.error('[Favorites] Error getting collaboration data:', error);
+    return null;
+  }
 };
 
 /**
@@ -255,26 +257,52 @@ export const getCollaborationImageUrl = async itemId => {
   const collaboration = getCollaborationDataById(itemId);
 
   if (!collaboration) {
+    console.warn('[Favorites] No collaboration data found for itemId:', itemId);
     return null;
   }
 
-  // 優先使用 heroImage key
-  if (collaboration.heroImage) {
+  console.log('[Favorites] Getting image for collaboration:', collaboration);
+
+  // 优先使用 posterPreview key（与CollaborationGrid保持一致）
+  if (collaboration.posterPreview) {
     try {
       const imageStorage = await import('../../../utils/indexedDB.js');
-      return await imageStorage.default.getImageUrl(collaboration.heroImage);
+      const imageUrl = await imageStorage.default.getImageUrl(
+        collaboration.posterPreview
+      );
+      console.log('[Favorites] Got image URL from posterPreview:', imageUrl);
+      return imageUrl;
     } catch (error) {
       console.warn(
-        `[Favorites] Failed to get collaboration image: ${collaboration.heroImage}`,
+        `[Favorites] Failed to get collaboration image from posterPreview: ${collaboration.posterPreview}`,
         error
       );
     }
   }
 
-  // 回退到其他圖片字段
+  // 回退到 heroImage key
+  if (collaboration.heroImage) {
+    try {
+      const imageStorage = await import('../../../utils/indexedDB.js');
+      const imageUrl = await imageStorage.default.getImageUrl(
+        collaboration.heroImage
+      );
+      console.log('[Favorites] Got image URL from heroImage:', imageUrl);
+      return imageUrl;
+    } catch (error) {
+      console.warn(
+        `[Favorites] Failed to get collaboration image from heroImage: ${collaboration.heroImage}`,
+        error
+      );
+    }
+  }
+
+  // 回退到其他图片字段
   if (collaboration.image) {
+    console.log('[Favorites] Using fallback image:', collaboration.image);
     return collaboration.image;
   }
 
+  console.warn('[Favorites] No image found for collaboration:', itemId);
   return null;
 };
