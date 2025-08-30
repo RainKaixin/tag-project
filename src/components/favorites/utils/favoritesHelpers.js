@@ -216,26 +216,76 @@ export const getWorkDataById = itemId => {
  */
 export const getCollaborationDataById = itemId => {
   try {
+    console.log('[getCollaborationDataById] Looking for itemId:', itemId);
+
     // 从localStorage获取真实的协作数据 - 使用正确的存储键名
     const stored = localStorage.getItem('mock_collaborations');
+    console.log('[getCollaborationDataById] Raw stored data:', stored);
+
     if (stored) {
       const collaborations = JSON.parse(stored);
+      console.log(
+        '[getCollaborationDataById] Parsed collaborations:',
+        collaborations
+      );
+
       // 查找匹配的协作项目
+      console.log('[getCollaborationDataById] Searching for itemId:', itemId);
+      console.log(
+        '[getCollaborationDataById] Available collaborations:',
+        collaborations.map(c => ({ id: c.id, title: c.title }))
+      );
+
       const collaboration = collaborations.find(collab => collab.id === itemId);
       if (collaboration) {
-        console.log('[Favorites] Found collaboration data:', collaboration);
+        console.log(
+          '[getCollaborationDataById] Found collaboration data:',
+          collaboration
+        );
+        console.log(
+          '[getCollaborationDataById] Collaboration roles:',
+          collaboration.roles
+        );
         return collaboration;
+      } else {
+        console.warn(
+          '[getCollaborationDataById] No collaboration found with id:',
+          itemId
+        );
+        console.log(
+          '[getCollaborationDataById] Available IDs:',
+          collaborations.map(c => c.id)
+        );
+
+        // 尝试查找最新的协作项目（如果没有找到匹配的ID）
+        if (collaborations.length > 0) {
+          const latestCollaboration = collaborations[0];
+          console.log(
+            '[getCollaborationDataById] Using latest collaboration as fallback:',
+            latestCollaboration
+          );
+          console.log(
+            '[getCollaborationDataById] Latest collaboration roles:',
+            latestCollaboration.roles
+          );
+          return latestCollaboration;
+        }
       }
+    } else {
+      console.warn('[getCollaborationDataById] No data in localStorage');
     }
 
     // 如果localStorage中没有数据，尝试从默认数据中查找
     console.warn(
-      '[Favorites] No collaboration data found in localStorage for itemId:',
+      '[getCollaborationDataById] No collaboration data found in localStorage for itemId:',
       itemId
     );
     return null;
   } catch (error) {
-    console.error('[Favorites] Error getting collaboration data:', error);
+    console.error(
+      '[getCollaborationDataById] Error getting collaboration data:',
+      error
+    );
     return null;
   }
 };

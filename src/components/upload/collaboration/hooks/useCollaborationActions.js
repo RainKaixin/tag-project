@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import { createCollaboration } from '../../../../services/collaborationService';
+import { formatFormDataForAPI } from '../../../../services/collaborationService/utils';
 import draftService from '../../../../services/draftService';
 import { createNewRole } from '../data/formOptions';
 
@@ -86,6 +87,18 @@ const useCollaborationActions = ({ state, setters }) => {
     async e => {
       e.preventDefault();
       console.log('Collaboration form submitted:', state.formData);
+      console.log(
+        '[useCollaborationActions] Form roles data:',
+        state.formData.roles
+      );
+      console.log(
+        '[useCollaborationActions] Form roles structure:',
+        state.formData.roles?.map(role => ({
+          customRole: role.customRole,
+          roleDescription: role.roleDescription,
+          requiredSkills: role.requiredSkills,
+        }))
+      );
 
       // 验证必填字段
       const requiredFields = {
@@ -115,10 +128,7 @@ const useCollaborationActions = ({ state, setters }) => {
           state.formData.projectVision &&
           state.formData.projectVision.trim() !== ''
         ),
-        whyThisMattersValid: !!(
-          state.formData.whyThisMatters &&
-          state.formData.whyThisMatters.trim() !== ''
-        ),
+        whyThisMattersValid: true, // Why This Matters 是可选的，所以总是有效
       });
 
       // 验证角色信息
@@ -154,14 +164,16 @@ const useCollaborationActions = ({ state, setters }) => {
         // 设置提交状态
         setIsSubmitting(true);
 
-        // 准备提交数据 - 移除 blob URL，只保留文件对象
+        // 使用 formatFormDataForAPI 处理表单数据，确保roles数据正确格式化
+        const formattedData = await formatFormDataForAPI(state.formData);
+        console.log('[useCollaborationActions] Formatted data:', formattedData);
+
+        // 准备提交数据 - 使用格式化后的数据
         const submissionData = {
-          ...state.formData,
+          ...formattedData,
           // 强制设置 applicationDeadline 用于测试
           applicationDeadline:
             state.formData.applicationDeadline || 'TEST DEADLINE',
-          // 移除 blob URL，避免存储到数据库
-          posterPreview: null, // 不存储 blob URL
           // 添加当前用户信息
           author: {
             id: 'current_user', // 这里应该从context获取真实用户ID

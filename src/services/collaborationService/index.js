@@ -29,6 +29,18 @@ const getCollaborationsFromStorage = () => {
     const stored = localStorage.getItem(MOCK_STORAGE_KEYS.COLLABORATIONS);
     const parsed = stored ? JSON.parse(stored) : allMockCollaborations;
 
+    // 调试：检查检索的数据
+    console.log(
+      '[getCollaborationsFromStorage] Retrieved collaborations:',
+      parsed
+    );
+    if (parsed && parsed.length > 0) {
+      console.log(
+        '[getCollaborationsFromStorage] First collaboration roles:',
+        parsed[0]?.roles
+      );
+    }
+
     return parsed;
   } catch (error) {
     console.error('Error reading collaborations from storage:', error);
@@ -103,6 +115,16 @@ export const createCollaboration = async formData => {
       collaborationData,
       ...existingCollaborations,
     ];
+
+    // 调试：检查存储的数据
+    console.log(
+      '[createCollaboration] collaborationData to store:',
+      collaborationData
+    );
+    console.log(
+      '[createCollaboration] collaborationData.roles:',
+      collaborationData.roles
+    );
 
     // 保存到存儲
     saveCollaborationsToStorage(updatedCollaborations);

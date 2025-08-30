@@ -19,14 +19,28 @@ const storeDataUrlToIndexedDB = async (blobUrl, collaborationId) => {
       // 生成唯一的存儲 key
       const imageKey = `collaboration_${collaborationId}_${Date.now()}`;
 
-      // 存儲到 IndexedDB
-      const { imageStorage } = await import('../../utils/indexedDB.js');
-      await imageStorage.storeImage(imageKey, blobUrl);
-
-      console.log(
-        `[Collaboration] Stored Data URL to IndexedDB with key: ${imageKey}`
-      );
-      return imageKey;
+      try {
+        // 嘗試存儲到 IndexedDB
+        const { imageStorage } = await import('../../utils/indexedDB.js');
+        if (imageStorage && imageStorage.storeImage) {
+          await imageStorage.storeImage(imageKey, blobUrl);
+          console.log(
+            `[Collaboration] Stored Data URL to IndexedDB with key: ${imageKey}`
+          );
+          return imageKey;
+        } else {
+          console.warn(
+            '[Collaboration] imageStorage not available, using Data URL as fallback'
+          );
+          return blobUrl;
+        }
+      } catch (storageError) {
+        console.warn(
+          '[Collaboration] IndexedDB storage failed, using Data URL as fallback:',
+          storageError
+        );
+        return blobUrl;
+      }
     }
 
     // 如果是 blob URL，轉換為 Data URL
@@ -45,24 +59,38 @@ const storeDataUrlToIndexedDB = async (blobUrl, collaborationId) => {
       // 生成唯一的存儲 key
       const imageKey = `collaboration_${collaborationId}_${Date.now()}`;
 
-      // 存儲到 IndexedDB
-      const { imageStorage } = await import('../../utils/indexedDB.js');
-      await imageStorage.storeImage(imageKey, dataUrl);
-
-      console.log(
-        `[Collaboration] Stored Data URL to IndexedDB with key: ${imageKey}`
-      );
-      return imageKey;
+      try {
+        // 嘗試存儲到 IndexedDB
+        const { imageStorage } = await import('../../utils/indexedDB.js');
+        if (imageStorage && imageStorage.storeImage) {
+          await imageStorage.storeImage(imageKey, dataUrl);
+          console.log(
+            `[Collaboration] Stored Data URL to IndexedDB with key: ${imageKey}`
+          );
+          return imageKey;
+        } else {
+          console.warn(
+            '[Collaboration] imageStorage not available, using Data URL as fallback'
+          );
+          return dataUrl;
+        }
+      } catch (storageError) {
+        console.warn(
+          '[Collaboration] IndexedDB storage failed, using Data URL as fallback:',
+          storageError
+        );
+        return dataUrl;
+      }
     }
 
     // 其他情況直接返回原值
     return blobUrl;
   } catch (error) {
     console.warn(
-      '[Collaboration] Failed to store Data URL to IndexedDB:',
+      '[Collaboration] Failed to process image, returning original URL as fallback:',
       error
     );
-    return null;
+    return blobUrl; // 返回原始 URL 作为 fallback
   }
 };
 
@@ -116,17 +144,27 @@ export const formatFormDataForAPI = async formData => {
     },
 
     // 團隊角色 - 修復：正確轉換表單角色結構
-    roles:
-      formData.roles
-        ?.map(role => ({
-          id: role.id || Date.now().toString(),
-          title: role.customRole?.trim() || role.title?.trim() || '',
-          description:
-            role.roleDescription?.trim() || role.description?.trim() || '',
-          requiredSkills: role.requiredSkills?.trim() || '',
-          status: 'available', // 默認為可用狀態
-        }))
-        .filter(role => role.title && role.description) || [],
+    roles: (() => {
+      console.log(
+        '[formatFormDataForAPI] Input formData.roles:',
+        formData.roles
+      );
+
+      const processedRoles =
+        formData.roles
+          ?.map(role => ({
+            id: role.id || Date.now().toString(),
+            title: role.customRole?.trim() || role.title?.trim() || '',
+            description:
+              role.roleDescription?.trim() || role.description?.trim() || '',
+            requiredSkills: role.requiredSkills?.trim() || '',
+            status: 'available', // 默認為可用狀態
+          }))
+          .filter(role => role.title) || []; // 只要有 title 就保留，不强制要求 description
+
+      console.log('[formatFormDataForAPI] Processed roles:', processedRoles);
+      return processedRoles;
+    })(),
 
     // 作者信息 - 修復：使用 getCurrentUser() 获取正确的头像数据
     author: {
@@ -159,6 +197,8 @@ export const formatFormDataForAPI = async formData => {
  */
 export const formatAPIDataForDetail = apiData => {
   // 调试信息：检查输入数据
+  console.log('[formatAPIDataForDetail] Input apiData:', apiData);
+  console.log('[formatAPIDataForDetail] Input apiData.roles:', apiData?.roles);
 
   const result = {
     id: apiData.id,
@@ -197,9 +237,12 @@ export const formatAPIDataForDetail = apiData => {
       contact: apiData.contactInfo,
     },
     milestones: [], // 暫時為空，後續可擴展
+    // 添加roles数据，确保职位信息能正确传递
+    roles: apiData.roles || [],
   };
 
   // 调试信息：检查输出数据
+  console.log('[formatAPIDataForDetail] Output result.roles:', result.roles);
 
   return result;
 };

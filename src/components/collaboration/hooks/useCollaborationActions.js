@@ -41,6 +41,9 @@ export const useCollaborationActions = (data, setters) => {
     setIsSaved,
     setActivePositionTab,
     setPositions,
+    updateProjectData,
+    updatePositions,
+    saveCollaborationData,
   } = setters;
 
   // 处理申请职位
@@ -318,6 +321,11 @@ export const useCollaborationActions = (data, setters) => {
     handleViewMilestones,
     handleSaveToggle,
     handleFillPosition,
+
+    // 数据更新函数
+    updateProjectData,
+    updatePositions,
+    saveCollaborationData,
 
     // 工具函数
     getStatusColor,

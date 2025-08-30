@@ -12,30 +12,8 @@ const ProjectVision = ({ vision, owner, currentUser, onFinalReviewClick }) => {
   // 判断当前用户是否为项目发起人
   const isInitiator = currentUser?.id === owner?.id;
 
-  // 模拟团队成员数据（只包含 Collaborators，不包含 Initiator）
-  const teamMembers = [
-    {
-      id: 'alex',
-      name: 'Alex Chen',
-      avatar:
-        'https://images.unsplash.com/photo-1472099645785-48f60103fc96?w=100&h=100&fit=crop&crop=face',
-      role: 'Collaborator',
-    },
-    {
-      id: 'maya',
-      name: 'Maya Rodriguez',
-      avatar:
-        'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
-      role: 'Collaborator',
-    },
-    {
-      id: 'david',
-      name: 'David Lee',
-      avatar:
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
-      role: 'Collaborator',
-    },
-  ];
+  // 动态团队成员数据 - 从props获取真实的Collaborators
+  const teamMembers = vision?.collaborators || [];
   const { navigateToArtist } = useNavigation();
 
   const handleOwnerClick = () => {
@@ -147,54 +125,63 @@ const ProjectVision = ({ vision, owner, currentUser, onFinalReviewClick }) => {
           Collaborators
         </h4>
         <div className='space-y-3'>
-          {teamMembers.map(member => (
-            <div
-              key={member.id}
-              className='flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors duration-200'
-            >
-              {/* Avatar */}
-              <div className='flex-shrink-0'>
-                <img
-                  src={member.avatar}
-                  alt={member.name}
-                  className='w-10 h-10 rounded-full object-cover'
-                  onError={e => {
-                    e.target.style.display = 'none';
-                  }}
-                />
-              </div>
-
-              {/* Name and Role */}
-              <div className='flex-1 min-w-0'>
-                <div className='font-medium text-gray-900 truncate'>
-                  {member.name}
+          {teamMembers.length > 0 ? (
+            teamMembers.map(member => (
+              <div
+                key={member.id}
+                className='flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors duration-200'
+              >
+                {/* Avatar */}
+                <div className='flex-shrink-0'>
+                  <img
+                    src={member.avatar}
+                    alt={member.name}
+                    className='w-10 h-10 rounded-full object-cover'
+                    onError={e => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
                 </div>
-                <div className='flex items-center gap-2 mt-1'>
-                  <span
-                    className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${
-                      member.role === 'Initiator'
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-blue-100 text-blue-800'
-                    }`}
+
+                {/* Name and Role */}
+                <div className='flex-1 min-w-0'>
+                  <div className='font-medium text-gray-900 truncate'>
+                    {member.name}
+                  </div>
+                  <div className='flex items-center gap-2 mt-1'>
+                    <span
+                      className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${
+                        member.role === 'Initiator'
+                          ? 'bg-purple-100 text-purple-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}
+                    >
+                      {member.role}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Final Review Button - 只有 Initiator 可以看到 */}
+                {isInitiator && (
+                  <button
+                    onClick={() =>
+                      onFinalReviewClick && onFinalReviewClick(member)
+                    }
+                    className='px-3 py-1 bg-purple-600 text-white text-xs font-medium rounded-lg hover:bg-purple-700 transition-colors duration-200 flex-shrink-0'
                   >
-                    {member.role}
-                  </span>
-                </div>
+                    Final Review
+                  </button>
+                )}
               </div>
-
-              {/* Final Review Button - 只有 Initiator 可以看到 */}
-              {isInitiator && (
-                <button
-                  onClick={() =>
-                    onFinalReviewClick && onFinalReviewClick(member)
-                  }
-                  className='px-3 py-1 bg-purple-600 text-white text-xs font-medium rounded-lg hover:bg-purple-700 transition-colors duration-200 flex-shrink-0'
-                >
-                  Final Review
-                </button>
-              )}
+            ))
+          ) : (
+            <div className='text-center py-6 text-gray-500'>
+              <p>No collaborators yet</p>
+              <p className='text-sm mt-1'>
+                Approved applicants will appear here
+              </p>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

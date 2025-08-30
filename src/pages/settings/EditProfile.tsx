@@ -209,14 +209,34 @@ const EditProfile = () => {
     []
   );
 
+  // URL格式化函数
+  const formatUrl = (url: string): string => {
+    if (!url.trim()) return url;
+
+    // 如果已经包含协议，直接返回
+    if (url.match(/^https?:\/\//i)) {
+      return url;
+    }
+
+    // 如果以www开头，添加https://
+    if (url.match(/^www\./i)) {
+      return `https://${url}`;
+    }
+
+    // 其他情况，添加https://
+    return `https://${url}`;
+  };
+
   // 处理社交链接变化
   const handleSocialLinkChange = useCallback(
     (platform: 'instagram' | 'portfolio' | 'discord', value: string) => {
+      // 在保存时格式化URL
+      const formattedValue = formatUrl(value);
       setProfileData(prev => ({
         ...prev,
         socialLinks: {
           ...prev.socialLinks,
-          [platform]: value,
+          [platform]: formattedValue,
         },
       }));
       setIsDirty(true);

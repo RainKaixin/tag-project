@@ -4,9 +4,52 @@ import styles from '../EditProfile.module.css';
 import type { SocialLinksCardProps, LinkItem, SocialLinks } from '../types';
 
 const SUGGESTIONS = [
-  { label: 'ArtStation', placeholder: 'https://www.artstation.com/yourname' },
-  { label: 'Behance', placeholder: 'https://www.behance.net/yourname' },
+  { label: 'ArtStation', placeholder: 'artstation.com/yourname' },
+  { label: 'Behance', placeholder: 'behance.net/yourname' },
 ];
+
+// 智能URL格式化函数
+const formatUrl = (url: string): string => {
+  if (!url.trim()) return url;
+
+  // 如果已经包含协议，直接返回
+  if (url.match(/^https?:\/\//i)) {
+    return url;
+  }
+
+  // 如果以www开头，添加https://
+  if (url.match(/^www\./i)) {
+    return `https://${url}`;
+  }
+
+  // 其他情况，添加https://
+  return `https://${url}`;
+};
+
+// 宽松的URL验证函数
+const isValidUrl = (url: string): boolean => {
+  if (!url.trim()) return true; // 空值视为有效
+
+  try {
+    // 先尝试直接解析
+    new URL(url);
+    return true;
+  } catch {
+    // 如果失败，尝试添加https://后解析
+    try {
+      new URL(formatUrl(url));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+};
+
+// 获取完整URL用于存储和点击
+const getFullUrl = (url: string): string => {
+  if (!url.trim()) return url;
+  return formatUrl(url);
+};
 
 const SocialLinksCard: React.FC<SocialLinksCardProps> = ({
   links,
@@ -16,17 +59,6 @@ const SocialLinksCard: React.FC<SocialLinksCardProps> = ({
   const [newLinkLabel, setNewLinkLabel] = useState('');
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [error, setError] = useState('');
-
-  // URL 验证函数
-  const isValidUrl = (url: string): boolean => {
-    if (!url.trim()) return true; // 空值视为有效
-    try {
-      const urlObj = new URL(url);
-      return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  };
 
   const handleChange = (
     platform: 'instagram' | 'portfolio' | 'discord',
@@ -50,14 +82,18 @@ const SocialLinksCard: React.FC<SocialLinksCardProps> = ({
       return;
     }
 
-    if (!/^https?:\/\/.+/i.test(url)) {
-      setError('Please enter a valid URL starting with http:// or https://');
+    // 使用宽松的URL验证
+    if (!isValidUrl(url)) {
+      setError('Please enter a valid website address');
       return;
     }
 
+    // 获取完整URL用于存储
+    const fullUrl = getFullUrl(url);
+
     // 检查重复域名
     try {
-      const newHost = new URL(url).hostname.toLowerCase();
+      const newHost = new URL(fullUrl).hostname.toLowerCase();
       const exists = (links.otherLinks || []).some(link => {
         try {
           return new URL(link.url).hostname.toLowerCase() === newHost;
@@ -71,7 +107,7 @@ const SocialLinksCard: React.FC<SocialLinksCardProps> = ({
         return;
       }
     } catch {
-      setError('Please enter a valid URL');
+      setError('Please enter a valid website address');
       return;
     }
 
@@ -81,11 +117,11 @@ const SocialLinksCard: React.FC<SocialLinksCardProps> = ({
       return;
     }
 
-    // 添加链接
+    // 添加链接 - 存储完整URL
     const newLink: LinkItem = {
       id: crypto.randomUUID(),
       label,
-      url,
+      url: fullUrl,
     };
 
     onOtherLinksChange([...(links.otherLinks || []), newLink]);
@@ -158,7 +194,7 @@ const SocialLinksCard: React.FC<SocialLinksCardProps> = ({
     {
       key: 'instagram',
       label: 'Instagram URL',
-      placeholder: 'https://www.instagram.com/yourusername',
+      placeholder: 'instagram.com/yourusername',
       icon: (
         <svg
           className={styles.socialIcon}
@@ -172,7 +208,7 @@ const SocialLinksCard: React.FC<SocialLinksCardProps> = ({
     {
       key: 'portfolio',
       label: 'Portfolio URL',
-      placeholder: 'https://your-portfolio.com',
+      placeholder: 'your-portfolio.com',
       icon: (
         <svg
           className={styles.socialIcon}
@@ -186,7 +222,7 @@ const SocialLinksCard: React.FC<SocialLinksCardProps> = ({
     {
       key: 'discord',
       label: 'Discord URL',
-      placeholder: 'https://discord.gg/yourname',
+      placeholder: 'discord.gg/yourname',
       icon: (
         <svg
           className={styles.socialIcon}
@@ -243,7 +279,7 @@ const SocialLinksCard: React.FC<SocialLinksCardProps> = ({
                     id={`${platform.key}-error`}
                     className={styles.errorMessage}
                   >
-                    Please enter a valid URL starting with http:// or https://
+                    Please enter a valid website address
                   </div>
                 )}
               </div>
@@ -314,7 +350,7 @@ const SocialLinksCard: React.FC<SocialLinksCardProps> = ({
                       setNewLinkUrl(e.target.value);
                       setError('');
                     }}
-                    placeholder='https://example.com'
+                    placeholder='example.com'
                     className={styles.addLinkInput}
                   />
                   <button

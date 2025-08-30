@@ -38,6 +38,9 @@ const CollaborationDetailPage = () => {
     setIsSaved: data.setIsSaved,
     setActivePositionTab: data.setActivePositionTab,
     setPositions: data.setPositions,
+    updateProjectData: data.updateProjectData,
+    updatePositions: data.updatePositions,
+    saveCollaborationData: data.saveCollaborationData,
   });
 
   // 添加 Final Review 状态管理
@@ -98,7 +101,77 @@ const CollaborationDetailPage = () => {
   // 处理批准申请
   const handleApproveApplication = application => {
     console.log('Approving application:', application);
-    // TODO: 实现批准申请的逻辑
+    console.log('Current project data:', data.project);
+    console.log('Current project collaborators:', data.project?.collaborators);
+
+    // 检查申请人是否已经被批准
+    const existingCollaborators =
+      data.project?.collaborators || data.project?.vision?.collaborators || [];
+    const isAlreadyApproved = existingCollaborators.some(
+      collab => collab.id === application.id || collab.name === application.name
+    );
+
+    if (isAlreadyApproved) {
+      console.log('Application already approved:', application.name);
+      return;
+    }
+
+    // 将申请人添加到Collaborators列表
+    const newCollaborator = {
+      id: application.id || `collaborator_${Date.now()}`,
+      name: application.name,
+      avatar: application.avatar || '/assets/placeholder.svg',
+      role: 'Collaborator',
+      email: application.email,
+      portfolio: application.portfolio,
+      approvedAt: new Date().toISOString(),
+    };
+
+    console.log('Existing collaborators:', existingCollaborators);
+
+    // 更新项目数据中的collaborators
+    const updatedProject = {
+      ...data.project,
+      collaborators: [...existingCollaborators, newCollaborator],
+    };
+
+    // 同时更新vision中的collaborators，确保ProjectVision组件能接收到数据
+    const updatedVision = {
+      ...data.project.vision,
+      collaborators: [...existingCollaborators, newCollaborator],
+    };
+
+    const finalUpdatedProject = {
+      ...updatedProject,
+      vision: updatedVision,
+    };
+
+    // 更新申请状态为已批准
+    const updatedPositions = data.positions.map(position => {
+      if (position.applications) {
+        const updatedApplications = position.applications.map(app => {
+          if (app.id === application.id) {
+            return { ...app, status: 'approved' };
+          }
+          return app;
+        });
+        return { ...position, applications: updatedApplications };
+      }
+      return position;
+    });
+
+    // 更新状态
+    actions.updateProjectData(finalUpdatedProject);
+    actions.updatePositions(updatedPositions);
+
+    // 保存到localStorage
+    actions.saveCollaborationData(finalUpdatedProject);
+
+    console.log(
+      'Application approved, new collaborator added:',
+      newCollaborator
+    );
+    console.log('Updated project with collaborators:', finalUpdatedProject);
     handleApplicationPopoverClose();
   };
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { PrimaryButton, SecondaryButton } from '../../ui';
 
@@ -11,6 +11,10 @@ const ApplicationInfoPopover = ({
   isInitiator = false,
   anchorElement, // 锚定元素（头像）
 }) => {
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isApproved, setIsApproved] = useState(
+    application?.status === 'approved'
+  );
   const popoverRef = useRef(null);
 
   // 点击外部关闭
@@ -95,7 +99,17 @@ const ApplicationInfoPopover = ({
   };
 
   const handleApprove = () => {
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmApprove = () => {
+    setIsApproved(true);
     onApprove?.(application);
+    setShowConfirmModal(false);
+  };
+
+  const handleCancelApprove = () => {
+    setShowConfirmModal(false);
   };
 
   return (
@@ -220,10 +234,45 @@ const ApplicationInfoPopover = ({
             </SecondaryButton>
             <PrimaryButton
               onClick={handleApprove}
-              className='flex-1 text-sm py-2'
+              disabled={isApproved}
+              className={`flex-1 text-sm py-2 ${
+                isApproved
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-purple-600 text-white hover:bg-purple-700'
+              }`}
             >
-              Approve
+              {isApproved ? 'Approved' : 'Approve'}
             </PrimaryButton>
+          </div>
+        )}
+
+        {/* 确认弹窗 */}
+        {showConfirmModal && (
+          <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+            <div className='bg-white rounded-lg p-6 max-w-md w-full mx-4'>
+              <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+                Confirm Approval
+              </h3>
+              <p className='text-gray-700 mb-6'>
+                Are you sure you want to approve{' '}
+                <span className='font-medium'>{application.name}</span> for this
+                position? This action cannot be undone.
+              </p>
+              <div className='flex gap-3 justify-end'>
+                <SecondaryButton
+                  onClick={handleCancelApprove}
+                  className='px-4 py-2'
+                >
+                  Cancel
+                </SecondaryButton>
+                <PrimaryButton
+                  onClick={handleConfirmApprove}
+                  className='px-4 py-2 bg-green-600 hover:bg-green-700'
+                >
+                  Confirm Approve
+                </PrimaryButton>
+              </div>
+            </div>
           </div>
         )}
       </div>
