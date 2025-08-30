@@ -1,4 +1,5 @@
 import { favoritesService } from '../../../services';
+import { getProfile } from '../../../services';
 import {
   addApplication,
   removeApplication,
@@ -65,10 +66,24 @@ export const useCollaborationActions = (data, setters) => {
       // 获取用户头像
       const avatarUrl = await getUnifiedAvatar(userId);
 
+      // 获取用户个人资料中的真实姓名
+      let userName = currentUser?.name || data.currentUser?.name || 'Anonymous';
+      try {
+        const profileResult = await getProfile(userId);
+        if (profileResult.success && profileResult.data?.fullName) {
+          userName = profileResult.data.fullName;
+        }
+      } catch (error) {
+        console.warn(
+          '[useCollaborationActions] Failed to get user profile:',
+          error
+        );
+      }
+
       // 创建申请记录
       const application = {
         userId: userId,
-        name: currentUser?.name || data.currentUser?.name || 'Anonymous',
+        name: userName, // 使用用户个人资料中的真实姓名
         avatar:
           avatarUrl ||
           currentUser?.avatar ||
@@ -78,6 +93,13 @@ export const useCollaborationActions = (data, setters) => {
         portfolio: data.applyForm?.portfolio || '',
         message: data.applyForm?.message || '',
       };
+
+      // 调试信息：打印申请表单数据
+      console.log('[useCollaborationActions] Apply form data:', data.applyForm);
+      console.log(
+        '[useCollaborationActions] Created application:',
+        application
+      );
 
       // 保存申请记录到持久化存储
       const result = addApplication(data.project?.id, positionId, application);

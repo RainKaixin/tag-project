@@ -152,6 +152,73 @@ export const removeApplication = (collaborationId, positionId, userId) => {
 };
 
 /**
+ * 更新申请记录中的用户姓名
+ * @param {string} userId - 用户ID
+ * @param {string} newName - 新的用户姓名
+ * @returns {Object} 更新结果
+ */
+export const updateApplicationUserName = (userId, newName) => {
+  try {
+    // 获取所有申请记录
+    const allKeys = Object.keys(localStorage);
+    const applicationKeys = allKeys.filter(key => key.startsWith(STORAGE_KEY));
+
+    let updatedCount = 0;
+
+    applicationKeys.forEach(key => {
+      try {
+        const data = localStorage.getItem(key);
+        if (data) {
+          const parsedData = JSON.parse(data);
+          const applications = parsedData.applications;
+
+          if (applications) {
+            let hasChanges = false;
+
+            // 更新所有职位中的申请记录
+            Object.keys(applications).forEach(positionId => {
+              const positionApplications = applications[positionId];
+
+              positionApplications.forEach(application => {
+                if (
+                  application.userId === userId &&
+                  application.name !== newName
+                ) {
+                  application.name = newName;
+                  hasChanges = true;
+                  updatedCount++;
+                }
+              });
+            });
+
+            // 如果有更改，保存回localStorage
+            if (hasChanges) {
+              localStorage.setItem(key, JSON.stringify(parsedData));
+            }
+          }
+        }
+      } catch (error) {
+        console.warn(
+          `[applicationService] Failed to update applications in key ${key}:`,
+          error
+        );
+      }
+    });
+
+    console.log(
+      `[applicationService] Updated ${updatedCount} application records for user ${userId}`
+    );
+    return { success: true, updatedCount };
+  } catch (error) {
+    console.error(
+      '[applicationService] Failed to update application user names:',
+      error
+    );
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * 清除所有申请记录
  * @param {string} collaborationId - 协作项目ID
  * @returns {Object} 清除结果

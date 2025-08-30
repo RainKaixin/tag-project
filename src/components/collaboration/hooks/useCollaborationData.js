@@ -3,7 +3,11 @@ import { useLocation, useParams } from 'react-router-dom';
 
 import { useAppContext } from '../../../context/AppContext';
 import { favoritesService } from '../../../services';
-import { getApplicationsData } from '../../../services/applicationService';
+import { getProfile } from '../../../services';
+import {
+  getApplicationsData,
+  updateApplicationUserName,
+} from '../../../services/applicationService';
 import {
   getApplyFormData,
   hasCompleteApplyFormData,
@@ -51,7 +55,6 @@ export const useCollaborationData = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [applyForm, setApplyForm] = useState({
-    name: '',
     email: '',
     portfolio: '',
     message: '',
@@ -99,6 +102,58 @@ export const useCollaborationData = () => {
         // 加载申请记录
         const savedApplications = getApplicationsData(project.id);
 
+        // 更新申请记录中的用户姓名（如果需要）
+        const updateUserNamesInApplications = async () => {
+          if (savedApplications) {
+            const currentUser = getCurrentUser();
+            if (currentUser?.id) {
+              try {
+                const profileResult = await getProfile(currentUser.id);
+                if (profileResult.success && profileResult.data?.fullName) {
+                  const newName = profileResult.data.fullName;
+                  // 检查是否需要更新
+                  let needsUpdate = false;
+                  Object.values(savedApplications).forEach(
+                    positionApplications => {
+                      positionApplications.forEach(application => {
+                        if (
+                          application.userId === currentUser.id &&
+                          application.name !== newName
+                        ) {
+                          needsUpdate = true;
+                        }
+                      });
+                    }
+                  );
+
+                  if (needsUpdate) {
+                    updateApplicationUserName(currentUser.id, newName);
+                    // 重新获取更新后的数据
+                    const updatedApplications = getApplicationsData(project.id);
+                    if (updatedApplications) {
+                      Object.keys(updatedApplications).forEach(positionId => {
+                        updatedApplications[positionId].forEach(application => {
+                          if (application.userId === currentUser.id) {
+                            application.name = newName;
+                          }
+                        });
+                      });
+                    }
+                  }
+                }
+              } catch (error) {
+                console.warn(
+                  '[useCollaborationData] Failed to update application user names:',
+                  error
+                );
+              }
+            }
+          }
+        };
+
+        // 执行异步更新
+        updateUserNamesInApplications();
+
         // 应用保存的状态和申请记录到职位数据
         const positionsWithStatus = defaultPositions.map(position => ({
           ...position,
@@ -121,6 +176,47 @@ export const useCollaborationData = () => {
 
     loadPositionsWithStatus();
   }, [project?.id]);
+
+  // 初始化已申请职位状态
+  useEffect(() => {
+    if (!project?.id || !currentUser?.id) return;
+
+    const initializeAppliedPositions = () => {
+      try {
+        // 获取已保存的申请记录
+        const savedApplications = getApplicationsData(project.id);
+
+        if (savedApplications) {
+          // 检查当前用户已经申请过的职位
+          const userAppliedPositions = new Set();
+
+          Object.entries(savedApplications).forEach(
+            ([positionId, applications]) => {
+              // 检查该职位的申请记录中是否有当前用户
+              const hasApplied = applications.some(
+                app => app.userId === currentUser.id
+              );
+              if (hasApplied) {
+                userAppliedPositions.add(parseInt(positionId));
+              }
+            }
+          );
+
+          // 更新已申请职位状态
+          setAppliedPositions(userAppliedPositions);
+
+          console.log(
+            `[useCollaborationData] Initialized applied positions for user ${currentUser.id}:`,
+            Array.from(userAppliedPositions)
+          );
+        }
+      } catch (error) {
+        console.error('Failed to initialize applied positions:', error);
+      }
+    };
+
+    initializeAppliedPositions();
+  }, [project?.id, currentUser?.id]);
 
   // 加载Apply Now表单数据
   useEffect(() => {

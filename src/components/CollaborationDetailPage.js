@@ -5,6 +5,7 @@ import { useAppContext } from '../context/AppContext';
 
 import AfterFinishedReview from './collab/AfterFinishedReview_refactored';
 import ReviewApprovalPanel from './collab/ReviewApprovalPanel';
+import ApplicationInfoPopover from './collaboration/components/ApplicationInfoPopover';
 import ApplyModal from './collaboration/components/ApplyModal';
 import CollaborationHeader from './collaboration/components/CollaborationHeader';
 import CommentsSection from './collaboration/components/CommentsSection';
@@ -43,6 +44,11 @@ const CollaborationDetailPage = () => {
   const [selectedCollaboratorForReview, setSelectedCollaboratorForReview] =
     useState(null);
 
+  // 申请人信息Popover状态管理
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [showApplicationPopover, setShowApplicationPopover] = useState(false);
+  const [anchorElement, setAnchorElement] = useState(null);
+
   // 处理 Final Review 点击
   const handleFinalReviewClick = collaborator => {
     setSelectedCollaboratorForReview(collaborator);
@@ -66,6 +72,44 @@ const CollaborationDetailPage = () => {
     // 清空选中状态
     setSelectedCollaboratorForReview(null);
   };
+
+  // 处理申请人头像点击
+  const handleApplicationClick = (application, event) => {
+    // 关闭当前Popover（如果存在）
+    if (showApplicationPopover) {
+      setShowApplicationPopover(false);
+      setSelectedApplication(null);
+      setAnchorElement(null);
+    }
+
+    // 打开新的Popover
+    setSelectedApplication(application);
+    setAnchorElement(event.currentTarget);
+    setShowApplicationPopover(true);
+  };
+
+  // 处理申请人信息Popover关闭
+  const handleApplicationPopoverClose = () => {
+    setShowApplicationPopover(false);
+    setSelectedApplication(null);
+    setAnchorElement(null);
+  };
+
+  // 处理批准申请
+  const handleApproveApplication = application => {
+    console.log('Approving application:', application);
+    // TODO: 实现批准申请的逻辑
+    handleApplicationPopoverClose();
+  };
+
+  // 处理联系申请人
+  const handleContactApplication = () => {
+    console.log('Contacting applicant');
+    // Contact功能已经在ApplicationInfoModal中实现
+  };
+
+  // 检查当前用户是否为项目发起者
+  const isInitiator = data.currentUser?.id === data.project?.author?.id;
 
   // 页面初始化时判断是否需要滚动到顶部
   useEffect(() => {
@@ -128,6 +172,8 @@ const CollaborationDetailPage = () => {
             getStatusColor={actions.getStatusColor}
             getStatusText={actions.getStatusText}
             currentUser={data.currentUser}
+            onApplicationClick={handleApplicationClick}
+            isInitiator={isInitiator}
           />
 
           {/* Right Column - Project Owner Panel (Upgraded) */}
@@ -203,6 +249,17 @@ const CollaborationDetailPage = () => {
           data.positions?.find(p => p.id === data.cancelPositionId)?.title ||
           'this position'
         }
+      />
+
+      {/* Application Info Modal */}
+      <ApplicationInfoPopover
+        isOpen={showApplicationPopover}
+        onClose={handleApplicationPopoverClose}
+        application={selectedApplication}
+        onApprove={handleApproveApplication}
+        onContact={handleContactApplication}
+        isInitiator={isInitiator}
+        anchorElement={anchorElement}
       />
     </div>
   );

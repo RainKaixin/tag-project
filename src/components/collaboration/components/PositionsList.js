@@ -5,7 +5,11 @@ import { InfoCard, PrimaryButton } from '../../ui';
 import CommentsSection from './CommentsSection';
 
 // 申請者頭像牆組件
-const ApplicationsWall = ({ applications = [] }) => {
+const ApplicationsWall = ({
+  applications = [],
+  onApplicationClick,
+  isInitiator = false,
+}) => {
   if (applications.length === 0) {
     return (
       <div className='text-center py-8'>
@@ -52,7 +56,14 @@ const ApplicationsWall = ({ applications = [] }) => {
                   'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
                 }
                 alt={application.name}
-                className='w-12 h-12 rounded-full object-cover border-2 border-gray-200 hover:border-purple-300 transition-colors duration-200'
+                className={`w-12 h-12 rounded-full object-cover border-2 border-gray-200 transition-colors duration-200 ${
+                  isInitiator
+                    ? 'hover:border-purple-300 cursor-pointer'
+                    : 'hover:border-gray-300'
+                }`}
+                onClick={event =>
+                  isInitiator && onApplicationClick?.(application, event)
+                }
               />
               {application.status === 'approved' && (
                 <div className='absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white flex items-center justify-center'>
@@ -104,6 +115,8 @@ const PositionsList = ({
   getStatusText,
   currentUser,
   project,
+  onApplicationClick,
+  isInitiator = false,
 }) => {
   return (
     <div className='mt-8'>
@@ -272,6 +285,8 @@ const PositionsList = ({
                   activePositionTab === 'applications' && (
                     <ApplicationsWall
                       applications={position.applications || []}
+                      onApplicationClick={onApplicationClick}
+                      isInitiator={isInitiator}
                     />
                   )}
 

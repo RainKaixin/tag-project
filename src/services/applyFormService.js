@@ -73,15 +73,14 @@ export const hasCompleteApplyFormData = collaborationId => {
       return false;
     }
 
-    // 检查必填字段是否完整
-    const hasName = formData.name && formData.name.trim() !== '';
+    // 检查必填字段是否完整（移除name字段验证，因为使用用户个人资料中的姓名）
     const hasEmail = formData.email && formData.email.trim() !== '';
 
-    const isComplete = hasName && hasEmail;
+    const isComplete = hasEmail;
 
     console.log(
       `[applyFormService] Form data completeness check for collaboration ${collaborationId}:`,
-      { hasName, hasEmail, isComplete }
+      { hasEmail, isComplete }
     );
 
     return isComplete;

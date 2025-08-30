@@ -14,25 +14,6 @@ const ApplyModal = ({ isOpen, onClose, applyForm, onFormChange, onSubmit }) => {
       <form onSubmit={onSubmit} className='space-y-4'>
         <div>
           <label
-            htmlFor='name'
-            className='block text-sm font-medium text-gray-700 mb-1'
-          >
-            Name *
-          </label>
-          <input
-            id='name'
-            type='text'
-            name='name'
-            value={applyForm.name}
-            onChange={onFormChange}
-            required
-            className='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent'
-            placeholder='Your full name'
-          />
-        </div>
-
-        <div>
-          <label
             htmlFor='email'
             className='block text-sm font-medium text-gray-700 mb-1'
           >
@@ -59,12 +40,12 @@ const ApplyModal = ({ isOpen, onClose, applyForm, onFormChange, onSubmit }) => {
           </label>
           <input
             id='portfolio'
-            type='url'
+            type='text'
             name='portfolio'
             value={applyForm.portfolio}
             onChange={onFormChange}
             className='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent'
-            placeholder='https://your-portfolio.com'
+            placeholder='your-portfolio.com or any link'
           />
         </div>
 
@@ -84,6 +65,10 @@ const ApplyModal = ({ isOpen, onClose, applyForm, onFormChange, onSubmit }) => {
             className='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none'
             placeholder="Tell us why you'd like to join this project..."
           />
+          <p className='mt-2 text-xs text-gray-500'>
+            All information you submit, including your message, will remain
+            private and only accessible to the project initiator.
+          </p>
         </div>
 
         <div className='flex gap-3 pt-4'>
