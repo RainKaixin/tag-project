@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import { useAppContext } from '../context/AppContext';
+import applicationService from '../services/applicationService';
+import { saveApplicationStatus } from '../utils/applicationStorage';
 
 import AfterFinishedReview from './collab/AfterFinishedReview_refactored';
 import ReviewApprovalPanel from './collab/ReviewApprovalPanel';
@@ -77,7 +79,10 @@ const CollaborationDetailPage = () => {
   };
 
   // 处理申请人头像点击
-  const handleApplicationClick = (application, event) => {
+  const handleApplicationClick = (application, event, positionId) => {
+    console.log('[handleApplicationClick] Application:', application);
+    console.log('[handleApplicationClick] Position ID:', positionId);
+
     // 关闭当前Popover（如果存在）
     if (showApplicationPopover) {
       setShowApplicationPopover(false);
@@ -85,8 +90,42 @@ const CollaborationDetailPage = () => {
       setAnchorElement(null);
     }
 
-    // 打开新的Popover
-    setSelectedApplication(application);
+    // 从最新的positions数据中获取申请人的真实状态
+    const position = data.positions.find(p => p.id === positionId);
+    const appInPosition = position?.applications?.find(
+      app => app.id === application.id || app.userId === application.userId
+    );
+
+    // 打开新的Popover，并保存职位ID信息和最新状态
+    const applicationWithPosition = {
+      ...application,
+      positionId: positionId,
+      status: appInPosition?.status || application.status || 'pending', // 使用最新的状态，确保有默认值
+    };
+
+    console.log(
+      '[handleApplicationClick] Application with position:',
+      applicationWithPosition
+    );
+    console.log(
+      '[handleApplicationClick] App in position status:',
+      appInPosition?.status
+    );
+    console.log(
+      '[handleApplicationClick] Final application status:',
+      applicationWithPosition.status
+    );
+
+    console.log(
+      '[handleApplicationClick] Application with position:',
+      applicationWithPosition
+    );
+    console.log(
+      '[handleApplicationClick] App in position status:',
+      appInPosition?.status
+    );
+
+    setSelectedApplication(applicationWithPosition);
     setAnchorElement(event.currentTarget);
     setShowApplicationPopover(true);
   };
@@ -99,33 +138,78 @@ const CollaborationDetailPage = () => {
   };
 
   // 处理批准申请
-  const handleApproveApplication = application => {
-    console.log('Approving application:', application);
+  const handleApproveApplication = async (application, positionId) => {
+    console.log(
+      'Approving application:',
+      application,
+      'for position:',
+      positionId
+    );
     console.log('Current project data:', data.project);
     console.log('Current project collaborators:', data.project?.collaborators);
 
-    // 检查申请人是否已经被批准
-    const existingCollaborators =
-      data.project?.collaborators || data.project?.vision?.collaborators || [];
-    const isAlreadyApproved = existingCollaborators.some(
-      collab => collab.id === application.id || collab.name === application.name
-    );
+    // 检查该申请人在该职位中是否已经被Approve
+    const position = data.positions.find(p => p.id === positionId);
+    if (position && position.applications) {
+      const existingApp = position.applications.find(
+        app =>
+          (app.id === application.id || app.userId === application.userId) &&
+          app.status === 'approved'
+      );
 
-    if (isAlreadyApproved) {
-      console.log('Application already approved:', application.name);
-      return;
+      if (existingApp) {
+        console.log(
+          'Application already approved for this position:',
+          application.name,
+          positionId
+        );
+        return; // 如果已经Approve，直接返回
+      }
     }
 
-    // 将申请人添加到Collaborators列表
+    // 额外检查：检查该申请人是否已经在collaborators列表中（作为双重保险）
+    const existingCollaboratorsForCheck =
+      data.project?.collaborators || data.project?.vision?.collaborators || [];
+    const isAlreadyInCollaborators = existingCollaboratorsForCheck.some(
+      collab =>
+        (collab.id === application.id ||
+          collab.userId === application.userId) &&
+        collab.positionId === positionId
+    );
+
+    if (isAlreadyInCollaborators) {
+      console.log(
+        'Application already in collaborators for this position:',
+        application.name,
+        positionId
+      );
+      return; // 如果已经在collaborators中，直接返回
+    }
+
+    console.log(
+      'Application not yet approved for this position, proceeding with approval:',
+      application.name,
+      positionId
+    );
+
+    const positionTitle = position?.title || 'Unknown Position';
+
+    // 将申请人添加到Collaborators列表（允许同一申请人担任多个职位）
     const newCollaborator = {
-      id: application.id || `collaborator_${Date.now()}`,
+      id: `${application.id || application.userId}_${positionId}_${Date.now()}`, // 唯一ID
       name: application.name,
       avatar: application.avatar || '/assets/placeholder.svg',
       role: 'Collaborator',
+      positionId: positionId, // 添加职位ID
+      positionTitle: positionTitle, // 添加职位标题
       email: application.email,
       portfolio: application.portfolio,
       approvedAt: new Date().toISOString(),
     };
+
+    // 获取现有的collaborators
+    const existingCollaborators =
+      data.project?.collaborators || data.project?.vision?.collaborators || [];
 
     console.log('Existing collaborators:', existingCollaborators);
 
@@ -146,11 +230,11 @@ const CollaborationDetailPage = () => {
       vision: updatedVision,
     };
 
-    // 更新申请状态为已批准
+    // 更新申请状态为已批准 - 只更新特定职位中的特定申请人
     const updatedPositions = data.positions.map(position => {
-      if (position.applications) {
+      if (position.id === positionId && position.applications) {
         const updatedApplications = position.applications.map(app => {
-          if (app.id === application.id) {
+          if (app.id === application.id || app.userId === application.userId) {
             return { ...app, status: 'approved' };
           }
           return app;
@@ -160,6 +244,47 @@ const CollaborationDetailPage = () => {
       return position;
     });
 
+    // 保存申请状态到localStorage和applicationStorage
+    const userId = application.id || application.userId;
+
+    // 保存到applicationService
+    const updateResult = await applicationService.updateApplicationStatus(
+      data.project.id,
+      positionId,
+      userId,
+      'approved'
+    );
+
+    if (updateResult.success) {
+      console.log(
+        '[handleApproveApplication] Successfully saved application status to applicationService'
+      );
+    } else {
+      console.error(
+        '[handleApproveApplication] Failed to save application status to applicationService:',
+        updateResult.error
+      );
+    }
+
+    // 同时保存到applicationStorage
+    // 统一使用application.id作为键，如果没有则回退到userId
+    const applicantId = application.id || application.userId;
+    const storageResult = saveApplicationStatus(
+      positionId,
+      applicantId,
+      'approved'
+    );
+    if (storageResult.success) {
+      console.log(
+        '[handleApproveApplication] Successfully saved application status to applicationStorage'
+      );
+    } else {
+      console.error(
+        '[handleApproveApplication] Failed to save application status to applicationStorage:',
+        storageResult.error
+      );
+    }
+
     // 更新状态
     actions.updateProjectData(finalUpdatedProject);
     actions.updatePositions(updatedPositions);
@@ -167,12 +292,34 @@ const CollaborationDetailPage = () => {
     // 保存到localStorage
     actions.saveCollaborationData(finalUpdatedProject);
 
+    // 同步更新selectedApplication状态，确保Popover显示正确的按钮状态
+    if (
+      selectedApplication &&
+      (selectedApplication.id === application.id ||
+        selectedApplication.userId === application.userId) &&
+      selectedApplication.positionId === positionId
+    ) {
+      console.log(
+        '[handleApproveApplication] Updating selectedApplication status to approved'
+      );
+      setSelectedApplication({
+        ...selectedApplication,
+        status: 'approved',
+      });
+    }
+
     console.log(
-      'Application approved, new collaborator added:',
+      'Application approved for position:',
+      positionTitle,
+      'New collaborator added:',
       newCollaborator
     );
     console.log('Updated project with collaborators:', finalUpdatedProject);
-    handleApplicationPopoverClose();
+
+    // 延迟关闭Popover，让用户看到按钮状态变化
+    setTimeout(() => {
+      handleApplicationPopoverClose();
+    }, 2000); // 增加到2秒，让用户有更多时间看到状态变化
   };
 
   // 处理联系申请人
@@ -333,6 +480,8 @@ const CollaborationDetailPage = () => {
         onContact={handleContactApplication}
         isInitiator={isInitiator}
         anchorElement={anchorElement}
+        positionId={selectedApplication?.positionId}
+        positions={data.positions}
       />
     </div>
   );

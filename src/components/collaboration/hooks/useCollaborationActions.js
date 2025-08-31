@@ -1,9 +1,6 @@
 import { favoritesService } from '../../../services';
 import { getProfile } from '../../../services';
-import {
-  addApplication,
-  removeApplication,
-} from '../../../services/applicationService';
+import applicationService from '../../../services/applicationService';
 import { saveApplyFormData } from '../../../services/applyFormService';
 import { getUnifiedAvatar } from '../../../services/avatarService';
 import { updatePositionStatus } from '../../../services/positionService';
@@ -105,7 +102,11 @@ export const useCollaborationActions = (data, setters) => {
       );
 
       // 保存申请记录到持久化存储
-      const result = addApplication(data.project?.id, positionId, application);
+      const result = await applicationService.addApplication(
+        data.project?.id,
+        positionId,
+        application
+      );
 
       if (result.success) {
         // 更新本地状态
@@ -201,9 +202,11 @@ export const useCollaborationActions = (data, setters) => {
 
     // 保存Apply Now表单数据到持久化存储
     try {
-      saveApplyFormData(data.project?.id, data.applyForm);
+      const currentUser = getCurrentUser();
+      const userId = currentUser?.id || data.currentUser?.id;
+      saveApplyFormData(data.project?.id, userId, data.applyForm);
       console.log(
-        `[useCollaborationActions] Saved apply form data for project ${data.project?.id}:`,
+        `[useCollaborationActions] Saved apply form data for project ${data.project?.id}, user ${userId}:`,
         data.applyForm
       );
     } catch (error) {
@@ -233,7 +236,7 @@ export const useCollaborationActions = (data, setters) => {
   };
 
   // 处理确认取消申请
-  const handleConfirmCancelApplication = () => {
+  const handleConfirmCancelApplication = async () => {
     if (cancelPositionId) {
       // 更新申请状态
       setAppliedPositions(prev => {
@@ -265,7 +268,11 @@ export const useCollaborationActions = (data, setters) => {
       try {
         const currentUser = getCurrentUser();
         const userId = currentUser?.id || data.currentUser?.id;
-        removeApplication(data.project?.id, cancelPositionId, userId);
+        await applicationService.removeApplication(
+          data.project?.id,
+          cancelPositionId,
+          userId
+        );
       } catch (error) {
         console.error(
           '[useCollaborationActions] Failed to remove application from storage:',

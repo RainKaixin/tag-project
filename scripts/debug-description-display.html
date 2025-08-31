@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debug Description Display</title>
+  </head>
+  <body>
+    <h1>🔍 Debug Description Display Issue</h1>
+    <button onclick="runDebug()">Run Debug</button>
+    <div id="output"></div>
+
+    <script>
+      function log(message) {
+        const output = document.getElementById('output');
+        output.innerHTML += '<p>' + message + '</p>';
+        console.log(message);
+      }
+
+      function runDebug() {
+        log('🔍 Debugging description display issue...');
+
+        // 检查 localStorage 中的协作数据
+        const stored = localStorage.getItem('mock_collaborations');
+        log('📦 Raw stored data: ' + (stored ? 'Found' : 'Not found'));
+
+        if (stored) {
+          const collaborations = JSON.parse(stored);
+          log('📋 Total collaborations: ' + collaborations.length);
+
+          // 检查每个协作项目的 description 字段
+          collaborations.forEach((collab, index) => {
+            log(`\n${index + 1}. ${collab.title}:`);
+            log(`   Description: "${collab.description}"`);
+            log(`   Description length: ${collab.description?.length || 0}`);
+            log(`   Description type: ${typeof collab.description}`);
+            log(`   Has description: ${!!collab.description}`);
+          });
+
+          // 模拟 TAGMe 页面的数据转换
+          log('🔍 Simulating TAGMe data conversion...');
+
+          // 模拟 getCollaborationsFromStorage
+          const getCollaborationsFromStorage = () => {
+            try {
+              const stored = localStorage.getItem('mock_collaborations');
+              const parsed = stored ? JSON.parse(stored) : [];
+              return parsed;
+            } catch (error) {
+              log('Error reading collaborations from storage: ' + error);
+              return [];
+            }
+          };
+
+          // 模拟 formatAPIDataForList
+          const formatAPIDataForList = apiDataList => {
+            return apiDataList.map(item => ({
+              id: item.id,
+              title: item.title,
+              subtitle: item.description,
+              description: item.description, // 添加 description 字段
+              projectVision: item.projectVision,
+              whyThisMatters: item.whyThisMatters,
+              image: item.heroImage || null,
+              posterPreview: item.posterPreview || item.heroImage || null,
+              categories: item.projectType ? [item.projectType] : [],
+              author: {
+                id: item.author?.id || null,
+                name: item.author?.name || 'Unknown',
+                avatar: item.author?.avatar || null,
+              },
+              likes: item.likes || 0,
+              views: item.views || 0,
+              isLiked: false,
+              isBookmarked: false,
+              isInitiator: false,
+              role: item.author?.role || 'Initiator',
+              duration: item.duration || '',
+              meetingSchedule: item.meetingSchedule || '',
+              applicationDeadline: item.applicationDeadline || '',
+              status:
+                item.status === 'active' ? 'Open for Collaboration' : 'Closed',
+              skills: item.roles?.map(role => role.title) || [],
+              teamSize: item.teamSize || '',
+              currentMembers: 0,
+            }));
+          };
+
+          // 模拟 getCollaborations
+          const getCollaborations = async (options = {}) => {
+            try {
+              const queryOptions = {
+                page: 1,
+                limit: 12,
+                status: 'active',
+                authorId: null,
+                searchTerm: '',
+                sortBy: 'createdAt',
+                sortOrder: 'desc',
+                ...options,
+              };
+
+              let collaborations = getCollaborationsFromStorage();
+              log('📋 Initial collaborations count: ' + collaborations.length);
+
+              // 筛选逻辑
+              if (queryOptions.status) {
+                collaborations = collaborations.filter(
+                  c => c.status === queryOptions.status
+                );
+                log('🔍 After status filter: ' + collaborations.length);
+              }
+
+              // 排序逻辑
+              collaborations.sort((a, b) => {
+                const aValue = a[queryOptions.sortBy];
+                const bValue = b[queryOptions.sortBy];
+
+                if (queryOptions.sortOrder === 'desc') {
+                  return new Date(bValue) - new Date(aValue);
+                } else {
+                  return new Date(aValue) - new Date(bValue);
+                }
+              });
+
+              // 分页逻辑
+              const total = collaborations.length;
+              const totalPages = Math.ceil(total / queryOptions.limit);
+              const startIndex = (queryOptions.page - 1) * queryOptions.limit;
+              const endIndex = startIndex + queryOptions.limit;
+              const paginatedCollaborations = collaborations.slice(
+                startIndex,
+                endIndex
+              );
+
+              // 格式化為列表格式
+              const formattedCollaborations = formatAPIDataForList(
+                paginatedCollaborations
+              );
+
+              log('📄 Final formatted collaborations:');
+              formattedCollaborations.forEach((collab, index) => {
+                log(`\n${index + 1}. ${collab.title}:`);
+                log(`   Description: "${collab.description}"`);
+                log(
+                  `   Description length: ${collab.description?.length || 0}`
+                );
+                log(`   Has description: ${!!collab.description}`);
+              });
+
+              return {
+                success: true,
+                data: formattedCollaborations,
+                pagination: {
+                  page: queryOptions.page,
+                  limit: queryOptions.limit,
+                  total,
+                  totalPages,
+                  hasNext: queryOptions.page < totalPages,
+                  hasPrev: queryOptions.page > 1,
+                },
+              };
+            } catch (error) {
+              log('Error fetching collaborations: ' + error);
+              return {
+                success: false,
+                error: error.message || 'Failed to fetch collaborations',
+              };
+            }
+          };
+
+          // 测试 TAGMe 页面的调用
+          getCollaborations().then(result => {
+            log('🎯 TAGMe getCollaborations result:');
+            if (result.success) {
+              log(
+                '📊 TAGMe should display: ' +
+                  result.data.length +
+                  ' collaborations'
+              );
+              result.data.forEach((collab, index) => {
+                log(
+                  `${index + 1}. ${collab.title} - Description: "${
+                    collab.description
+                  }"`
+                );
+              });
+            } else {
+              log('❌ TAGMe getCollaborations failed: ' + result.error);
+            }
+          });
+        } else {
+          log('❌ No collaborations found in localStorage');
+        }
+
+        log('✅ Debug completed!');
+      }
+    </script>
+  </body>
+</html>

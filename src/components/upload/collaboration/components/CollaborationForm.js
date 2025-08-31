@@ -148,21 +148,121 @@ const CollaborationForm = ({ formData, onFormChange }) => {
           <label className='block text-sm font-medium text-gray-700 mb-2'>
             Looking For
           </label>
-          <div className='flex'>
-            <input
-              type='text'
-              name='projectType'
-              value={formData.projectType}
-              onChange={onFormChange}
-              placeholder='Tags'
-              className='flex-1 bg-gray-50 border border-gray-300 rounded-l px-3 py-2 focus:outline-none focus:ring-1 focus:ring-tag-purple focus:border-tag-purple'
-            />
-            <button
-              type='button'
-              className='bg-tag-purple text-white px-3 py-2 rounded-r hover:bg-purple-700 transition-colors duration-200'
-            >
-              +
-            </button>
+          <div className='space-y-3'>
+            {/* Tags Input */}
+            <div className='flex'>
+              <input
+                type='text'
+                name='projectType'
+                value={formData.projectType}
+                onChange={onFormChange}
+                placeholder='Tags'
+                className='flex-1 bg-gray-50 border border-gray-300 rounded-l px-3 py-2 focus:outline-none focus:ring-1 focus:ring-tag-purple focus:border-tag-purple'
+                onKeyPress={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const currentTags = formData.projectType
+                      ? formData.projectType
+                          .split(',')
+                          .map(tag => tag.trim())
+                          .filter(tag => tag)
+                      : [];
+                    if (
+                      currentTags.length < 6 &&
+                      formData.projectType?.trim()
+                    ) {
+                      onFormChange({
+                        target: {
+                          name: 'projectType',
+                          value: formData.projectType + ', ',
+                        },
+                      });
+                    }
+                  }
+                }}
+              />
+              <button
+                type='button'
+                onClick={() => {
+                  const currentTags = formData.projectType
+                    ? formData.projectType
+                        .split(',')
+                        .map(tag => tag.trim())
+                        .filter(tag => tag)
+                    : [];
+                  if (currentTags.length < 6 && formData.projectType?.trim()) {
+                    onFormChange({
+                      target: {
+                        name: 'projectType',
+                        value: formData.projectType + ', ',
+                      },
+                    });
+                  }
+                }}
+                disabled={
+                  !formData.projectType?.trim() ||
+                  (formData.projectType
+                    ? formData.projectType
+                        .split(',')
+                        .map(tag => tag.trim())
+                        .filter(tag => tag).length >= 6
+                    : false)
+                }
+                className='bg-tag-purple text-white px-3 py-2 rounded-r hover:bg-purple-700 transition-colors duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed'
+              >
+                +
+              </button>
+            </div>
+
+            {/* Tags Display */}
+            {formData.projectType && (
+              <div className='flex flex-wrap gap-2'>
+                {formData.projectType?.split(',').map((tag, index) => {
+                  const trimmedTag = tag.trim();
+                  if (!trimmedTag) return null;
+
+                  return (
+                    <span
+                      key={index}
+                      className='inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm'
+                    >
+                      {trimmedTag}
+                      <button
+                        type='button'
+                        onClick={() => {
+                          const tags =
+                            formData.projectType
+                              ?.split(',')
+                              .map(t => t.trim())
+                              .filter(t => t) || [];
+                          tags.splice(index, 1);
+                          onFormChange({
+                            target: {
+                              name: 'projectType',
+                              value: tags.join(', '),
+                            },
+                          });
+                        }}
+                        className='ml-1 text-purple-600 hover:text-purple-800'
+                      >
+                        ×
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Helper Text */}
+            <p className='text-xs text-gray-500'>
+              {formData.projectType
+                ? formData.projectType
+                    ?.split(',')
+                    ?.map(tag => tag.trim())
+                    ?.filter(tag => tag)?.length || 0
+                : 0}
+              /6 tags
+            </p>
           </div>
         </div>
       </div>

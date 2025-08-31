@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Test Collaboration</title>
+  </head>
+  <body>
+    <h1>🎯 Create Test Collaboration for Alex</h1>
+    <button onclick="createTestCollaboration()">
+      Create Test Collaboration
+    </button>
+    <div id="output"></div>
+
+    <script>
+      function log(message) {
+        const output = document.getElementById('output');
+        output.innerHTML += '<p>' + message + '</p>';
+        console.log(message);
+      }
+
+      function createTestCollaboration() {
+        log('🎯 Creating test collaboration for Alex...');
+
+        // 检查现有的协作数据
+        const stored = localStorage.getItem('mock_collaborations');
+        let collaborations = stored ? JSON.parse(stored) : [];
+
+        log('📦 Existing collaborations: ' + collaborations.length);
+
+        // 创建新的测试协作项目
+        const newCollaboration = {
+          id: `test_${Date.now()}`,
+          title: 'Test Collaboration Project',
+          description:
+            'This is a test collaboration project created to verify the data flow.',
+          projectVision:
+            'Testing the collaboration data flow in artist profile',
+          whyThisMatters:
+            'This project helps us verify that collaborations created by users appear correctly in their artist profile.',
+          teamSize: '2-3',
+          duration: '1-2 weeks',
+          meetingSchedule: 'Once a week',
+          applicationDeadline: '2024-12-31',
+          projectType: 'Test Project',
+          contactInfo: {
+            email: 'alex.chen@example.com',
+            discord: 'alexchen#1234',
+            other: '',
+          },
+          roles: [
+            {
+              id: 'role_1',
+              title: 'Test Role',
+              description: 'This is a test role for verification purposes.',
+              requiredSkills: 'Testing, Verification',
+              status: 'available',
+            },
+          ],
+          author: {
+            id: 'alex',
+            name: 'Alex Chen',
+            avatar: null,
+            role: 'Concept Artist',
+          },
+          status: 'active',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          likes: 0,
+          views: 0,
+          applications: [],
+        };
+
+        // 添加到协作列表的开头
+        collaborations.unshift(newCollaboration);
+
+        // 保存回 localStorage
+        localStorage.setItem(
+          'mock_collaborations',
+          JSON.stringify(collaborations)
+        );
+
+        log('✅ Test collaboration created successfully!');
+        log(
+          '📝 New collaboration details: ' +
+            JSON.stringify(
+              {
+                id: newCollaboration.id,
+                title: newCollaboration.title,
+                author: newCollaboration.author.name,
+                createdAt: newCollaboration.createdAt,
+              },
+              null,
+              2
+            )
+        );
+
+        // 验证保存
+        const verifyStored = localStorage.getItem('mock_collaborations');
+        const verifyCollaborations = JSON.parse(verifyStored);
+        log(
+          '🔍 Verification - Total collaborations: ' +
+            verifyCollaborations.length
+        );
+
+        // 查找Alex的协作项目
+        const alexCollaborations = verifyCollaborations.filter(
+          c => c.author && c.author.id === 'alex'
+        );
+        log('👤 Alex collaborations: ' + alexCollaborations.length);
+        alexCollaborations.forEach(c => {
+          log(`  - ${c.title} (${c.id})`);
+        });
+
+        log('🎉 Test completed!');
+      }
+    </script>
+  </body>
+</html>

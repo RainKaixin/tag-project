@@ -236,7 +236,22 @@ export const getCollaborationDataById = itemId => {
         collaborations.map(c => ({ id: c.id, title: c.title }))
       );
 
-      const collaboration = collaborations.find(collab => collab.id === itemId);
+      // 尝试多种 ID 匹配方式
+      let collaboration = collaborations.find(collab => collab.id === itemId);
+
+      // 如果直接匹配失败，尝试字符串匹配
+      if (!collaboration) {
+        collaboration = collaborations.find(
+          collab => collab.id.toString() === itemId.toString()
+        );
+      }
+
+      // 如果还是失败，尝试数字匹配
+      if (!collaboration && !isNaN(itemId)) {
+        collaboration = collaborations.find(
+          collab => collab.id === parseInt(itemId)
+        );
+      }
       if (collaboration) {
         console.log(
           '[getCollaborationDataById] Found collaboration data:',

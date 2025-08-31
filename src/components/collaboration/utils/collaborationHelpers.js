@@ -39,10 +39,12 @@ export const processProjectData = (projectData, location, state) => {
         id: projectData.id,
         title: projectData.title,
         author: {
-          id: projectData.author?.id || null,
+          id: projectData.author?.id || projectData.authorId || null,
           title: projectData.title,
-          artist: projectData.author?.name || 'Unknown',
-          artistAvatar: projectData.author?.avatar || null,
+          artist:
+            projectData.author?.name || projectData.authorName || 'Unknown',
+          artistAvatar:
+            projectData.author?.avatar || projectData.authorAvatar || null,
           description: projectData.subtitle,
           image: projectData.posterPreview || projectData.image,
           category: projectData.categories?.[0] || 'Project',

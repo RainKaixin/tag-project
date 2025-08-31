@@ -12,8 +12,9 @@ import { useWorkData } from './hooks/useWorkData';
  * Favorites板块主组件
  * 展示用户收藏的Works和Collaborations
  * @param {boolean} isOwnProfile - 是否为当前用户查看自己的档案
+ * @param {string} viewedUserId - 被查看用户的ID，用于获取该用户的收藏
  */
-const FavoritesSection = ({ isOwnProfile = false }) => {
+const FavoritesSection = ({ isOwnProfile = false, viewedUserId = null }) => {
   const {
     favorites,
     loading,
@@ -21,7 +22,7 @@ const FavoritesSection = ({ isOwnProfile = false }) => {
     pagination,
     handleLoadMore,
     handleRemoveFavorite: removeFavoriteFromState,
-  } = useFavorites();
+  } = useFavorites(viewedUserId);
 
   const { handleRemoveFavorite } = useFavoriteActions();
 

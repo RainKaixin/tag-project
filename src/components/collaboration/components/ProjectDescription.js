@@ -9,6 +9,7 @@ const ApplicationsWall = ({
   applications = [],
   onApplicationClick,
   isInitiator = false,
+  positionId, // 添加positionId参数
 }) => {
   if (applications.length === 0) {
     return (
@@ -61,9 +62,24 @@ const ApplicationsWall = ({
                     ? 'hover:border-purple-300 cursor-pointer'
                     : 'hover:border-gray-300'
                 }`}
-                onClick={event =>
-                  isInitiator && onApplicationClick?.(application, event)
-                }
+                onClick={event => {
+                  console.log(
+                    '[ProjectDescription ApplicationsWall] Clicking application:',
+                    application.name
+                  );
+                  console.log(
+                    '[ProjectDescription ApplicationsWall] Position ID:',
+                    positionId
+                  );
+                  console.log(
+                    '[ProjectDescription ApplicationsWall] Is initiator:',
+                    isInitiator
+                  );
+
+                  if (isInitiator && onApplicationClick) {
+                    onApplicationClick(application, event, positionId);
+                  }
+                }}
               />
               {application.status === 'approved' && (
                 <div className='absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white flex items-center justify-center'>
@@ -190,6 +206,84 @@ const ProjectDescription = ({
             </span>
           </div>
         </div>
+
+        {/* Contact Information */}
+        {(project.contactInfo?.email ||
+          project.contactInfo?.discord ||
+          project.contactInfo?.other) && (
+          <div className='mt-6 pt-6 border-t border-gray-200'>
+            <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+              Contact Information
+            </h3>
+            <div className='space-y-3'>
+              {project.contactInfo?.email && (
+                <div className='flex items-center gap-2'>
+                  <svg
+                    className='w-5 h-5 text-gray-500'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
+                    />
+                  </svg>
+                  <span className='text-sm text-gray-600'>
+                    <span className='font-medium'>Email:</span>{' '}
+                    {project.contactInfo.email}
+                  </span>
+                </div>
+              )}
+
+              {project.contactInfo?.discord && (
+                <div className='flex items-center gap-2'>
+                  <svg
+                    className='w-5 h-5 text-gray-500'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z'
+                    />
+                  </svg>
+                  <span className='text-sm text-gray-600'>
+                    <span className='font-medium'>Discord:</span>{' '}
+                    {project.contactInfo.discord}
+                  </span>
+                </div>
+              )}
+
+              {project.contactInfo?.other && (
+                <div className='flex items-center gap-2'>
+                  <svg
+                    className='w-5 h-5 text-gray-500'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1'
+                    />
+                  </svg>
+                  <span className='text-sm text-gray-600'>
+                    <span className='font-medium'>Other:</span>{' '}
+                    {project.contactInfo.other}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Open Positions Section */}
         <div className='mt-24'>
@@ -353,6 +447,7 @@ const ProjectDescription = ({
                     applications={position.applications || []}
                     onApplicationClick={onApplicationClick}
                     isInitiator={isInitiator}
+                    positionId={position.id}
                   />
                 </div>
               </div>

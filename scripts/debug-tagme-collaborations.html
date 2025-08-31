@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debug TAGMe Collaborations</title>
+  </head>
+  <body>
+    <h1>🔍 Debug TAGMe Collaborations Issue</h1>
+    <button onclick="runDebug()">Run Debug</button>
+    <div id="output"></div>
+
+    <script>
+      function log(message) {
+        const output = document.getElementById('output');
+        output.innerHTML += '<p>' + message + '</p>';
+        console.log(message);
+      }
+
+      function runDebug() {
+        log('🔍 Debugging TAGMe collaborations issue...');
+
+        // 检查 localStorage 中的协作数据
+        const stored = localStorage.getItem('mock_collaborations');
+        log('📦 Raw stored data: ' + (stored ? 'Found' : 'Not found'));
+
+        if (stored) {
+          const collaborations = JSON.parse(stored);
+          log('📋 Total collaborations in storage: ' + collaborations.length);
+
+          // 显示所有协作项目
+          collaborations.forEach((collab, index) => {
+            log(
+              `${index + 1}. ${collab.title} (by ${
+                collab.author?.id || 'unknown'
+              })`
+            );
+          });
+
+          // 检查是否有 Alex 的协作项目
+          const alexCollaborations = collaborations.filter(
+            c => c.author && c.author.id === 'alex'
+          );
+          log('👤 Alex collaborations: ' + alexCollaborations.length);
+
+          // 检查是否有其他用户的协作项目
+          const otherCollaborations = collaborations.filter(
+            c => c.author && c.author.id !== 'alex'
+          );
+          log('👥 Other users collaborations: ' + otherCollaborations.length);
+
+          // 检查协作项目的状态
+          const activeCollaborations = collaborations.filter(
+            c => c.status === 'active'
+          );
+          log('✅ Active collaborations: ' + activeCollaborations.length);
+
+          // 检查协作项目的创建时间
+          collaborations.forEach(collab => {
+            log(`📅 ${collab.title}: created at ${collab.createdAt}`);
+          });
+        } else {
+          log('❌ No collaborations found in localStorage');
+        }
+
+        // 模拟 TAGMe 页面的 getCollaborations 调用
+        log('🔍 Simulating TAGMe getCollaborations call...');
+
+        // 模拟 getCollaborationsFromStorage 函数
+        const getCollaborationsFromStorage = () => {
+          try {
+            const stored = localStorage.getItem('mock_collaborations');
+            const parsed = stored ? JSON.parse(stored) : [];
+            log(
+              '📊 getCollaborationsFromStorage returned: ' +
+                parsed.length +
+                ' collaborations'
+            );
+            return parsed;
+          } catch (error) {
+            log('Error reading collaborations from storage: ' + error);
+            return [];
+          }
+        };
+
+        // 模拟 getCollaborations 函数
+        const getCollaborations = async (options = {}) => {
+          try {
+            const queryOptions = {
+              page: 1,
+              limit: 12,
+              status: 'active',
+              authorId: null,
+              searchTerm: '',
+              sortBy: 'createdAt',
+              sortOrder: 'desc',
+              ...options,
+            };
+
+            let collaborations = getCollaborationsFromStorage();
+            log('📋 Initial collaborations count: ' + collaborations.length);
+
+            // 筛选逻辑
+            if (queryOptions.authorId) {
+              collaborations = collaborations.filter(
+                c => c.author.id === queryOptions.authorId
+              );
+              log('🔍 After authorId filter: ' + collaborations.length);
+            }
+
+            if (queryOptions.status) {
+              collaborations = collaborations.filter(
+                c => c.status === queryOptions.status
+              );
+              log('🔍 After status filter: ' + collaborations.length);
+            }
+
+            if (queryOptions.searchTerm) {
+              const searchTerm = queryOptions.searchTerm.toLowerCase();
+              collaborations = collaborations.filter(
+                c =>
+                  c.title.toLowerCase().includes(searchTerm) ||
+                  c.description.toLowerCase().includes(searchTerm) ||
+                  c.projectVision.toLowerCase().includes(searchTerm)
+              );
+              log('🔍 After searchTerm filter: ' + collaborations.length);
+            }
+
+            // 排序逻辑
+            collaborations.sort((a, b) => {
+              const aValue = a[queryOptions.sortBy];
+              const bValue = b[queryOptions.sortBy];
+
+              if (queryOptions.sortOrder === 'desc') {
+                return new Date(bValue) - new Date(aValue);
+              } else {
+                return new Date(aValue) - new Date(bValue);
+              }
+            });
+
+            // 分页逻辑
+            const total = collaborations.length;
+            const totalPages = Math.ceil(total / queryOptions.limit);
+            const startIndex = (queryOptions.page - 1) * queryOptions.limit;
+            const endIndex = startIndex + queryOptions.limit;
+            const paginatedCollaborations = collaborations.slice(
+              startIndex,
+              endIndex
+            );
+
+            log(
+              '📄 Final result: ' +
+                JSON.stringify(
+                  {
+                    total,
+                    totalPages,
+                    startIndex,
+                    endIndex,
+                    paginatedCount: paginatedCollaborations.length,
+                  },
+                  null,
+                  2
+                )
+            );
+
+            return {
+              success: true,
+              data: paginatedCollaborations,
+              pagination: {
+                page: queryOptions.page,
+                limit: queryOptions.limit,
+                total,
+                totalPages,
+                hasNext: queryOptions.page < totalPages,
+                hasPrev: queryOptions.page > 1,
+              },
+            };
+          } catch (error) {
+            log('Error fetching collaborations: ' + error);
+            return {
+              success: false,
+              error: error.message || 'Failed to fetch collaborations',
+            };
+          }
+        };
+
+        // 测试 TAGMe 页面的调用
+        getCollaborations().then(result => {
+          log(
+            '🎯 TAGMe getCollaborations result: ' +
+              JSON.stringify(result, null, 2)
+          );
+          if (result.success) {
+            log(
+              '📊 TAGMe should display: ' +
+                result.data.length +
+                ' collaborations'
+            );
+            result.data.forEach((collab, index) => {
+              log(`${index + 1}. ${collab.title} (${collab.author?.id})`);
+            });
+          } else {
+            log('❌ TAGMe getCollaborations failed: ' + result.error);
+          }
+        });
+
+        log('✅ Debug completed!');
+      }
+    </script>
+  </body>
+</html>

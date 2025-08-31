@@ -6,9 +6,10 @@ import { getCurrentUser } from '../../../utils/currentUser';
 
 /**
  * 收藏数据管理Hook
+ * @param {string} viewedUserId - 被查看用户的ID，如果提供则获取该用户的收藏，否则获取当前用户的收藏
  * @returns {Object} 收藏数据和状态
  */
-export const useFavorites = () => {
+export const useFavorites = (viewedUserId = null) => {
   // 状态管理
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,22 +27,31 @@ export const useFavorites = () => {
         setLoading(true);
         setError(null);
 
-        // 检查当前用户
-        const currentUser = getCurrentUser();
-        console.log('[useFavorites] 当前用户:', currentUser);
+        // 确定要获取收藏的用户ID
+        let targetUserId = viewedUserId;
 
-        if (!currentUser?.id) {
-          console.warn('[useFavorites] 用户未登录，无法加载收藏');
-          setFavorites([]);
-          setPagination({
-            cursor: null,
-            hasMore: false,
-            total: 0,
-          });
-          return;
+        if (!targetUserId) {
+          // 如果没有提供viewedUserId，则使用当前登录用户
+          const currentUser = getCurrentUser();
+          console.log('[useFavorites] 当前用户:', currentUser);
+
+          if (!currentUser?.id) {
+            console.warn('[useFavorites] 用户未登录，无法加载收藏');
+            setFavorites([]);
+            setPagination({
+              cursor: null,
+              hasMore: false,
+              total: 0,
+            });
+            return;
+          }
+          targetUserId = currentUser.id;
         }
 
+        console.log('[useFavorites] 获取收藏的用户ID:', targetUserId);
+
         const params = {
+          userId: targetUserId, // 指定要获取收藏的用户ID
           type: 'all', // 固定为all，显示所有收藏
           cursor: reset ? null : pagination.cursor,
           limit: 12,
@@ -93,7 +103,7 @@ export const useFavorites = () => {
   useEffect(() => {
     console.log('[useFavorites] 初始化加载收藏...');
     loadFavorites(true);
-  }, [loadFavorites]);
+  }, [loadFavorites, viewedUserId]);
 
   // 移除筛选功能，不再需要
 

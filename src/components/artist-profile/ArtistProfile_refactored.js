@@ -92,11 +92,7 @@ const ArtistProfile = () => {
   return (
     <div
       className='bg-white min-h-screen'
-      key={
-        artistState.isOwnProfile
-          ? artistState.currentUser?.id
-          : artistState.artist?.id
-      }
+      key={`${artistState.artist?.id}-${artistState.isOwnProfile}`}
     >
       {/* Header Section */}
       <ArtistHeader
@@ -109,7 +105,11 @@ const ArtistProfile = () => {
         onBackClick={actions.handleBackClick}
         onEditProfileClick={actions.handleEditProfileClick}
         onPreviewAsVisitorClick={actions.handlePreviewAsVisitorClick}
-        onBackToOwnerViewClick={null}
+        onBackToOwnerViewClick={
+          artistState.shouldShowBackToOwnerView
+            ? actions.handleBackToOwnerViewClick
+            : null
+        }
         toggleFollow={followCountState.toggleFollow}
         onFollowersClick={handleFollowersClick}
         onFollowingClick={handleFollowingClick}
@@ -139,11 +139,16 @@ const ArtistProfile = () => {
               collaborations={artistState.collaborations}
               expandedCardId={artistState.expandedCardId}
               onCollaborationToggle={actions.handleCollaborationToggle}
+              currentUserId={artistState.currentUser?.id}
+              viewedUserId={artistState.artist?.id}
             />
 
             {/* Favorites Section */}
             <div className='mt-8'>
-              <FavoritesSection isOwnProfile={artistState.isOwnProfile} />
+              <FavoritesSection
+                isOwnProfile={artistState.isOwnProfile}
+                viewedUserId={artistState.artist?.id}
+              />
             </div>
           </div>
         </div>

@@ -257,7 +257,7 @@ const CollaborationGrid = ({ onCollaborationClick, onBookmarkToggle }) => {
                 <h3 className='font-bold text-gray-900 mb-1 text-sm hover:text-purple-600 transition-colors duration-200'>
                   {collaboration.title}
                 </h3>
-                <p className='text-xs text-gray-600 mb-2 line-clamp-2'>
+                <p className='text-xs text-gray-600 mb-2 overflow-hidden'>
                   {collaboration.description}
                 </p>
               </div>

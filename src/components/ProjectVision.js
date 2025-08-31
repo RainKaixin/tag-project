@@ -158,6 +158,12 @@ const ProjectVision = ({ vision, owner, currentUser, onFinalReviewClick }) => {
                     >
                       {member.role}
                     </span>
+                    {/* 显示职位信息 */}
+                    {member.positionTitle && (
+                      <span className='inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700'>
+                        {member.positionTitle}
+                      </span>
+                    )}
                   </div>
                 </div>
 

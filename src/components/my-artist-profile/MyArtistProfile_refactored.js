@@ -113,6 +113,7 @@ const MyArtistProfile_refactored = () => {
                   setExpandedCardId
                 )
               }
+              currentUserId={currentUser?.id}
             />
           </div>
         </div>

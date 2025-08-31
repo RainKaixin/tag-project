@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Test Collaborations</title>
+  </head>
+  <body>
+    <h1>🎯 Create Test Collaborations for TAGMe</h1>
+    <button onclick="createTestCollaborations()">
+      Create Test Collaborations
+    </button>
+    <div id="output"></div>
+
+    <script>
+      function log(message) {
+        const output = document.getElementById('output');
+        output.innerHTML += '<p>' + message + '</p>';
+        console.log(message);
+      }
+
+      function createTestCollaborations() {
+        log('🎯 Creating test collaborations for TAGMe...');
+
+        // 检查现有的协作数据
+        const stored = localStorage.getItem('mock_collaborations');
+        let collaborations = stored ? JSON.parse(stored) : [];
+
+        log('📦 Existing collaborations: ' + collaborations.length);
+
+        // 创建多个测试协作项目
+        const testCollaborations = [
+          {
+            id: `test_alex_${Date.now()}`,
+            title: 'Game Concept Design Project',
+            description:
+              'Creating an innovative mobile game concept that combines puzzle mechanics with narrative storytelling.',
+            projectVision:
+              'Revolutionizing mobile gaming through innovative concept design',
+            whyThisMatters:
+              'This project aims to push the boundaries of mobile game design.',
+            teamSize: '4-5',
+            duration: '3-4 months',
+            meetingSchedule: '2-3 times/week',
+            applicationDeadline: '2024-12-15',
+            projectType: 'Game Design',
+            contactInfo: {
+              email: 'alex.chen@example.com',
+              discord: 'alexchen#1234',
+              other: '',
+            },
+            roles: [
+              {
+                id: 'role_1',
+                title: 'Character Designer',
+                description: 'Create unique and memorable character designs.',
+                requiredSkills: 'Character Design, Concept Art',
+                status: 'available',
+              },
+            ],
+            author: {
+              id: 'alex',
+              name: 'Alex Chen',
+              avatar: null,
+              role: 'Concept Artist',
+            },
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            likes: 24,
+            views: 156,
+            applications: [],
+          },
+          {
+            id: `test_bryan_${Date.now() + 1}`,
+            title: 'Digital Illustration Series',
+            description:
+              "Collaborative digital art project focused on creating illustrations for children's books.",
+            projectVision:
+              'Creating magical illustrations that inspire young readers',
+            whyThisMatters:
+              "Children's books have the power to shape imaginations.",
+            teamSize: '2-3',
+            duration: '1-2 months',
+            meetingSchedule: '1-2 times/week',
+            applicationDeadline: '2024-11-30',
+            projectType: 'Illustration',
+            contactInfo: {
+              email: 'bryan.rodriguez@example.com',
+              discord: 'bryanrodriguez#5678',
+              other: '',
+            },
+            roles: [
+              {
+                id: 'role_1',
+                title: 'Character Illustrator',
+                description:
+                  'Create warm and imaginative character illustrations.',
+                requiredSkills: 'Digital Illustration, Character Design',
+                status: 'available',
+              },
+            ],
+            author: {
+              id: 'bryan',
+              name: 'Bryan Rodriguez',
+              avatar: null,
+              role: 'Illustrator',
+            },
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            likes: 18,
+            views: 89,
+            applications: [],
+          },
+          {
+            id: `test_alice_${Date.now() + 2}`,
+            title: 'Brand Identity System',
+            description: 'Complete brand identity system for a tech startup.',
+            projectVision: 'Creating a memorable and scalable brand identity',
+            whyThisMatters: 'Strong branding is crucial for startup success.',
+            teamSize: '3-4',
+            duration: '2-3 months',
+            meetingSchedule: 'Weekly meetings',
+            applicationDeadline: '2024-12-20',
+            projectType: 'Branding',
+            contactInfo: {
+              email: 'alice.chen@example.com',
+              discord: 'alicechen#9012',
+              other: '',
+            },
+            roles: [
+              {
+                id: 'role_1',
+                title: 'Brand Designer',
+                description: 'Design comprehensive brand identity system.',
+                requiredSkills: 'Brand Design, Logo Design',
+                status: 'available',
+              },
+            ],
+            author: {
+              id: 'alice',
+              name: 'Alice Chen',
+              avatar: null,
+              role: 'Brand Designer',
+            },
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            likes: 32,
+            views: 234,
+            applications: [],
+          },
+        ];
+
+        // 添加到协作列表的开头
+        collaborations.unshift(...testCollaborations);
+
+        // 保存回 localStorage
+        localStorage.setItem(
+          'mock_collaborations',
+          JSON.stringify(collaborations)
+        );
+
+        log('✅ Test collaborations created successfully!');
+        log('📝 Created collaborations:');
+        testCollaborations.forEach(collab => {
+          log(`  - ${collab.title} (by ${collab.author.name})`);
+        });
+
+        // 验证保存
+        const verifyStored = localStorage.getItem('mock_collaborations');
+        const verifyCollaborations = JSON.parse(verifyStored);
+        log(
+          '🔍 Verification - Total collaborations: ' +
+            verifyCollaborations.length
+        );
+
+        // 检查各用户的协作项目
+        const alexCollaborations = verifyCollaborations.filter(
+          c => c.author && c.author.id === 'alex'
+        );
+        const bryanCollaborations = verifyCollaborations.filter(
+          c => c.author && c.author.id === 'bryan'
+        );
+        const aliceCollaborations = verifyCollaborations.filter(
+          c => c.author && c.author.id === 'alice'
+        );
+
+        log('👤 User collaborations:');
+        log('  - Alex: ' + alexCollaborations.length);
+        log('  - Bryan: ' + bryanCollaborations.length);
+        log('  - Alice: ' + aliceCollaborations.length);
+
+        // 检查活跃状态
+        const activeCollaborations = verifyCollaborations.filter(
+          c => c.status === 'active'
+        );
+        log('✅ Active collaborations: ' + activeCollaborations.length);
+
+        log(
+          '🎉 Test completed! Now TAGMe page should display these collaborations.'
+        );
+      }
+    </script>
+  </body>
+</html>

@@ -438,81 +438,105 @@ export const getDefaultArtworks = () => {
  * @returns {Array} 合作项目数据数组
  */
 export const getCollaborationsData = async userId => {
-  // 目前返回固定的合作数据，未来可以根据userId过滤
-  return [
-    {
-      id: 1,
-      title: 'Animation Project with Jason K.',
-      description:
-        'Collaborated on character design and background illustrations for a short animated film project.',
-      image:
-        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
-      partner: 'Jason K.',
-      partnerAvatar:
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
-      completionDate: 'Completed May 2023',
-      category: 'Animation',
-      isInitiator: false,
-      role: 'Character Designer',
-      dateRange: 'March 2023 - May 2023',
-      responsibility:
-        'Responsible for visual design and facial animation of main characters, created complete design schemes for 5 core characters, and participated in unifying the background art style.',
-      teamFeedback: {
-        feedbacker: 'Jason K.',
-        feedbackerRole: 'Project Director',
-        content:
-          'Alex demonstrated excellent creativity and technical skills in character design. His designs are not only beautiful but also serve the narrative well. He has a positive team collaboration attitude and is an important contributor to the project.',
-      },
-    },
-    {
-      id: 2,
-      title: 'Brand Identity with Studio X',
-      description:
-        'Worked together on a complete brand identity system for a tech startup.',
-      image:
-        'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop',
-      partner: 'Studio X',
-      partnerAvatar:
-        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face',
-      completionDate: 'Completed March 2023',
-      category: 'Branding',
-      isInitiator: true,
-      role: 'Project Owner',
-      dateRange: 'January 2023 - March 2023',
-      responsibility:
-        'As project initiator, responsible for overall brand strategy development, leading the design team to complete the full visual identity system from logo design to brand guidelines.',
-      teamFeedback: {
-        feedbacker: 'Studio X Team',
-        feedbackerRole: 'Creative Director',
-        content:
-          'Alex demonstrated excellent project leadership and design professionalism, accurately understanding client needs and transforming them into outstanding design solutions. The entire brand system received high recognition from clients.',
-      },
-    },
-    {
-      id: 3,
-      title: 'UI Design with Mobile Team',
-      description:
-        'Collaborated on user interface design for a mobile application.',
-      image:
-        'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
-      partner: 'Mobile Team',
-      partnerAvatar:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face',
-      completionDate: 'Completed January 2023',
-      category: 'UI/UX',
-      isInitiator: false,
-      role: 'UI Designer',
-      dateRange: 'November 2022 - January 2023',
-      responsibility:
-        'Responsible for main interface design of mobile applications, including user flow optimization, component library establishment, and interactive prototype creation, ensuring excellent user experience.',
-      teamFeedback: {
-        feedbacker: 'Sarah Chen',
-        feedbackerRole: 'Product Manager',
-        content:
-          "Alex's UI design is both beautiful and practical, balancing visual effects and functional requirements well. His design thinking and technical implementation capabilities left a deep impression on the team.",
-      },
-    },
-  ];
+  try {
+    console.log(
+      '[getCollaborationsData] Getting collaborations for userId:',
+      userId
+    );
+
+    // 从 localStorage 获取真实的协作数据
+    const stored = localStorage.getItem('mock_collaborations');
+    if (!stored) {
+      console.log('[getCollaborationsData] No collaborations found in storage');
+      return [];
+    }
+
+    const collaborations = JSON.parse(stored);
+    console.log(
+      '[getCollaborationsData] Found collaborations:',
+      collaborations.length
+    );
+
+    // 过滤出当前用户创建的协作项目（作为 initiator）
+    const userCollaborations = collaborations.filter(
+      collab => collab.author && collab.author.id === userId
+    );
+
+    console.log(
+      '[getCollaborationsData] User collaborations:',
+      userCollaborations.length
+    );
+
+    // 转换为艺术家档案页面需要的格式
+    const formattedCollaborations = userCollaborations.map(collab => {
+      // 计算日期范围（从创建时间到现在）
+      const createdAt = new Date(collab.createdAt);
+      const now = new Date();
+      const monthsDiff = Math.floor(
+        (now - createdAt) / (1000 * 60 * 60 * 24 * 30)
+      );
+
+      let dateRange;
+      if (monthsDiff === 0) {
+        dateRange = 'This month';
+      } else if (monthsDiff === 1) {
+        dateRange = 'Last month';
+      } else {
+        dateRange = `${monthsDiff} months ago`;
+      }
+
+      // 获取项目图片（如果有的话）
+      let image = '';
+      if (collab.heroImage) {
+        // 如果是图片 key，需要转换为 URL
+        if (collab.heroImage.startsWith('collaboration_')) {
+          // 使用占位图片，实际项目中应该从 IndexedDB 获取
+          image =
+            'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop';
+        } else {
+          image = collab.heroImage;
+        }
+      } else {
+        // 使用默认占位图片
+        image =
+          'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop';
+      }
+
+      return {
+        id: collab.id,
+        title: collab.title,
+        description: collab.description,
+        image: image,
+        partner: 'Team Members', // 协作项目中的团队成员
+        partnerAvatar:
+          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
+        completionDate: `Created ${dateRange}`,
+        category: collab.projectType || 'Collaboration',
+        isInitiator: true, // 在艺术家档案中显示的都是用户创建的
+        role: 'Project Owner • Initiator',
+        dateRange: dateRange,
+        responsibility: '', // 默认为空，鼓励用户填写
+        teamFeedback: {
+          feedbacker: 'Team',
+          feedbackerRole: 'Collaborators',
+          content:
+            'This project is currently in progress. Team feedback will be available once the project is completed.',
+        },
+      };
+    });
+
+    console.log(
+      '[getCollaborationsData] Formatted collaborations:',
+      formattedCollaborations
+    );
+    return formattedCollaborations;
+  } catch (error) {
+    console.error(
+      '[getCollaborationsData] Error getting collaborations:',
+      error
+    );
+    return [];
+  }
 };
 
 /**

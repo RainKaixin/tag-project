@@ -229,6 +229,8 @@ const NotificationTest = () => {
           </div>
         </div>
 
+        {/* 收藏数据修复工具 */}
+
         {/* 測試步驟說明 */}
         <div className='bg-blue-50 p-3 rounded-lg'>
           <p className='text-sm font-medium text-blue-900 mb-2'>Test Steps:</p>

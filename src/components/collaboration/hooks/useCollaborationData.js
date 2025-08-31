@@ -4,15 +4,13 @@ import { useLocation, useParams } from 'react-router-dom';
 import { useAppContext } from '../../../context/AppContext';
 import { favoritesService } from '../../../services';
 import { getProfile } from '../../../services';
-import {
-  getApplicationsData,
-  updateApplicationUserName,
-} from '../../../services/applicationService';
+import applicationService from '../../../services/applicationService';
 import {
   getApplyFormData,
   hasCompleteApplyFormData,
 } from '../../../services/applyFormService';
 import { getAllPositionStatus } from '../../../services/positionService';
+import { getApplicationStatus } from '../../../utils/applicationStorage';
 import { getCurrentUser } from '../../../utils/currentUser';
 import { getCollaborationDataById } from '../../favorites/utils/favoritesHelpers';
 import {
@@ -26,9 +24,28 @@ export const useCollaborationData = () => {
   const { id } = useParams();
 
   // 从Context、路由状态、URL参数获取项目数据
-  const [projectData, setProjectData] = useState(
-    state.selectedCollaboration || location.state?.project
-  );
+  const [projectData, setProjectData] = useState(() => {
+    // 优先从 Context 或 location.state 获取
+    const initialData = state.selectedCollaboration || location.state?.project;
+
+    // 如果没有初始数据但有 ID，尝试从 localStorage 获取
+    if (!initialData && id) {
+      console.log(
+        '[useCollaborationData] No initial data, trying localStorage for id:',
+        id
+      );
+      const localStorageData = getCollaborationDataById(id);
+      if (localStorageData) {
+        console.log(
+          '[useCollaborationData] Found data in localStorage:',
+          localStorageData
+        );
+        return localStorageData;
+      }
+    }
+
+    return initialData;
+  });
 
   // 调试信息
   console.log('[useCollaborationData] Final projectData:', projectData);
@@ -79,8 +96,47 @@ export const useCollaborationData = () => {
   // 处理项目数据并设置初始project状态
   useEffect(() => {
     const processedProject = processProjectData(projectData, location, state);
+    console.log('[useCollaborationData] Processed project:', processedProject);
+    console.log(
+      '[useCollaborationData] Processed project.roles:',
+      processedProject?.roles
+    );
+
+    // 如果处理后的项目没有角色数据，尝试从 localStorage 恢复
+    if (!processedProject?.roles || processedProject.roles.length === 0) {
+      console.log(
+        '[useCollaborationData] Processed project has no roles, trying localStorage recovery...'
+      );
+
+      if (id) {
+        const localStorageData = getCollaborationDataById(id);
+        if (
+          localStorageData &&
+          localStorageData.roles &&
+          localStorageData.roles.length > 0
+        ) {
+          console.log(
+            '[useCollaborationData] Found roles in localStorage:',
+            localStorageData.roles
+          );
+
+          // 更新 processedProject，添加角色数据
+          const updatedProject = {
+            ...processedProject,
+            roles: localStorageData.roles,
+          };
+          console.log(
+            '[useCollaborationData] Updated project with roles:',
+            updatedProject
+          );
+          setProject(updatedProject);
+          return;
+        }
+      }
+    }
+
     setProject(processedProject);
-  }, [projectData, location, state]);
+  }, [projectData, location, state, id]);
 
   // 处理数据加载和补充
   useEffect(() => {
@@ -93,27 +149,72 @@ export const useCollaborationData = () => {
         !projectData.collaborators ||
         !projectData.vision?.collaborators);
 
+    // 调试：检查数据完整性
+    console.log('[useCollaborationData] Data completeness check:');
+    console.log('  projectData exists:', !!projectData);
+    console.log('  projectData.roles exists:', !!projectData?.roles);
+    console.log(
+      '  projectData.collaborators exists:',
+      !!projectData?.collaborators
+    );
+    console.log(
+      '  projectData.vision?.collaborators exists:',
+      !!projectData?.vision?.collaborators
+    );
+    console.log('  hasIncompleteData:', hasIncompleteData);
+
+    // 强制检查：如果 projectData 存在但没有 roles，或者 roles 为空数组，也需要恢复
+    const needsDataRecovery =
+      !projectData ||
+      hasIncompleteData ||
+      (projectData && (!projectData.roles || projectData.roles.length === 0));
+
+    console.log('  needsDataRecovery:', needsDataRecovery);
+
     // 如果没有数据或数据不完整，尝试从localStorage获取
-    if (!projectData || hasIncompleteData) {
+    if (needsDataRecovery) {
       console.log(
         '[useCollaborationData] No data or incomplete data, trying localStorage for id:',
         id
       );
-      const localStorageData = getCollaborationDataById(id);
+
+      // 尝试多种 ID 格式
+      const possibleIds = [id, parseInt(id), id.toString()];
+      let localStorageData = null;
+
+      for (const testId of possibleIds) {
+        console.log(
+          `[useCollaborationData] Trying ID format: ${testId} (type: ${typeof testId})`
+        );
+        localStorageData = getCollaborationDataById(testId);
+        console.log(
+          `[useCollaborationData] getCollaborationDataById result:`,
+          localStorageData
+        );
+        if (localStorageData) {
+          console.log(`[useCollaborationData] Found data with ID: ${testId}`);
+          break;
+        }
+      }
+
       if (localStorageData) {
         console.log(
           '[useCollaborationData] Found localStorage data:',
           localStorageData
         );
         console.log(
-          '[useCollaborationData] localStorage collaborators:',
-          localStorageData.collaborators
+          '[useCollaborationData] localStorage roles:',
+          localStorageData.roles
         );
         // 更新projectData状态，这会触发上面的useEffect重新处理数据
         setProjectData(localStorageData);
+      } else {
+        console.warn(
+          '[useCollaborationData] No data found in localStorage for any ID format'
+        );
       }
     }
-  }, [id, projectData?.id]); // 只在id或projectData.id变化时执行
+  }, [id]); // 移除 projectData?.id 依赖，确保每次 id 变化都会检查
 
   // 功能开关
   const enableProjectProgressBar = true;
@@ -134,24 +235,78 @@ export const useCollaborationData = () => {
 
   // 加载职位数据并应用持久化状态
   useEffect(() => {
-    if (!project?.id) return;
+    console.log(
+      '[useCollaborationData] useEffect triggered, project?.id:',
+      project?.id
+    );
+    console.log('[useCollaborationData] project?.roles:', project?.roles);
 
-    const loadPositionsWithStatus = () => {
+    if (!project?.id) {
+      console.log('[useCollaborationData] No project ID, returning early');
+      return;
+    }
+
+    // 额外检查：如果 project 没有角色数据，尝试从 localStorage 恢复
+    if (!project.roles || project.roles.length === 0) {
+      console.log(
+        '[useCollaborationData] Project has no roles, trying to recover from localStorage...'
+      );
+
+      // 尝试多种 ID 格式
+      const possibleIds = [
+        project.id,
+        parseInt(project.id),
+        project.id.toString(),
+      ];
+      let localStorageData = null;
+
+      for (const testId of possibleIds) {
+        console.log(
+          `[useCollaborationData] Trying ID format: ${testId} (type: ${typeof testId})`
+        );
+        localStorageData = getCollaborationDataById(testId);
+        if (
+          localStorageData &&
+          localStorageData.roles &&
+          localStorageData.roles.length > 0
+        ) {
+          console.log(
+            `[useCollaborationData] Found roles data with ID: ${testId}`
+          );
+          console.log(
+            '[useCollaborationData] Found roles:',
+            localStorageData.roles
+          );
+
+          // 更新 project 对象，添加角色数据
+          const updatedProject = {
+            ...project,
+            roles: localStorageData.roles,
+          };
+          console.log(
+            '[useCollaborationData] Updated project with roles:',
+            updatedProject
+          );
+          setProject(updatedProject);
+          // 不要 return，继续执行 loadPositionsWithStatus
+        }
+      }
+
+      console.log('[useCollaborationData] No roles data found in localStorage');
+    }
+
+    const loadPositionsWithStatus = async () => {
       try {
         // 获取项目数据中的真实职位信息
-        console.log('[useCollaborationData] Project data:', project);
-        console.log('[useCollaborationData] Project roles:', project?.roles);
         const defaultPositions = getPositionsData(project);
-        console.log(
-          '[useCollaborationData] Generated positions:',
-          defaultPositions
-        );
 
         // 获取持久化的职位状态
         const savedStatus = getAllPositionStatus(project.id);
 
         // 加载申请记录
-        const savedApplications = getApplicationsData(project.id);
+        const savedApplications = await applicationService.getApplicationsData(
+          project.id
+        );
 
         // 更新申请记录中的用户姓名（如果需要）
         const updateUserNamesInApplications = async () => {
@@ -178,9 +333,13 @@ export const useCollaborationData = () => {
                   );
 
                   if (needsUpdate) {
-                    updateApplicationUserName(currentUser.id, newName);
+                    await applicationService.updateApplicationUserName(
+                      currentUser.id,
+                      newName
+                    );
                     // 重新获取更新后的数据
-                    const updatedApplications = getApplicationsData(project.id);
+                    const updatedApplications =
+                      await applicationService.getApplicationsData(project.id);
                     if (updatedApplications) {
                       Object.keys(updatedApplications).forEach(positionId => {
                         updatedApplications[positionId].forEach(application => {
@@ -205,37 +364,97 @@ export const useCollaborationData = () => {
         // 执行异步更新
         updateUserNamesInApplications();
 
+        // 恢复申请状态：从applicationStorage恢复已批准的申请状态
+        const restoreApplicationStatus = () => {
+          if (savedApplications) {
+            Object.entries(savedApplications).forEach(
+              ([positionId, applications]) => {
+                applications.forEach(application => {
+                  // 从applicationStorage检查是否已被批准
+                  // 统一使用application.id作为键，如果没有则回退到userId
+                  const applicantId = application.id || application.userId;
+                  const storedStatus = getApplicationStatus(
+                    positionId,
+                    applicantId
+                  );
+                  if (storedStatus === 'approved') {
+                    console.log(
+                      `[useCollaborationData] Restoring approved status from storage for user ${application.userId} in position ${positionId}`
+                    );
+                    application.status = 'approved';
+                  } else if (application.status === 'approved') {
+                    // 如果applicationService中有approved状态，同步到applicationStorage
+                    console.log(
+                      `[useCollaborationData] Syncing approved status to storage for user ${application.userId} in position ${positionId}`
+                    );
+                    // 这里可以调用saveApplicationStatus，但为了避免循环依赖，我们先记录日志
+                  }
+                });
+              }
+            );
+          }
+        };
+
+        restoreApplicationStatus();
+
         // 应用保存的状态和申请记录到职位数据
-        const positionsWithStatus = defaultPositions.map(position => ({
-          ...position,
-          status: savedStatus[position.id] || position.status,
-          // 合并保存的申请记录
-          applications:
-            savedApplications?.[position.id] || position.applications || [],
-        }));
+        const positionsWithStatus = defaultPositions.map(position => {
+          const savedPositionApplications =
+            savedApplications?.[position.id] || [];
+
+          console.log(
+            `[useCollaborationData] Position ${position.id} saved applications:`,
+            savedPositionApplications
+          );
+
+          // 确保申请状态正确恢复
+          const applicationsWithStatus = savedPositionApplications.map(app => {
+            console.log(
+              `[useCollaborationData] Application ${app.userId} status: ${app.status}`
+            );
+            return {
+              ...app,
+              status: app.status || 'pending', // 确保状态字段存在
+            };
+          });
+
+          const result = {
+            ...position,
+            status: savedStatus[position.id] || position.status,
+            // 合并保存的申请记录，确保状态正确
+            applications: applicationsWithStatus,
+          };
+
+          console.log(
+            `[useCollaborationData] Final position ${position.id} applications:`,
+            result.applications
+          );
+
+          return result;
+        });
 
         setPositions(positionsWithStatus);
-        console.log(
-          '[useCollaborationData] Loaded positions with saved status and applications:',
-          positionsWithStatus
-        );
       } catch (error) {
         console.error('Failed to load positions with status:', error);
-        setPositions(getPositionsData());
+        setPositions(getPositionsData(project));
       }
     };
 
+    console.log('[useCollaborationData] About to call loadPositionsWithStatus');
     loadPositionsWithStatus();
-  }, [project?.id]);
+    console.log('[useCollaborationData] loadPositionsWithStatus called!');
+  }, [project?.id, project?.roles]);
 
   // 初始化已申请职位状态
   useEffect(() => {
     if (!project?.id || !currentUser?.id) return;
 
-    const initializeAppliedPositions = () => {
+    const initializeAppliedPositions = async () => {
       try {
         // 获取已保存的申请记录
-        const savedApplications = getApplicationsData(project.id);
+        const savedApplications = await applicationService.getApplicationsData(
+          project.id
+        );
 
         if (savedApplications) {
           // 检查当前用户已经申请过的职位
@@ -271,16 +490,18 @@ export const useCollaborationData = () => {
 
   // 加载Apply Now表单数据
   useEffect(() => {
-    if (!project?.id) return;
+    if (!project?.id || !currentUser?.id) return;
 
     const loadApplyFormData = () => {
       try {
-        const savedFormData = getApplyFormData(project.id);
+        const savedFormData = getApplyFormData(project.id, currentUser.id);
         if (savedFormData) {
           setApplyForm(savedFormData);
-          setHasSubmittedApplication(hasCompleteApplyFormData(project.id));
+          setHasSubmittedApplication(
+            hasCompleteApplyFormData(project.id, currentUser.id)
+          );
           console.log(
-            '[useCollaborationData] Loaded saved apply form data:',
+            '[useCollaborationData] Loaded saved apply form data for user:',
             savedFormData
           );
         }
@@ -290,7 +511,7 @@ export const useCollaborationData = () => {
     };
 
     loadApplyFormData();
-  }, [project?.id]);
+  }, [project?.id, currentUser?.id]);
 
   // 检查收藏状态
   useEffect(() => {
@@ -330,6 +551,42 @@ export const useCollaborationData = () => {
   const saveCollaborationData = useCallback(projectData => {
     try {
       console.log('[saveCollaborationData] Saving project data:', projectData);
+
+      // 创建精简版projectData，只移除base64图片数据，保留所有其他重要信息
+      const strippedProjectData = {
+        ...projectData,
+        // 只移除base64图片数据以避免localStorage配额问题
+        heroImage: undefined,
+        posterPreview: undefined,
+        image: undefined,
+        // 保留所有其他重要信息，包括initiator信息
+        author: projectData.author, // 确保initiator信息不被丢失
+        authorId: projectData.authorId,
+        authorName: projectData.authorName,
+        // 保留所有项目元数据
+        id: projectData.id,
+        title: projectData.title,
+        description: projectData.description,
+        collaborators: projectData.collaborators,
+        roles: projectData.roles,
+        vision: projectData.vision,
+        duration: projectData.duration,
+        teamSize: projectData.teamSize,
+        tags: projectData.tags,
+        status: projectData.status,
+        postedTime: projectData.postedTime,
+        applicationDeadline: projectData.applicationDeadline,
+        meetingFrequency: projectData.meetingFrequency,
+        // 保留其他可能的重要字段
+        contactInfo: projectData.contactInfo,
+        categories: projectData.categories,
+        milestones: projectData.milestones,
+      };
+
+      console.log(
+        '[saveCollaborationData] Stripped project data for storage:',
+        strippedProjectData
+      );
       console.log(
         '[saveCollaborationData] Project collaborators:',
         projectData?.collaborators
@@ -337,6 +594,10 @@ export const useCollaborationData = () => {
       console.log(
         '[saveCollaborationData] Project vision collaborators:',
         projectData?.vision?.collaborators
+      );
+      console.log(
+        '[saveCollaborationData] Project positions:',
+        projectData?.roles
       );
 
       // 获取现有的协作数据
@@ -349,7 +610,7 @@ export const useCollaborationData = () => {
 
       // 更新指定的协作项目
       const updatedCollaborations = collaborations.map(collab => {
-        if (collab.id === projectData.id) {
+        if (collab.id === strippedProjectData.id) {
           console.log(
             '[saveCollaborationData] Updating collaboration:',
             collab.id
@@ -363,21 +624,39 @@ export const useCollaborationData = () => {
             projectData.collaborators
           );
 
-          // 确保collaborators数据被正确保存
+          // 安全的合并策略：只更新需要变化的字段，保留原有数据
           const updatedCollab = {
-            ...collab,
-            ...projectData,
+            ...collab, // 保留原有完整数据
+            // 只更新collaborators和roles，不覆盖其他字段
             collaborators:
-              projectData.collaborators || collab.collaborators || [],
+              strippedProjectData.collaborators || collab.collaborators || [],
+            roles: strippedProjectData.roles || collab.roles || [],
+            // 安全地更新vision中的collaborators
             vision: {
               ...collab.vision,
-              ...projectData.vision,
               collaborators:
-                projectData.vision?.collaborators ||
-                projectData.collaborators ||
+                strippedProjectData.vision?.collaborators ||
+                strippedProjectData.collaborators ||
                 collab.vision?.collaborators ||
                 [],
             },
+            // 保留所有原有的元数据，不覆盖
+            author: collab.author, // 确保initiator信息不被覆盖
+            authorId: collab.authorId,
+            authorName: collab.authorName,
+            authorAvatar: collab.authorAvatar,
+            title: collab.title,
+            description: collab.description,
+            duration: collab.duration,
+            teamSize: collab.teamSize,
+            tags: collab.tags,
+            status: collab.status,
+            postedTime: collab.postedTime,
+            applicationDeadline: collab.applicationDeadline,
+            meetingFrequency: collab.meetingFrequency,
+            contactInfo: collab.contactInfo,
+            categories: collab.categories,
+            milestones: collab.milestones,
           };
 
           console.log(
@@ -389,18 +668,71 @@ export const useCollaborationData = () => {
         return collab;
       });
 
-      // 保存回localStorage
-      localStorage.setItem(
-        'mock_collaborations',
-        JSON.stringify(updatedCollaborations)
+      // 保存回localStorage，添加配额检查
+      const dataToSave = JSON.stringify(updatedCollaborations);
+      const dataSize = dataToSave.length;
+
+      console.log(
+        `[saveCollaborationData] Data size: ${(dataSize / 1024 / 1024).toFixed(
+          2
+        )} MB`
       );
-      console.log('[saveCollaborationData] Successfully saved to localStorage');
+
+      // 检查localStorage配额
+      try {
+        localStorage.setItem('mock_collaborations', dataToSave);
+        console.log(
+          '[saveCollaborationData] Successfully saved to localStorage'
+        );
+      } catch (quotaError) {
+        if (quotaError.name === 'QuotaExceededError') {
+          console.error(
+            '[saveCollaborationData] localStorage quota exceeded, attempting cleanup...'
+          );
+
+          // 尝试清理一些空间
+          try {
+            // 删除一些旧的或大的数据
+            const keysToRemove = [
+              'tag.avatars',
+              'tag.images',
+              'portfolio_alice',
+              'portfolio_bryan',
+            ];
+            keysToRemove.forEach(key => {
+              if (localStorage.getItem(key)) {
+                localStorage.removeItem(key);
+                console.log(
+                  `[saveCollaborationData] Removed ${key} to free space`
+                );
+              }
+            });
+
+            // 再次尝试保存
+            localStorage.setItem('mock_collaborations', dataToSave);
+            console.log(
+              '[saveCollaborationData] Successfully saved after cleanup'
+            );
+          } catch (cleanupError) {
+            console.error(
+              '[saveCollaborationData] Failed to save even after cleanup:',
+              cleanupError
+            );
+            // 至少保存applicationStorage数据，这是最重要的
+            console.log(
+              '[saveCollaborationData] Application status data is still preserved in applicationStorage'
+            );
+          }
+        } else {
+          throw quotaError;
+        }
+      }
 
       // 验证保存的数据
       const verifyStored = localStorage.getItem('mock_collaborations');
       const verifyCollaborations = verifyStored ? JSON.parse(verifyStored) : [];
       const savedCollab = verifyCollaborations.find(
-        c => c.id === projectData.id
+        c => c.id === strippedProjectData.id
       );
       console.log(
         '[saveCollaborationData] Verified saved collaborators:',
@@ -409,6 +741,10 @@ export const useCollaborationData = () => {
       console.log(
         '[saveCollaborationData] Verified saved vision collaborators:',
         savedCollab?.vision?.collaborators
+      );
+      console.log(
+        '[saveCollaborationData] Verified saved positions:',
+        savedCollab?.roles
       );
     } catch (error) {
       console.error(

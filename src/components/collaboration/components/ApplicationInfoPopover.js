@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
+import { isApplicationApproved } from '../../../utils/applicationStorage';
 import { PrimaryButton, SecondaryButton } from '../../ui';
 
 const ApplicationInfoPopover = ({
@@ -10,12 +11,87 @@ const ApplicationInfoPopover = ({
   onContact,
   isInitiator = false,
   anchorElement, // 锚定元素（头像）
+  positionId, // 添加职位ID参数
+  positions, // 添加positions数据，用于检查状态
 }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [isApproved, setIsApproved] = useState(
-    application?.status === 'approved'
-  );
   const popoverRef = useRef(null);
+
+  // 改进状态检查逻辑：优先使用applicationStorage检查申请状态
+  const isApproved = React.useMemo(() => {
+    console.log('[ApplicationInfoPopover] Checking approval status...');
+    console.log('[ApplicationInfoPopover] Application:', application);
+    console.log('[ApplicationInfoPopover] Position ID:', positionId);
+    console.log('[ApplicationInfoPopover] Positions:', positions);
+    console.log(
+      '[ApplicationInfoPopover] Application status:',
+      application?.status
+    );
+
+    // 优先检查applicationStorage中的状态
+    // 统一使用application.id作为键，如果没有则回退到userId
+    const applicantId = application?.id || application?.userId;
+    if (positionId && applicantId) {
+      const storageApproved = isApplicationApproved(positionId, applicantId);
+      if (storageApproved) {
+        console.log(
+          '[ApplicationInfoPopover] Application is approved in storage'
+        );
+        return true;
+      }
+    }
+
+    // 回退到检查application对象本身的状态
+    if (application?.status === 'approved') {
+      console.log('[ApplicationInfoPopover] Application is already approved');
+      return true;
+    }
+
+    // 如果有positionId和positions，检查特定职位中的状态
+    if (positionId && positions) {
+      const position = positions.find(p => p.id === positionId);
+      if (position && position.applications) {
+        const appInPosition = position.applications.find(
+          app =>
+            app.id === application?.id || app.userId === application?.userId
+        );
+
+        console.log('[ApplicationInfoPopover] App in position:', appInPosition);
+        console.log(
+          '[ApplicationInfoPopover] App status in position:',
+          appInPosition?.status
+        );
+
+        if (appInPosition?.status === 'approved') {
+          console.log(
+            '[ApplicationInfoPopover] App is approved in this specific position'
+          );
+          return true;
+        }
+      }
+    }
+
+    // 如果没有positionId，回退到检查application.status
+    if (!positionId && application?.status === 'approved') {
+      console.log(
+        '[ApplicationInfoPopover] No positionId, but application is approved'
+      );
+      return true;
+    }
+
+    console.log(
+      '[ApplicationInfoPopover] Application is not approved for this position'
+    );
+    return false;
+  }, [application, positionId, positions]);
+
+  // 添加调试日志
+  console.log(
+    '[ApplicationInfoPopover] Application status:',
+    application?.status
+  );
+  console.log('[ApplicationInfoPopover] Position ID:', positionId);
+  console.log('[ApplicationInfoPopover] Is approved:', isApproved);
 
   // 点击外部关闭
   useEffect(() => {
@@ -103,9 +179,17 @@ const ApplicationInfoPopover = ({
   };
 
   const handleConfirmApprove = () => {
-    setIsApproved(true);
-    onApprove?.(application);
+    console.log(
+      '[ApplicationInfoPopover] Confirming approval for:',
+      application.name,
+      'position:',
+      positionId
+    );
+    onApprove?.(application, positionId);
     setShowConfirmModal(false);
+
+    // 添加成功提示
+    console.log('[ApplicationInfoPopover] Application approved successfully');
   };
 
   const handleCancelApprove = () => {
@@ -235,13 +319,18 @@ const ApplicationInfoPopover = ({
             <PrimaryButton
               onClick={handleApprove}
               disabled={isApproved}
-              className={`flex-1 text-sm py-2 ${
+              className={`flex-1 text-sm py-2 transition-all duration-300 ${
                 isApproved
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  ? 'bg-green-100 text-green-800 border border-green-300 cursor-not-allowed'
                   : 'bg-purple-600 text-white hover:bg-purple-700'
               }`}
+              title={
+                isApproved
+                  ? 'Already approved for this position'
+                  : 'Approve this application for this position'
+              }
             >
-              {isApproved ? 'Approved' : 'Approve'}
+              {isApproved ? '✓ Approved' : 'Approve'}
             </PrimaryButton>
           </div>
         )}

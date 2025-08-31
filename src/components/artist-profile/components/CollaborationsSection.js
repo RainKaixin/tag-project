@@ -1,6 +1,6 @@
 // collaborations-section v3: 合作项目区域组件 - 集成草稿功能
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import draftService from '../../../services/draftService';
@@ -15,12 +15,16 @@ import CollaborationTabs from './CollaborationTabs';
  * @param {number|null} expandedCardId - 展开的卡片ID
  * @param {Function} onCollaborationToggle - 合作项目展开/收起事件
  * @param {string} className - 额外的CSS类名
+ * @param {string} currentUserId - 当前用户ID
+ * @param {string} viewedUserId - 被查看用户的ID，用于获取该用户的协作项目
  */
 const CollaborationsSection = ({
   collaborations,
   expandedCardId,
   onCollaborationToggle,
   className = '',
+  currentUserId = 'alice', // 默认值，实际应该从props传入
+  viewedUserId = null, // 被查看用户的ID
 }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('published');
@@ -28,27 +32,130 @@ const CollaborationsSection = ({
   const [loading, setLoading] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
 
-  // 模擬數據 - 實際應該從 props 或 API 獲取
-  const publishedPosts = [
-    {
-      id: 1,
-      title: 'Mobile App Design Collaboration',
-      // 移除作者信息，避免显示错误的用户
-      date: 'Dec 15, 2024',
-      image:
-        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
-      tags: ['UI/UX', 'Mobile', 'Design'],
-    },
-    {
-      id: 2,
-      title: 'Brand Identity Project',
-      // 移除作者信息，避免显示错误的用户
-      date: 'Dec 10, 2024',
-      image:
-        'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
-      tags: ['Branding', 'Logo', 'Identity'],
-    },
-  ];
+  // 从 localStorage 获取真实的协作数据
+  const [publishedPosts, setPublishedPosts] = useState([]);
+
+  // 加载已发布的协作项目
+  const loadPublishedCollaborations = useCallback(async () => {
+    try {
+      // 从 localStorage 获取协作数据
+      const stored = localStorage.getItem('mock_collaborations');
+      if (!stored) {
+        console.log(
+          '[CollaborationsSection] No collaborations found in storage'
+        );
+        setPublishedPosts([]);
+        return;
+      }
+
+      const collaborations = JSON.parse(stored);
+      console.log(
+        '[CollaborationsSection] Found collaborations:',
+        collaborations.length
+      );
+
+      // 确定要获取协作项目的用户ID
+      let targetUserId = viewedUserId;
+
+      if (!targetUserId) {
+        // 如果没有提供viewedUserId，则使用当前用户ID
+        if (!currentUserId) {
+          console.warn('[CollaborationsSection] No currentUserId provided');
+          setPublishedPosts([]);
+          return;
+        }
+        targetUserId = currentUserId;
+      }
+
+      console.log(
+        '[CollaborationsSection] 获取协作项目的用户ID:',
+        targetUserId
+      );
+
+      // 筛选出被查看用户创建的协作项目（已发布的项目）
+      const userCollaborations = collaborations.filter(
+        collab => collab.author && collab.author.id === targetUserId
+      );
+
+      console.log(
+        '[CollaborationsSection] User collaborations:',
+        userCollaborations.length
+      );
+
+      // 转换为卡片格式
+      const formattedCollaborations = userCollaborations.map(collab => {
+        // 计算日期
+        const createdAt = new Date(collab.createdAt);
+        const date = createdAt.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+
+        // 获取图片
+        let image = '';
+        if (collab.heroImage) {
+          if (collab.heroImage.startsWith('collaboration_')) {
+            // 使用占位图片，实际项目中应该从 IndexedDB 获取
+            image =
+              'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop';
+          } else {
+            image = collab.heroImage;
+          }
+        } else {
+          image =
+            'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop';
+        }
+
+        // 提取标签（从项目类型或描述中提取）
+        const tags = collab.projectType
+          ? [collab.projectType]
+          : ['Collaboration'];
+
+        return {
+          id: collab.id,
+          title: collab.title,
+          date: date,
+          image: image,
+          tags: tags,
+        };
+      });
+
+      setPublishedPosts(formattedCollaborations);
+    } catch (error) {
+      console.error(
+        '[CollaborationsSection] Error loading published collaborations:',
+        error
+      );
+      setPublishedPosts([]);
+    }
+  }, [currentUserId, viewedUserId]);
+
+  // 初始加载已发布的协作项目
+  useEffect(() => {
+    loadPublishedCollaborations();
+  }, [loadPublishedCollaborations]);
+
+  // 监听协作创建事件，自动刷新列表
+  useEffect(() => {
+    const handleCollaborationCreated = () => {
+      console.log(
+        '[CollaborationsSection] Collaboration created event received, refreshing published list'
+      );
+      loadPublishedCollaborations();
+    };
+
+    window.addEventListener(
+      'collaboration:created',
+      handleCollaborationCreated
+    );
+    return () => {
+      window.removeEventListener(
+        'collaboration:created',
+        handleCollaborationCreated
+      );
+    };
+  }, [loadPublishedCollaborations]);
 
   // 載入草稿數據
   const loadDrafts = async () => {
@@ -174,6 +281,29 @@ const CollaborationsSection = ({
     setActiveTab(tab);
   };
 
+  // 处理已发布的协作项目点击
+  const handlePublishedCollaborationClick = post => {
+    console.log('Opening published collaboration:', post);
+
+    // 从 localStorage 获取完整的协作数据
+    const stored = localStorage.getItem('mock_collaborations');
+    if (stored) {
+      const collaborations = JSON.parse(stored);
+      const fullCollaboration = collaborations.find(
+        collab => collab.id === post.id
+      );
+
+      if (fullCollaboration) {
+        // 跳转到协作详情页面
+        navigate(`/tagme/collaboration/${post.id}`, {
+          state: { project: fullCollaboration },
+        });
+      } else {
+        console.warn('Collaboration not found in storage:', post.id);
+      }
+    }
+  };
+
   return (
     <div className={`pt-8 mt-8 bg-purple-50 rounded-lg p-6 ${className}`}>
       <div className='flex items-center justify-between mb-6'>
@@ -199,20 +329,16 @@ const CollaborationsSection = ({
         </button>
       </div>
 
-      {/* 現有的 Collaboration 列表（簡歷版本） */}
+      {/* History & Experiences 区域 - 暂时为空，等待 Final Review 功能 */}
       <div className='mb-8'>
         <h4 className='text-md font-semibold text-gray-800 mb-4'>
           History & Experiences
         </h4>
-        <div className='space-y-4'>
-          {collaborations.map(collab => (
-            <CollaborationCard
-              key={collab.id}
-              collaboration={collab}
-              isExpanded={expandedCardId === collab.id}
-              onToggle={onCollaborationToggle}
-            />
-          ))}
+        <div className='text-center py-8'>
+          <p className='text-gray-500'>
+            No Final Reviews yet — complete a collaboration to build your
+            Experiences here.
+          </p>
         </div>
       </div>
 
@@ -235,7 +361,13 @@ const CollaborationsSection = ({
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
         {activeTab === 'published' &&
           publishedPosts.map(post => (
-            <CollaborationPostCard key={post.id} post={post} />
+            <div
+              key={post.id}
+              onClick={() => handlePublishedCollaborationClick(post)}
+              className='cursor-pointer'
+            >
+              <CollaborationPostCard post={post} />
+            </div>
           ))}
         {activeTab === 'drafts' &&
           (loading ? (

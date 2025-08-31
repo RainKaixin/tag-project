@@ -5,21 +5,23 @@ const STORAGE_KEY = 'tag_apply_form_data';
 /**
  * 保存Apply Now表单数据
  * @param {string} collaborationId - 协作项目ID
+ * @param {string} userId - 用户ID
  * @param {Object} formData - 表单数据
  * @returns {Object} 保存结果
  */
-export const saveApplyFormData = (collaborationId, formData) => {
+export const saveApplyFormData = (collaborationId, userId, formData) => {
   try {
-    const key = `${STORAGE_KEY}_${collaborationId}`;
+    const key = `${STORAGE_KEY}_${collaborationId}_${userId}`;
     const dataToSave = {
       ...formData,
+      userId: userId,
       timestamp: Date.now(),
     };
 
     localStorage.setItem(key, JSON.stringify(dataToSave));
 
     console.log(
-      `[applyFormService] Saved apply form data for collaboration ${collaborationId}:`,
+      `[applyFormService] Saved apply form data for collaboration ${collaborationId}, user ${userId}:`,
       formData
     );
 
@@ -33,23 +35,24 @@ export const saveApplyFormData = (collaborationId, formData) => {
 /**
  * 获取Apply Now表单数据
  * @param {string} collaborationId - 协作项目ID
+ * @param {string} userId - 用户ID
  * @returns {Object|null} 表单数据或null
  */
-export const getApplyFormData = collaborationId => {
+export const getApplyFormData = (collaborationId, userId) => {
   try {
-    const key = `${STORAGE_KEY}_${collaborationId}`;
+    const key = `${STORAGE_KEY}_${collaborationId}_${userId}`;
     const data = localStorage.getItem(key);
 
     if (!data) {
       console.log(
-        `[applyFormService] No apply form data found for collaboration ${collaborationId}`
+        `[applyFormService] No apply form data found for collaboration ${collaborationId}, user ${userId}`
       );
       return null;
     }
 
     const parsedData = JSON.parse(data);
     console.log(
-      `[applyFormService] Retrieved apply form data for collaboration ${collaborationId}:`,
+      `[applyFormService] Retrieved apply form data for collaboration ${collaborationId}, user ${userId}:`,
       parsedData
     );
 
@@ -63,11 +66,12 @@ export const getApplyFormData = collaborationId => {
 /**
  * 检查是否有完整的Apply Now表单数据
  * @param {string} collaborationId - 协作项目ID
+ * @param {string} userId - 用户ID
  * @returns {boolean} 是否有完整数据
  */
-export const hasCompleteApplyFormData = collaborationId => {
+export const hasCompleteApplyFormData = (collaborationId, userId) => {
   try {
-    const formData = getApplyFormData(collaborationId);
+    const formData = getApplyFormData(collaborationId, userId);
 
     if (!formData) {
       return false;
@@ -79,7 +83,7 @@ export const hasCompleteApplyFormData = collaborationId => {
     const isComplete = hasEmail;
 
     console.log(
-      `[applyFormService] Form data completeness check for collaboration ${collaborationId}:`,
+      `[applyFormService] Form data completeness check for collaboration ${collaborationId}, user ${userId}:`,
       { hasEmail, isComplete }
     );
 
@@ -96,15 +100,16 @@ export const hasCompleteApplyFormData = collaborationId => {
 /**
  * 清除Apply Now表单数据
  * @param {string} collaborationId - 协作项目ID
+ * @param {string} userId - 用户ID
  * @returns {Object} 清除结果
  */
-export const clearApplyFormData = collaborationId => {
+export const clearApplyFormData = (collaborationId, userId) => {
   try {
-    const key = `${STORAGE_KEY}_${collaborationId}`;
+    const key = `${STORAGE_KEY}_${collaborationId}_${userId}`;
     localStorage.removeItem(key);
 
     console.log(
-      `[applyFormService] Cleared apply form data for collaboration ${collaborationId}`
+      `[applyFormService] Cleared apply form data for collaboration ${collaborationId}, user ${userId}`
     );
 
     return { success: true };

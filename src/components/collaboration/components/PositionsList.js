@@ -9,6 +9,7 @@ const ApplicationsWall = ({
   applications = [],
   onApplicationClick,
   isInitiator = false,
+  positionId, // 添加positionId参数
 }) => {
   if (applications.length === 0) {
     return (
@@ -61,9 +62,18 @@ const ApplicationsWall = ({
                     ? 'hover:border-purple-300 cursor-pointer'
                     : 'hover:border-gray-300'
                 }`}
-                onClick={event =>
-                  isInitiator && onApplicationClick?.(application, event)
-                }
+                onClick={event => {
+                  console.log(
+                    '[ApplicationsWall] Clicking application:',
+                    application.name
+                  );
+                  console.log('[ApplicationsWall] Position ID:', positionId);
+                  console.log('[ApplicationsWall] Is initiator:', isInitiator);
+
+                  if (isInitiator && onApplicationClick) {
+                    onApplicationClick(application, event, positionId);
+                  }
+                }}
               />
               {application.status === 'approved' && (
                 <div className='absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white flex items-center justify-center'>
@@ -287,6 +297,7 @@ const PositionsList = ({
                       applications={position.applications || []}
                       onApplicationClick={onApplicationClick}
                       isInitiator={isInitiator}
+                      positionId={position.id}
                     />
                   )}
 
