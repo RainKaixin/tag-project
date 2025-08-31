@@ -1,12 +1,14 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { createCollaboration } from '../../../../services/collaborationService';
 import { formatFormDataForAPI } from '../../../../services/collaborationService/utils';
 import draftService from '../../../../services/draftService';
+import DraftSavedModal from '../components/DraftSavedModal';
 import { createNewRole } from '../data/formOptions';
 
 const useCollaborationActions = ({ state, setters }) => {
   const { setFormData, setIsSubmitting, setIsSaving } = setters;
+  const [showDraftSavedModal, setShowDraftSavedModal] = useState(false);
 
   // 清理 blob URL 的函數
   const cleanupBlobUrl = useCallback(url => {
@@ -126,7 +128,7 @@ const useCollaborationActions = ({ state, setters }) => {
         whyThisMattersValue: state.formData.whyThisMatters,
         projectVisionValid: !!(
           state.formData.projectVision &&
-          state.formData.projectVision.trim() !== ''
+          state.formData.projectVision?.trim() !== ''
         ),
         whyThisMattersValid: true, // Why This Matters 是可选的，所以总是有效
       });
@@ -219,7 +221,12 @@ const useCollaborationActions = ({ state, setters }) => {
         }
       } catch (error) {
         console.error('Error posting collaboration:', error);
-        alert('Failed to post collaboration. Please try again.');
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          formData: state.formData,
+        });
+        alert(`Failed to post collaboration: ${error.message}`);
       } finally {
         // 重置提交状态
         setIsSubmitting(false);
@@ -293,8 +300,8 @@ const useCollaborationActions = ({ state, setters }) => {
             })
           );
 
-          // 显示成功提示
-          alert('Draft saved successfully! You can continue editing later.');
+          // 显示自定义成功弹窗
+          setShowDraftSavedModal(true);
         } else {
           throw new Error(result.error || 'Failed to save draft');
         }
@@ -347,6 +354,8 @@ const useCollaborationActions = ({ state, setters }) => {
     handleAddRole,
     handleRemoveRole,
     handleRoleChange,
+    showDraftSavedModal,
+    setShowDraftSavedModal,
   };
 };
 

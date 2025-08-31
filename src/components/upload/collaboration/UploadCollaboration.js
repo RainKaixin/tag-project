@@ -10,6 +10,7 @@ import UploadSuccess from '../UploadSuccess';
 import CollaborationForm from './components/CollaborationForm';
 import CollaborationHeader from './components/CollaborationHeader';
 import CollaborationRoles from './components/CollaborationRoles';
+import DraftSavedModal from './components/DraftSavedModal';
 import FileUploadSection from './components/FileUploadSection';
 import useCollaborationActions from './hooks/useCollaborationActions';
 import useCollaborationState from './hooks/useCollaborationState';
@@ -80,6 +81,12 @@ const UploadCollaboration = () => {
         onClose={() => setters.setShowValidationModal(false)}
         errors={state.validationErrors}
         title='Please Complete Required Fields'
+      />
+
+      {/* Draft 保存成功弹窗 */}
+      <DraftSavedModal
+        isOpen={actions.showDraftSavedModal}
+        onClose={() => actions.setShowDraftSavedModal(false)}
       />
 
       <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>

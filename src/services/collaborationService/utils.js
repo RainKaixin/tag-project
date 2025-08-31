@@ -152,17 +152,47 @@ export const formatFormDataForAPI = async formData => {
 
       const processedRoles =
         formData.roles
-          ?.map(role => ({
-            id: role.id || Date.now().toString(),
-            title: role.customRole?.trim() || role.title?.trim() || '',
-            description:
-              role.roleDescription?.trim() || role.description?.trim() || '',
-            requiredSkills: role.requiredSkills?.trim() || '',
-            status: 'available', // 默認為可用狀態
-          }))
-          .filter(role => role.title) || []; // 只要有 title 就保留，不强制要求 description
+          ?.map(role => {
+            console.log('[formatFormDataForAPI] Processing role:', role);
 
-      console.log('[formatFormDataForAPI] Processed roles:', processedRoles);
+            const processedRole = {
+              id: role.id || Date.now().toString(),
+              title: role.customRole?.trim() || role.title?.trim() || '',
+              description:
+                role.roleDescription?.trim() || role.description?.trim() || '',
+              requiredSkills: (() => {
+                if (!role.requiredSkills) return [];
+                if (Array.isArray(role.requiredSkills))
+                  return role.requiredSkills;
+                if (typeof role.requiredSkills === 'string') {
+                  return role.requiredSkills
+                    .split(',')
+                    .map(skill => skill.trim())
+                    .filter(skill => skill.length > 0);
+                }
+                return [];
+              })(),
+              status: 'available', // 默認為可用狀態
+            };
+
+            console.log(
+              '[formatFormDataForAPI] Processed role:',
+              processedRole
+            );
+            return processedRole;
+          })
+          .filter(role => {
+            const hasTitle = role.title && role.title.length > 0;
+            console.log(
+              `[formatFormDataForAPI] Role "${role.title}" has title: ${hasTitle}`
+            );
+            return hasTitle;
+          }) || [];
+
+      console.log(
+        '[formatFormDataForAPI] Final processed roles:',
+        processedRoles
+      );
       return processedRoles;
     })(),
 
@@ -213,13 +243,13 @@ export const formatAPIDataForDetail = apiData => {
       category: apiData.projectType || 'Project',
       likes: apiData.likes || 0,
       views: apiData.views || 0,
-      timeAgo: formatTimeAgo(apiData.createdAt),
+      timeAgo: formatExactDate(apiData.createdAt),
       role: apiData.author?.role || 'Initiator',
     },
     duration: apiData.duration,
     teamSize: apiData.teamSize,
-    postedTime: formatTimeAgo(apiData.createdAt),
-    tags: apiData.projectType ? [apiData.projectType] : [],
+    postedTime: formatExactDate(apiData.createdAt),
+    tags: [], // 暂时不显示标签，避免显示无意义的 "Project" 标签
     heroImage: apiData.heroImage || apiData.posterPreview || null,
     description: apiData.description,
     meetingFrequency: apiData.meetingSchedule,
@@ -262,7 +292,7 @@ export const formatAPIDataForList = apiDataList => {
     whyThisMatters: item.whyThisMatters, // 添加 whyThisMatters 字段
     image: item.heroImage || null,
     posterPreview: item.posterPreview || item.heroImage || null, // 添加 posterPreview 字段
-    categories: item.projectType ? [item.projectType] : [],
+    categories: [], // 暂时不显示分类，避免显示无意义的 "Project" 标签
     author: {
       id: item.author?.id || null,
       name: item.author?.name || 'Unknown',
@@ -311,6 +341,29 @@ export const formatTimeAgo = timestamp => {
     const months = Math.floor(diffInSeconds / 2592000);
     return `${months} month${months > 1 ? 's' : ''} ago`;
   }
+};
+
+/**
+ * 格式化時間為明確的日期格式
+ * @param {string} timestamp - 時間戳
+ * @returns {string} 明確的日期字符串
+ */
+export const formatExactDate = timestamp => {
+  if (!timestamp) return 'Unknown date';
+
+  const date = new Date(timestamp);
+
+  // 检查日期是否有效
+  if (isNaN(date.getTime())) {
+    return 'Invalid date';
+  }
+
+  // 格式化为 "MMM DD, YYYY" (英文格式)
+  const year = date.getFullYear();
+  const month = date.toLocaleDateString('en-US', { month: 'short' });
+  const day = date.getDate();
+
+  return `${month} ${day}, ${year}`;
 };
 
 /**
@@ -422,7 +475,17 @@ export const sanitizeCollaborationData = data => {
         ...role,
         title: role.title?.trim() || '',
         description: role.description?.trim() || '',
-        requiredSkills: role.requiredSkills?.trim() || '',
+        requiredSkills: (() => {
+          if (!role.requiredSkills) return [];
+          if (Array.isArray(role.requiredSkills)) return role.requiredSkills;
+          if (typeof role.requiredSkills === 'string') {
+            return role.requiredSkills
+              .split(',')
+              .map(skill => skill.trim())
+              .filter(skill => skill.length > 0);
+          }
+          return [];
+        })(),
       })) || [],
   };
 };

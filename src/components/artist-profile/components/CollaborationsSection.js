@@ -28,8 +28,27 @@ const CollaborationsSection = ({
   const [loading, setLoading] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
 
-  // 真實發布的 Collaboration Posts - 從 props 或 API 獲取
-  const publishedPosts = [];
+  // 模擬數據 - 實際應該從 props 或 API 獲取
+  const publishedPosts = [
+    {
+      id: 1,
+      title: 'Mobile App Design Collaboration',
+      // 移除作者信息，避免显示错误的用户
+      date: 'Dec 15, 2024',
+      image:
+        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
+      tags: ['UI/UX', 'Mobile', 'Design'],
+    },
+    {
+      id: 2,
+      title: 'Brand Identity Project',
+      // 移除作者信息，避免显示错误的用户
+      date: 'Dec 10, 2024',
+      image:
+        'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
+      tags: ['Branding', 'Logo', 'Identity'],
+    },
+  ];
 
   // 載入草稿數據
   const loadDrafts = async () => {
@@ -41,7 +60,7 @@ const CollaborationsSection = ({
         const formattedDrafts = result.data.items.map(draft => ({
           id: draft.id,
           title: draft.title || 'Untitled Draft',
-          author: 'Bryan', // 從當前用戶獲取
+          // 移除作者信息，避免显示错误的用户
           date: new Date(draft.updatedAt).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -118,7 +137,7 @@ const CollaborationsSection = ({
               const formattedDrafts = result.data.items.map(draft => ({
                 id: draft.id,
                 title: draft.title || 'Untitled Draft',
-                author: 'Bryan',
+                // 移除作者信息，避免显示错误的用户
                 date: new Date(draft.updatedAt).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
@@ -183,7 +202,7 @@ const CollaborationsSection = ({
       {/* 現有的 Collaboration 列表（簡歷版本） */}
       <div className='mb-8'>
         <h4 className='text-md font-semibold text-gray-800 mb-4'>
-          Collaboration History
+          History & Experiences
         </h4>
         <div className='space-y-4'>
           {collaborations.map(collab => (
@@ -360,6 +379,22 @@ const CollaborationsSection = ({
                     strengths, teamwork, and impact on the project.
                   </p>
                 </div>
+              </div>
+
+              {/* Additional Note Section */}
+              <div className='bg-purple-50 border border-purple-200 rounded-lg p-6'>
+                <h4 className='font-bold text-gray-900 mb-3 text-lg'>
+                  Additional Note on Collaborations Published & History:
+                </h4>
+                <p className='text-gray-700 leading-relaxed'>
+                  Any Collaboration you publish will first appear under the
+                  Published section. Only when the project is completed—meaning
+                  you've received at least one Final Review from either an
+                  Initiator or a Collaborator—will it be stored in your
+                  Collaboration History. At that point, it becomes part of your
+                  personal Experiences and represents a completed project
+                  record.
+                </p>
               </div>
             </div>
 

@@ -83,11 +83,8 @@ const CollaborationPostCard = ({ post, className = '', onDelete }) => {
           )}
         </div>
 
-        {/* 作者和日期 */}
+        {/* 日期 */}
         <div className='flex items-center gap-2 mb-3'>
-          <div className='w-6 h-6 bg-gray-300 rounded-full flex-shrink-0'></div>
-          <span className='text-sm text-gray-700'>{post.author}</span>
-          <span className='text-sm text-gray-500'>•</span>
           <span className='text-sm text-gray-500'>{post.date}</span>
         </div>
 
