@@ -251,6 +251,88 @@ export const notificationService = {
   },
 
   /**
+   * 创建Collaboration申请通知
+   * @param {string} applicantId - 申请者ID
+   * @param {string} applicantName - 申请者姓名
+   * @param {string} applicantAvatar - 申请者头像
+   * @param {string} collaborationId - 协作项目ID
+   * @param {string} collaborationTitle - 协作项目标题
+   * @param {string} initiatorId - 项目发起者ID
+   * @param {Object} applicationData - 申请数据
+   * @returns {Promise<Object>} 创建结果
+   */
+  createCollaborationApplicationNotification: async (
+    applicantId,
+    applicantName,
+    applicantAvatar,
+    collaborationId,
+    collaborationTitle,
+    initiatorId,
+    applicationData
+  ) => {
+    try {
+      const notification = {
+        id: `collaboration_application_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`,
+        type: 'collaboration',
+        senderId: applicantId,
+        senderName: applicantName,
+        senderAvatar: applicantAvatar,
+        receiverId: initiatorId,
+        title: 'New Collaboration Application',
+        content: `${applicantName} applied for your collaboration "${collaborationTitle}"`,
+        message: `${applicantName} applied for your collaboration "${collaborationTitle}". Click to view the application details.`,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        meta: {
+          action: 'collaboration_application',
+          collaborationId,
+          collaborationTitle,
+          applicantId,
+          applicantName,
+          applicantAvatar,
+          applicationData,
+        },
+      };
+
+      // 优先保存到 LocalStorage
+      const result = await localStorageAdapter.createNotification(notification);
+      if (result.success) {
+        console.log(
+          `[notificationService] Created collaboration application notification in LocalStorage`
+        );
+        return result;
+      }
+
+      // 如果 LocalStorage 失败，尝试 Supabase
+      const supabaseResult = await supabaseAdapter.createNotification(
+        notification
+      );
+      if (supabaseResult.success) {
+        console.log(
+          `[notificationService] Created collaboration application notification in Supabase`
+        );
+        return supabaseResult;
+      }
+
+      console.warn(
+        `[notificationService] Failed to create collaboration application notification`
+      );
+      return {
+        success: false,
+        error: 'Failed to create collaboration application notification',
+      };
+    } catch (error) {
+      console.error(
+        `[notificationService] Error creating collaboration application notification:`,
+        error
+      );
+      return { success: false, error: error.message };
+    }
+  },
+
+  /**
    * 标记通知为已读
    * @param {string} notificationId - 通知ID
    * @returns {Promise<Object>} 更新结果

@@ -35,6 +35,7 @@ export const localStorageAdapter = {
       console.log(
         `[localStorageAdapter] Created notification for user ${notification.receiverId}`
       );
+      console.log('[localStorageAdapter] Notification data:', notification);
       return { success: true, data: notification };
     } catch (error) {
       console.error(

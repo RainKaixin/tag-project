@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import { useAppContext } from '../context/AppContext';
+import {
+  createCollaborationRequest,
+  createCollaborationRequestNotification,
+} from '../services';
 import applicationService from '../services/applicationService';
 import { saveApplicationStatus } from '../utils/applicationStorage';
 
@@ -55,8 +59,79 @@ const CollaborationDetailPage = () => {
   const [anchorElement, setAnchorElement] = useState(null);
 
   // 处理 Final Review 点击
-  const handleFinalReviewClick = collaborator => {
-    setSelectedCollaboratorForReview(collaborator);
+  const handleFinalReviewClick = async collaborator => {
+    console.log(
+      '[CollaborationDetailPage] Final Review clicked for collaborator:',
+      collaborator
+    );
+    console.log('[CollaborationDetailPage] Current user:', data.currentUser);
+    console.log('[CollaborationDetailPage] Project data:', data.project);
+    console.log(
+      '[CollaborationDetailPage] Is initiator:',
+      data.currentUser?.id === data.project?.author?.id
+    );
+
+    // 验证权限：只有 Initiator 才能发送 Final Review 请求
+    const isInitiator = data.currentUser?.id === data.project?.author?.id;
+    if (!isInitiator) {
+      console.warn(
+        '[CollaborationDetailPage] Only initiator can send Final Review requests'
+      );
+      return;
+    }
+
+    try {
+      console.log(
+        '[CollaborationDetailPage] Creating collaboration request...'
+      );
+
+      // 创建协作请求
+      const collaborationRequest = await createCollaborationRequest({
+        projectId: data.project.id,
+        projectName: data.project.title,
+        requesterId: data.currentUser.id, // Initiator 作为请求者
+        requesterName: data.currentUser.name,
+        requesterAvatar: data.currentUser.avatar || '',
+        ownerId: collaborator.id, // 协作者作为接收者
+        ownerName: collaborator.name,
+        message: `The project initiator ${data.currentUser.name} is requesting you to write a final review for the collaboration project "${data.project.title}".`,
+      });
+
+      console.log(
+        '[CollaborationDetailPage] Collaboration request created:',
+        collaborationRequest
+      );
+
+      // 为协作者创建通知
+      await createCollaborationRequestNotification({
+        userId: collaborator.id, // 通知发送给协作者
+        projectId: data.project.id,
+        projectName: data.project.title,
+        requestId: collaborationRequest.id,
+        requesterId: data.currentUser.id,
+        requesterName: data.currentUser.name,
+        requesterAvatar: data.currentUser.avatar || '',
+      });
+
+      console.log(
+        '[CollaborationDetailPage] Notification created for collaborator:',
+        collaborator.name
+      );
+
+      // 设置选中的协作者（用于后续的评论提交）
+      setSelectedCollaboratorForReview(collaborator);
+
+      // 显示成功提示
+      console.log(
+        `[CollaborationDetailPage] Final Review request sent to ${collaborator.name} successfully`
+      );
+    } catch (error) {
+      console.error(
+        '[CollaborationDetailPage] Error creating Final Review request:',
+        error
+      );
+      // 这里可以添加用户提示，比如显示错误消息
+    }
   };
 
   // 处理针对合作者的评价提交
@@ -428,13 +503,12 @@ const CollaborationDetailPage = () => {
             requestStatus='none'
             hasSubmittedFinalComment={false}
             finalComments={[]}
-            projectId={data.projectData?.id || 'proj_01'}
+            projectId={data.project?.id || 'proj_01'}
             userId={data.currentUser?.id || 'bryan'}
             userName={data.currentUser?.name || 'Bryan'}
             userRole={data.currentUser?.role || 'Collaborator'}
-            projectName={
-              data.projectData?.title || 'Interactive Web Experience'
-            }
+            projectName={data.project?.title || 'Interactive Web Experience'}
+            projectData={data.project} // 传递完整的项目数据
             onSendRequest={() => {}}
             onSubmitComment={text => {}}
             selectedCollaborator={selectedCollaboratorForReview}

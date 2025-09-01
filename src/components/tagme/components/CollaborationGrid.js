@@ -254,12 +254,10 @@ const CollaborationGrid = ({ onCollaborationClick, onBookmarkToggle }) => {
                 }
                 className='block cursor-pointer'
               >
-                <h3 className='font-bold text-gray-900 mb-1 text-sm hover:text-purple-600 transition-colors duration-200'>
+                <h3 className='font-bold text-gray-900 mb-2 text-sm hover:text-purple-600 transition-colors duration-200'>
                   {collaboration.title}
                 </h3>
-                <p className='text-xs text-gray-600 mb-2 overflow-hidden'>
-                  {collaboration.description}
-                </p>
+                {/* Description removed from TAG Me list view to save space */}
               </div>
 
               {/* Author */}

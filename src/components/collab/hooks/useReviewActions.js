@@ -1,12 +1,10 @@
 import { useCallback } from 'react';
 
+import { submitFinalComment, getReviewState } from '../../../services';
 import {
   createCollaborationRequest,
   createCollaborationRequestNotification,
-  submitFinalComment,
-  getReviewState,
 } from '../../../services';
-import { getCurrentUser } from '../../../utils/currentUser';
 
 /**
  * useReviewActions Hook - 处理用户操作和业务逻辑
@@ -29,6 +27,7 @@ const useReviewActions = ({
   userName,
   userRole,
   projectName,
+  projectData, // 添加项目数据参数
   onSendRequest = () => {
     // TODO: Implement send request
   },
@@ -51,30 +50,50 @@ const useReviewActions = ({
     setError(null);
 
     try {
-      const currentUser = getCurrentUser();
+      // 🔍 调试信息
+      console.log('[useReviewActions] Sending AfterFinishedReview request:');
+      console.log('  - Project ID:', projectId);
+      console.log('  - Project Name:', projectName);
+      console.log('  - Requester ID:', userId);
+      console.log('  - Requester Name:', userName);
 
-      // 创建协作请求
+      // 🔍 获取项目发起者ID
+      const initiatorId =
+        projectData?.author?.id || projectData?.initiatorId || 'alice';
+
+      console.log(
+        '[useReviewActions] Project data for initiator lookup:',
+        projectData
+      );
+      console.log('[useReviewActions] Initiator ID:', initiatorId);
+
+      // 创建协作请求（使用现有的collaboration request机制）
       const collaborationRequest = await createCollaborationRequest({
         projectId,
         projectName,
         requesterId: userId,
         requesterName: userName,
-        requesterAvatar: currentUser?.avatar || '',
-        ownerId: 'alice',
-        ownerName: 'Alice Chen',
-        message: 'I would like to join this collaboration project.',
+        requesterAvatar: '', // 简化avatar处理
+        ownerId: initiatorId,
+        ownerName: projectData?.author?.name || 'Project Owner',
+        message:
+          'I would like to request permission to write a final review for this collaboration project.',
       });
 
       // 为项目所有者创建通知
       await createCollaborationRequestNotification({
-        userId: 'alice',
+        userId: initiatorId,
         projectId,
         projectName,
         requestId: collaborationRequest.id,
         requesterId: userId,
         requesterName: userName,
-        requesterAvatar: currentUser?.avatar || '',
+        requesterAvatar: '', // 简化avatar处理
       });
+
+      console.log(
+        '[useReviewActions] Collaboration request created successfully'
+      );
 
       // 更新本地状态
       setLocalRequestStatus('pending');
@@ -82,7 +101,7 @@ const useReviewActions = ({
       return collaborationRequest; // 返回成功结果
     } catch (error) {
       setError(error.message);
-      console.error('Error sending collaboration request:', error);
+      console.error('Error sending AfterFinishedReview request:', error);
       throw error; // 重新抛出错误，让调用者知道失败
     } finally {
       setIsLoading(false);

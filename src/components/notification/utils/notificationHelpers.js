@@ -1,4 +1,7 @@
-import { notificationTypeMap } from '../data/notificationOptions';
+import {
+  notificationTypeMap,
+  getNotificationCategory,
+} from '../data/notificationOptions';
 
 // 筛选通知
 export const filterNotifications = (items, activeTab, timeFilter) => {
@@ -6,9 +9,8 @@ export const filterNotifications = (items, activeTab, timeFilter) => {
 
   // 按标签筛选
   if (activeTab !== 'All') {
-    const typeToFilter = notificationTypeMap[activeTab];
     filtered = filtered.filter(
-      notification => notification.type === typeToFilter
+      notification => getNotificationCategory(notification.type) === activeTab
     );
   }
 
@@ -25,8 +27,8 @@ export const getNotificationCount = (items, type) => {
   if (type === 'All') {
     return items.length;
   }
-  const typeToCount = notificationTypeMap[type];
-  return items.filter(n => n.type === typeToCount).length;
+
+  return items.filter(n => getNotificationCategory(n.type) === type).length;
 };
 
 // 获取通知图标
@@ -97,6 +99,18 @@ export const getNotificationIcon = (type, userAvatar) => {
             viewBox='0 0 20 20'
           >
             <path d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
+          </svg>
+        </div>
+      );
+    case 'gallery':
+      return (
+        <div className='w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center'>
+          <svg
+            className='w-4 h-4 text-blue-600'
+            fill='currentColor'
+            viewBox='0 0 20 20'
+          >
+            <path d='M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z' />
           </svg>
         </div>
       );

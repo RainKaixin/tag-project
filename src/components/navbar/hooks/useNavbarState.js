@@ -64,7 +64,12 @@ const useNavbarState = user => {
     // 监听未读变化事件
     const onChange = e => {
       const id = e?.detail?.userId;
+      console.log('[useNavbarState] Notification change event:', e);
+      console.log('[useNavbarState] Event userId:', id);
+      console.log('[useNavbarState] Current userId:', getCurrentUserId());
+
       if (!id || id === getCurrentUserId()) {
+        console.log('[useNavbarState] Reloading unread count...');
         if (mounted) {
           // 延迟加载未读计数，避免频繁调用
           setTimeout(() => {

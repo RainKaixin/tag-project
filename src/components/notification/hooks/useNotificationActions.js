@@ -103,6 +103,7 @@ const useNotificationActions = ({ state, setters }) => {
   const handleNotificationClick = useCallback(async notification => {
     // 注意：这里不需要再次调用 markAsRead，因为 NotificationItem 已经调用了 onMarkAsRead
     // 我们只需要处理导航逻辑
+
     if (notification.projectId) {
       // 实现项目页面跳转
     }

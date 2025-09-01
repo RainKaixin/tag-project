@@ -49,11 +49,9 @@ const MOCK_WORKS = {
   ],
 };
 
-// Mock收藏数据
+// Mock收藏数据 - 移除预设数据，确保收藏完全基于用户真实操作
 const MOCK_FAVORITES = {
-  alice: ['pf_bryan_01', 'pf_alex_01'],
-  bryan: ['pf_alice_01'],
-  alex: ['pf_alice_01', 'pf_bryan_01'],
+  // 所有用户从空白收藏开始，不预设任何收藏数据
 };
 
 // Mock关注数据
@@ -124,18 +122,38 @@ const seedWorks = (): void => {
 
 /**
  * 种子化收藏数据
+ * 不再预设任何收藏数据，确保收藏完全基于用户真实操作
  */
 const seedFavorites = (): void => {
   try {
-    Object.entries(MOCK_FAVORITES).forEach(([userId, favorites]) => {
+    // 清理可能存在的旧种子数据
+    const usersToClean = ['alice', 'bryan', 'alex'];
+    usersToClean.forEach(userId => {
       const key = `tag_favorites_${userId}`;
-      if (!localStorage.getItem(key)) {
-        localStorage.setItem(key, JSON.stringify(favorites));
-        console.log(`[Seed] Seeded favorites for user: ${userId}`);
+      const existingData = localStorage.getItem(key);
+      if (existingData) {
+        // 检查是否为旧格式数据（字符串数组）
+        try {
+          const parsed = JSON.parse(existingData);
+          if (Array.isArray(parsed)) {
+            // 删除旧格式的种子数据
+            localStorage.removeItem(key);
+            console.log(
+              `[Seed] Cleaned old favorites data for user: ${userId}`
+            );
+          }
+        } catch (e) {
+          // 如果解析失败，也删除
+          localStorage.removeItem(key);
+          console.log(
+            `[Seed] Cleaned invalid favorites data for user: ${userId}`
+          );
+        }
       }
     });
+    console.log('[Seed] Favorites seeding completed - no preset data');
   } catch (error) {
-    console.warn('[Seed] Failed to seed favorites:', error);
+    console.warn('[Seed] Failed to clean favorites data:', error);
   }
 };
 
@@ -212,6 +230,9 @@ export const resetMockData = (): void => {
       'tag_favorites_bryan',
       'tag_favorites_alex',
       'tag_follows',
+      // 同时清理新的收藏服务数据
+      'tag_favorites',
+      'tag_favorite_counters',
     ];
 
     keysToRemove.forEach(key => {

@@ -196,11 +196,12 @@ const CollaborationHeader = ({
               />
               {!isInitiator && (
                 <PrimaryButton
-                  onClick={onApplyNow}
+                  onClick={hasSubmittedApplication ? undefined : onApplyNow}
                   size='lg'
+                  disabled={hasSubmittedApplication}
                   className={`w-full sm:w-auto transition-all duration-300 ${
                     hasSubmittedApplication
-                      ? 'bg-green-600 hover:bg-green-700 border-green-600'
+                      ? 'bg-green-600 border-green-600 cursor-not-allowed opacity-75'
                       : 'bg-purple-600 hover:bg-purple-700 border-purple-600'
                   }`}
                 >
@@ -219,7 +220,7 @@ const CollaborationHeader = ({
                           d='M5 13l4 4L19 7'
                         />
                       </svg>
-                      Application Saved
+                      Application Submitted
                     </div>
                   ) : (
                     'Apply Now'

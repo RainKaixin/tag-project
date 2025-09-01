@@ -1,5 +1,6 @@
 import { favoritesService } from '../../../services';
 import { getProfile } from '../../../services';
+import { notificationService } from '../../../services';
 import applicationService from '../../../services/applicationService';
 import { saveApplyFormData } from '../../../services/applyFormService';
 import { getUnifiedAvatar } from '../../../services/avatarService';
@@ -125,6 +126,96 @@ export const useCollaborationActions = (data, setters) => {
         console.log(
           `[useCollaborationActions] User ${application.name} applied for position ${positionId}`
         );
+
+        // 设置申请已提交状态，禁用Application Saved按钮
+        setHasSubmittedApplication(true);
+
+        // 创建申请通知给项目发起者
+        try {
+          // 🔍 尝试多种方式获取initiatorId
+          let initiatorId = null;
+
+          // 方法1：从project.author.id获取
+          if (data.project?.author?.id) {
+            initiatorId = data.project.author.id;
+          }
+          // 方法2：从project.initiatorId获取
+          else if (data.project?.initiatorId) {
+            initiatorId = data.project.initiatorId;
+          }
+          // 方法3：从project.authorId获取
+          else if (data.project?.authorId) {
+            initiatorId = data.project.authorId;
+          }
+          // 方法4：从project.creator?.id获取
+          else if (data.project?.creator?.id) {
+            initiatorId = data.project.creator.id;
+          }
+          // 方法5：使用默认值（用于测试）
+          else {
+            // 如果都找不到，使用默认的alice作为initiator（仅用于测试）
+            initiatorId = 'alice';
+            console.warn(
+              '[useCollaborationActions] Using default initiatorId: alice'
+            );
+          }
+
+          // 🔍 调试信息：检查ID匹配
+          console.log('[useCollaborationActions] Debug notification creation:');
+          console.log('  - Current user ID:', userId);
+          console.log('  - Project author ID:', data.project?.author?.id);
+          console.log('  - Project initiatorId:', data.project?.initiatorId);
+          console.log('  - Project authorId:', data.project?.authorId);
+          console.log('  - Project creator ID:', data.project?.creator?.id);
+          console.log('  - Final initiatorId:', initiatorId);
+          console.log('  - Project data:', data.project);
+
+          if (initiatorId && initiatorId !== userId) {
+            console.log('[useCollaborationActions] Creating notification...');
+            const notificationResult =
+              await notificationService.createCollaborationApplicationNotification(
+                userId,
+                application.name,
+                application.avatar,
+                data.project?.id,
+                data.project?.title,
+                initiatorId,
+                {
+                  positionId,
+                  email: application.email,
+                  portfolio: application.portfolio,
+                  message: application.message,
+                }
+              );
+
+            if (notificationResult.success) {
+              console.log(
+                `[useCollaborationActions] Created notification for initiator ${initiatorId}`
+              );
+              console.log(
+                '[useCollaborationActions] Notification result:',
+                notificationResult
+              );
+            } else {
+              console.warn(
+                `[useCollaborationActions] Failed to create notification:`,
+                notificationResult.error
+              );
+            }
+          } else {
+            console.warn(
+              '[useCollaborationActions] Skipping notification creation:'
+            );
+            console.warn('  - initiatorId is missing or same as current user');
+            console.warn('  - initiatorId:', initiatorId);
+            console.warn('  - userId:', userId);
+          }
+        } catch (notificationError) {
+          console.warn(
+            '[useCollaborationActions] Error creating notification:',
+            notificationError
+          );
+        }
       } else {
         console.error(
           '[useCollaborationActions] Failed to save application:',

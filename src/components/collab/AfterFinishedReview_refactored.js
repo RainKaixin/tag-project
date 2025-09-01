@@ -28,6 +28,7 @@ const AfterFinishedReview = ({
   userName = 'Current User',
   userRole = 'Member',
   projectName = 'Project Name',
+  projectData = null, // 添加项目数据参数
   onSendRequest = () => {
     // TODO: Implement send request
   },
@@ -60,6 +61,7 @@ const AfterFinishedReview = ({
     userName,
     userRole,
     projectName,
+    projectData, // 传递项目数据
     onSendRequest,
     onSubmitComment,
   });
