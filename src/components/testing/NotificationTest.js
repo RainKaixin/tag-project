@@ -9,10 +9,7 @@ import {
   createCollaborationNotification,
   createGeneralNotification,
 } from '../../services/mock/notificationService.mock.js';
-import {
-  resetReviewRequests,
-  getAllReviewRequests,
-} from '../../services/mock/reviewRequestService.js';
+// Review request service has been removed - replaced with Add Experience functionality
 import { getCurrentUser, setCurrentUserId } from '../../utils/currentUser';
 
 const NotificationTest = () => {
@@ -25,13 +22,15 @@ const NotificationTest = () => {
   };
 
   const handleCancelRequests = () => {
-    resetReviewRequests();
-    console.log('All review requests cancelled');
+    console.log(
+      'Review requests functionality has been removed - replaced with Add Experience'
+    );
   };
 
   const handleShowRequests = () => {
-    const requests = getAllReviewRequests();
-    console.log('Current review requests:', requests);
+    console.log(
+      'Review requests functionality has been removed - replaced with Add Experience'
+    );
   };
 
   const handleShowNotifications = async () => {

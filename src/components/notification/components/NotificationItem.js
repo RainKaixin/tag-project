@@ -23,17 +23,11 @@ const NotificationItem = ({
       return;
     }
 
-    // 如果是需要操作的通知（review_request 或 collaboration），顯示模態框
-    if (
-      (notification.type === 'review_request' && !notification.isRead) ||
-      (notification.type === 'collaboration' &&
-        notification.meta?.requestId &&
-        notification.meta?.status === 'pending' &&
-        !notification.isRead)
-    ) {
+    // 如果是需要操作的通知（review_request），顯示模態框
+    if (notification.type === 'review_request' && !notification.isRead) {
       setShowModal(true);
     } else {
-      // 其他通知（如 follow, like）直接标记为已读并调用点击处理
+      // 其他通知（如 follow, like, collaboration）直接标记为已读并调用点击处理
       if (!notification.isRead && onMarkAsRead) {
         onMarkAsRead(notification.id);
       }

@@ -33,6 +33,8 @@ export const getNotificationCategory = notificationType => {
       return 'Gallery';
     case 'collaboration':
     case 'collaboration_application':
+    case 'review_request':
+    case 'review_response':
       return 'Collaboration';
     default:
       return 'System';

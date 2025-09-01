@@ -5,12 +5,12 @@ import { useAppContext } from '../context/AppContext';
 import {
   createCollaborationRequest,
   createCollaborationRequestNotification,
+  notificationService,
 } from '../services';
 import applicationService from '../services/applicationService';
 import { saveApplicationStatus } from '../utils/applicationStorage';
 
-import AfterFinishedReview from './collab/AfterFinishedReview_refactored';
-import ReviewApprovalPanel from './collab/ReviewApprovalPanel';
+// ReviewApprovalPanel has been removed - replaced with Add Experience functionality
 import ApplicationInfoPopover from './collaboration/components/ApplicationInfoPopover';
 import ApplyModal from './collaboration/components/ApplyModal';
 import CollaborationHeader from './collaboration/components/CollaborationHeader';
@@ -49,113 +49,22 @@ const CollaborationDetailPage = () => {
     saveCollaborationData: data.saveCollaborationData,
   });
 
-  // 添加 Final Review 状态管理
-  const [selectedCollaboratorForReview, setSelectedCollaboratorForReview] =
-    useState(null);
-
   // 申请人信息Popover状态管理
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showApplicationPopover, setShowApplicationPopover] = useState(false);
   const [anchorElement, setAnchorElement] = useState(null);
 
-  // 处理 Final Review 点击
-  const handleFinalReviewClick = async collaborator => {
-    console.log(
-      '[CollaborationDetailPage] Final Review clicked for collaborator:',
-      collaborator
-    );
-    console.log('[CollaborationDetailPage] Current user:', data.currentUser);
-    console.log('[CollaborationDetailPage] Project data:', data.project);
-    console.log(
-      '[CollaborationDetailPage] Is initiator:',
-      data.currentUser?.id === data.project?.author?.id
-    );
-
-    // 验证权限：只有 Initiator 才能发送 Final Review 请求
-    const isInitiator = data.currentUser?.id === data.project?.author?.id;
-    if (!isInitiator) {
-      console.warn(
-        '[CollaborationDetailPage] Only initiator can send Final Review requests'
-      );
-      return;
-    }
-
-    try {
-      console.log(
-        '[CollaborationDetailPage] Creating collaboration request...'
-      );
-
-      // 创建协作请求
-      const collaborationRequest = await createCollaborationRequest({
-        projectId: data.project.id,
-        projectName: data.project.title,
-        requesterId: data.currentUser.id, // Initiator 作为请求者
-        requesterName: data.currentUser.name,
-        requesterAvatar: data.currentUser.avatar || '',
-        ownerId: collaborator.id, // 协作者作为接收者
-        ownerName: collaborator.name,
-        message: `The project initiator ${data.currentUser.name} is requesting you to write a final review for the collaboration project "${data.project.title}".`,
-      });
-
-      console.log(
-        '[CollaborationDetailPage] Collaboration request created:',
-        collaborationRequest
-      );
-
-      // 为协作者创建通知
-      await createCollaborationRequestNotification({
-        userId: collaborator.id, // 通知发送给协作者
-        projectId: data.project.id,
-        projectName: data.project.title,
-        requestId: collaborationRequest.id,
-        requesterId: data.currentUser.id,
-        requesterName: data.currentUser.name,
-        requesterAvatar: data.currentUser.avatar || '',
-      });
-
-      console.log(
-        '[CollaborationDetailPage] Notification created for collaborator:',
-        collaborator.name
-      );
-
-      // 设置选中的协作者（用于后续的评论提交）
-      setSelectedCollaboratorForReview(collaborator);
-
-      // 显示成功提示
-      console.log(
-        `[CollaborationDetailPage] Final Review request sent to ${collaborator.name} successfully`
-      );
-    } catch (error) {
-      console.error(
-        '[CollaborationDetailPage] Error creating Final Review request:',
-        error
-      );
-      // 这里可以添加用户提示，比如显示错误消息
-    }
-  };
-
-  // 处理针对合作者的评价提交
-  const handleCollaboratorReviewSubmit = async commentText => {
-    if (!selectedCollaboratorForReview) return;
-
-    const newReview = {
-      collaboratorId: selectedCollaboratorForReview.id,
-      collaboratorName: selectedCollaboratorForReview.name,
-      reviewerId: data.currentUser?.id || 'bryan',
-      reviewerName: data.currentUser?.name || 'Bryan',
-      text: commentText,
-      timestamp: new Date().toISOString(),
-    };
-
-    console.log('Submitted review for collaborator:', newReview);
-
-    // 清空选中状态
-    setSelectedCollaboratorForReview(null);
-  };
-
-  // 处理申请人头像点击
+  // 处理申请人点击
   const handleApplicationClick = (application, event, positionId) => {
     console.log('[handleApplicationClick] Application:', application);
+    console.log(
+      '[handleApplicationClick] Application type:',
+      typeof application
+    );
+    console.log(
+      '[handleApplicationClick] Application keys:',
+      application ? Object.keys(application) : 'null'
+    );
     console.log('[handleApplicationClick] Position ID:', positionId);
 
     // 关闭当前Popover（如果存在）
@@ -391,6 +300,63 @@ const CollaborationDetailPage = () => {
     );
     console.log('Updated project with collaborators:', finalUpdatedProject);
 
+    // 发送批准通知给申请人
+    try {
+      console.log(
+        '[handleApproveApplication] Attempting to send notification to:',
+        application.userId || application.id
+      );
+      console.log('[handleApproveApplication] Application ID vs UserID:', {
+        id: application.id,
+        userId: application.userId,
+      });
+      console.log('[handleApproveApplication] Notification data:', {
+        userId: application.userId || application.id,
+        type: 'collaboration',
+        title: 'Application Approved',
+        message: `Your application for "${positionTitle}" position in "${data.project.name}" has been approved! You are now a collaborator.`,
+        projectId: data.project.id,
+        meta: {
+          action: 'application_approved',
+          collaborationId: data.project.id,
+          collaborationTitle: data.project.name,
+          positionId: positionId,
+          positionTitle: positionTitle,
+          approvedBy: data.currentUser?.name || 'Project Owner',
+        },
+      });
+
+      const notificationResult =
+        await notificationService.createGeneralNotification({
+          userId: application.userId || application.id,
+          type: 'collaboration',
+          title: 'Application Approved',
+          message: `Your application for "${positionTitle}" position in "${data.project.name}" has been approved! You are now a collaborator.`,
+          projectId: data.project.id,
+          meta: {
+            action: 'application_approved',
+            collaborationId: data.project.id,
+            collaborationTitle: data.project.name,
+            positionId: positionId,
+            positionTitle: positionTitle,
+            approvedBy: data.currentUser?.name || 'Project Owner',
+          },
+        });
+
+      console.log(
+        '[handleApproveApplication] Notification result:',
+        notificationResult
+      );
+      console.log(
+        '[handleApproveApplication] Approval notification sent successfully'
+      );
+    } catch (error) {
+      console.error(
+        '[handleApproveApplication] Failed to send approval notification:',
+        error
+      );
+    }
+
     // 延迟关闭Popover，让用户看到按钮状态变化
     setTimeout(() => {
       handleApplicationPopoverClose();
@@ -479,42 +445,13 @@ const CollaborationDetailPage = () => {
               owner={data.project.author}
               currentUser={data.currentUser} // 传递当前用户信息
               eligibility={{ isMemberCompleted: true }} // Mock eligibility
-              onFinalReviewClick={handleFinalReviewClick}
             />
 
-            {/* after-finished-review v1 (dev panel) - 开发审批面板 */}
-            {data.enableReviewApprovalPanel && (
-              <div className='mt-6'>
-                <ReviewApprovalPanel
-                  projectId={data.project.id}
-                  isOwner={true} // 开发模式：总是显示为Owner
-                />
-              </div>
-            )}
+            {/* ReviewApprovalPanel has been removed - replaced with Add Experience functionality */}
           </div>
         </div>
 
-        {/* After-Finished Review - Full Width */}
-        <div className='mt-8'>
-          <AfterFinishedReview
-            isLoggedIn={true}
-            isProjectMember={true}
-            hasCompletedTasks={true}
-            requestStatus='none'
-            hasSubmittedFinalComment={false}
-            finalComments={[]}
-            projectId={data.project?.id || 'proj_01'}
-            userId={data.currentUser?.id || 'bryan'}
-            userName={data.currentUser?.name || 'Bryan'}
-            userRole={data.currentUser?.role || 'Collaborator'}
-            projectName={data.project?.title || 'Interactive Web Experience'}
-            projectData={data.project} // 传递完整的项目数据
-            onSendRequest={() => {}}
-            onSubmitComment={text => {}}
-            selectedCollaborator={selectedCollaboratorForReview}
-            onCollaboratorReviewSubmit={handleCollaboratorReviewSubmit}
-          />
-        </div>
+        {/* After-Finished Review - 已移除重复组件，使用右侧面板的 RightOwnerPanel */}
       </div>
 
       {/* Apply Modal */}

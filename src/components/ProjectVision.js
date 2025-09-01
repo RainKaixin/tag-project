@@ -67,13 +67,10 @@ const ProjectVision = ({ vision, owner, currentUser, onFinalReviewClick }) => {
         <div>
           <div className='font-medium text-gray-900'>{owner.artist}</div>
           <div className='text-sm text-gray-500'>
-            {owner.role === 'Initiator' ? (
-              <span className='inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full'>
-                Initiator
-              </span>
-            ) : (
-              owner.role
-            )}
+            {/* 项目发起者总是显示 Initiator 标签 */}
+            <span className='inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full'>
+              Initiator
+            </span>
           </div>
         </div>
       </div>

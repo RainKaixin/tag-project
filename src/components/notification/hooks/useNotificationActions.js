@@ -5,7 +5,6 @@ import {
   approveCollaborationRequest,
   denyCollaborationRequest,
 } from '../../../services/mock/collaborationRequestService.js';
-import { updateReviewRequest } from '../../../services/mock/reviewRequestService.js';
 import { getCurrentUserId } from '../../../utils/currentUser.js';
 import { filterNotifications } from '../utils/notificationHelpers';
 
@@ -101,14 +100,36 @@ const useNotificationActions = ({ state, setters }) => {
 
   // 处理通知点击，标记为已读
   const handleNotificationClick = useCallback(async notification => {
-    // 注意：这里不需要再次调用 markAsRead，因为 NotificationItem 已经调用了 onMarkAsRead
-    // 我们只需要处理导航逻辑
+    console.log('Notification clicked:', notification);
 
-    if (notification.projectId) {
-      // 实现项目页面跳转
+    // 只处理 Collaboration Application 通知的跳转
+    if (notification.type === 'collaboration') {
+      // 尝试从不同位置获取项目ID
+      const projectId =
+        notification.projectId ||
+        notification.meta?.projectId ||
+        notification.meta?.requestId ||
+        notification.meta?.collaborationId; // 添加这个字段！
+
+      console.log('Notification projectId lookup:', {
+        direct: notification.projectId,
+        metaProjectId: notification.meta?.projectId,
+        metaRequestId: notification.meta?.requestId,
+        metaCollaborationId: notification.meta?.collaborationId,
+        final: projectId,
+      });
+
+      if (projectId) {
+        // 跳转到协作项目详情页面
+        console.log('Navigating to collaboration project:', projectId);
+        window.location.href = `/tagme/collaboration/${projectId}`;
+      } else {
+        console.log('No projectId found in notification:', notification);
+      }
+    } else {
+      // 其他通知类型只标记为已读，不进行跳转
+      console.log('Notification clicked, marked as read:', notification.type);
     }
-
-    console.log('Navigate to notification detail:', notification);
   }, []);
 
   // 标记单个通知为已读
@@ -145,19 +166,11 @@ const useNotificationActions = ({ state, setters }) => {
     }
   }, []);
 
-  // 处理review request审批
+  // 处理review request审批 - 已移除，改为 Add Experience 功能
   const handleReviewRequest = useCallback(async (notification, action) => {
-    try {
-      const { requestId } = notification.meta;
-      const updatedRequest = updateReviewRequest(requestId, action);
-
-      if (updatedRequest) {
-        console.log(`Review request ${action}:`, updatedRequest);
-        await notificationService.markAsRead(notification.id);
-      }
-    } catch (error) {
-      console.error('Error handling review request:', error);
-    }
+    console.log(
+      'Review request functionality has been replaced with Add Experience'
+    );
   }, []);
 
   // 处理协作请求审批

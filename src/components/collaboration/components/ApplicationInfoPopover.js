@@ -21,6 +21,14 @@ const ApplicationInfoPopover = ({
   const isApproved = React.useMemo(() => {
     console.log('[ApplicationInfoPopover] Checking approval status...');
     console.log('[ApplicationInfoPopover] Application:', application);
+    console.log(
+      '[ApplicationInfoPopover] Application type:',
+      typeof application
+    );
+    console.log(
+      '[ApplicationInfoPopover] Application keys:',
+      application ? Object.keys(application) : 'null'
+    );
     console.log('[ApplicationInfoPopover] Position ID:', positionId);
     console.log('[ApplicationInfoPopover] Positions:', positions);
     console.log(

@@ -452,6 +452,70 @@ export const notificationService = {
       return { success: false, error: error.message };
     }
   },
+
+  /**
+   * 创建通用通知
+   * @param {Object} params - 通知参数
+   * @param {string} params.userId - 接收者ID
+   * @param {string} params.type - 通知类型
+   * @param {string} params.title - 通知标题
+   * @param {string} params.message - 通知消息
+   * @param {string} params.projectId - 项目ID（可选）
+   * @param {Object} params.meta - 元数据（可选）
+   * @returns {Promise<Object>} 创建结果
+   */
+  createGeneralNotification: async params => {
+    try {
+      const notification = {
+        id: `general_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        type: params.type || 'general',
+        senderId: null, // 通用通知没有发送者
+        senderName: null,
+        receiverId: params.userId,
+        title: params.title,
+        content: params.message,
+        message: params.message,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        meta: {
+          action: params.type,
+          projectId: params.projectId,
+          ...params.meta,
+        },
+      };
+
+      // 优先保存到 LocalStorage
+      const result = await localStorageAdapter.createNotification(notification);
+      if (result.success) {
+        console.log(
+          `[notificationService] Created general notification in LocalStorage`
+        );
+        return result;
+      }
+
+      // 如果 LocalStorage 失败，尝试 Supabase
+      const supabaseResult = await supabaseAdapter.createNotification(
+        notification
+      );
+      if (supabaseResult.success) {
+        console.log(
+          `[notificationService] Created general notification in Supabase`
+        );
+        return supabaseResult;
+      }
+
+      console.warn(
+        `[notificationService] Failed to create general notification`
+      );
+      return { success: false, error: 'Failed to create general notification' };
+    } catch (error) {
+      console.error(
+        `[notificationService] Error creating general notification:`,
+        error
+      );
+      return { success: false, error: error.message };
+    }
+  },
 };
 
 export default notificationService;

@@ -42,10 +42,7 @@ export { commentService } from './commentService/index.js';
 // 导出 mock 服务中的特定函数（保持向后兼容）
 export { getProfile, saveProfile } from './mock/userProfileService.js';
 export { createCollaborationRequestNotification } from './mock/notificationService.mock.js';
-export {
-  submitFinalComment,
-  getReviewState,
-} from './mock/reviewRequestService.js';
+// Review request service has been removed - replaced with Add Experience functionality
 export {
   createCollaborationRequest,
   getCollaborationRequestStatus,
@@ -60,7 +57,7 @@ export * as mockArtworkService from './mock/artworkService.js';
 export * as mockAvatarService from './mock/avatarService.mock.js';
 export * as mockCollaborationRequestService from './mock/collaborationRequestService.js';
 export * as mockNotificationService from './mock/notificationService.mock.js';
-export * as mockReviewRequestService from './mock/reviewRequestService.js';
+// Review request service has been removed - replaced with Add Experience functionality
 export * as mockUserProfileService from './mock/userProfileService.js';
 
 // 导出 Supabase 客户端

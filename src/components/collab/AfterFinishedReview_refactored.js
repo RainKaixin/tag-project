@@ -259,17 +259,6 @@ const AfterFinishedReview = ({
                 </svg>
               </button>
             )}
-
-            {/* 开发辅助按钮 */}
-            {process.env.NODE_ENV === 'development' && (
-              <button
-                onClick={actions.handleResetRequests}
-                className='px-4 py-2 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors duration-200'
-                title='Cancel all review requests (dev only)'
-              >
-                Cancel Requests
-              </button>
-            )}
           </div>
 
           {/* 评论输入区域 - 与原有功能完全一致 */}
@@ -432,17 +421,6 @@ const AfterFinishedReview = ({
                     d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
                   />
                 </svg>
-              </button>
-            )}
-
-            {/* 开发辅助按钮 */}
-            {process.env.NODE_ENV === 'development' && (
-              <button
-                onClick={actions.handleResetRequests}
-                className='px-4 py-2 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors duration-200'
-                title='Cancel all review requests (dev only)'
-              >
-                Cancel Requests
               </button>
             )}
           </div>
