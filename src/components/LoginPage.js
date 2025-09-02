@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
 
+import { ForgotPasswordModal } from './forgot-password';
+
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -12,6 +14,7 @@ const LoginPage = () => {
     rememberMe: false,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
   const handleInputChange = e => {
     const { name, value, type, checked } = e.target;
@@ -154,12 +157,13 @@ const LoginPage = () => {
                   </label>
                 </div>
                 <div className='text-sm'>
-                  <a
-                    href='#'
+                  <button
+                    type='button'
+                    onClick={() => setIsForgotPasswordOpen(true)}
                     className='font-medium text-tag-blue hover:text-tag-dark-blue'
                   >
                     Forgot password?
-                  </a>
+                  </button>
                 </div>
               </div>
 
@@ -230,6 +234,12 @@ const LoginPage = () => {
           </div>
         </div>
       </footer>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
+      />
     </div>
   );
 };

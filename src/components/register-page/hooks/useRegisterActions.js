@@ -4,6 +4,8 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { signUp } from '../../../services/supabase/auth';
+
 /**
  * useRegisterActions Hook - 处理注册表单的操作逻辑
  * @param {Object} params - 参数对象
@@ -35,9 +37,10 @@ const useRegisterActions = ({
 
       setSendingCode(true);
       try {
-        // 实现实际的验证码发送逻辑
-        // 例如：await supabase.auth.sendOtp({ email })
-        console.log('Sending verification code to:', email);
+        // 使用 Supabase 发送验证码
+        // 注意：Supabase v2 中，signUp 会自动发送验证邮件
+        // 我们这里模拟发送成功，实际注册时会处理
+        console.log('Preparing to send verification code to:', email);
 
         // 模拟发送成功
         setTimeout(() => {
@@ -64,22 +67,30 @@ const useRegisterActions = ({
 
       setLoading(true);
       try {
-        // 实现实际的注册逻辑
-        // 例如：const { data, error } = await supabase.auth.signUp({
-        //   email: formData.email,
-        //   password: formData.password
-        // });
+        // 使用 Supabase 实现真实的注册逻辑
+        const { success, user, error } = await signUp(
+          formData.email,
+          formData.password,
+          {
+            // 可以在这里添加额外的用户数据
+            // 例如：display_name, avatar_url 等
+          }
+        );
 
-        console.log('Registration info:', formData);
-
-        // 模拟注册成功
-        setTimeout(() => {
+        if (success) {
+          console.log('Registration successful:', user);
           setLoading(false);
-          alert('Registration successful! Please go to login page');
+          alert(
+            'Registration successful! Please check your email to verify your account, then go to login page.'
+          );
           navigate('/login');
-        }, 1000);
+        } else {
+          console.error('Registration failed:', error);
+          setLoading(false);
+          setGeneralError(error || 'Registration failed, please try again');
+        }
       } catch (error) {
-        console.error('Registration failed:', error);
+        console.error('Registration error:', error);
         setLoading(false);
         setGeneralError('Registration failed, please try again');
       }

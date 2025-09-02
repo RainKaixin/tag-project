@@ -37,9 +37,6 @@ const RegisterFooter = ({ onLoginClick }) => {
               <a href='#' className='hover:text-gray-700'>
                 Terms of Service
               </a>
-              <a href='#' className='hover:text-gray-700'>
-                Help Center
-              </a>
             </div>
           </div>
         </div>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { favoritesService } from '../../../services';
 import { getProfile } from '../../../services';
 import { notificationService } from '../../../services';
@@ -13,22 +14,16 @@ export const useCollaborationActions = (data, setters) => {
   const { goBack, navigateToMilestone, navigateToArtist } = useNavigation();
 
   const {
-    appliedPositions,
-    selectedPosition,
-    comment,
-    positionComments,
+    appliedPositions, // eslint-disable-line no-unused-vars
     hasSubmittedApplication,
-    showWarning,
-    showSuccessToast,
-    showCancelModal,
+    showWarning, // eslint-disable-line no-unused-vars
+    showSuccessToast, // eslint-disable-line no-unused-vars
+    showCancelModal, // eslint-disable-line no-unused-vars
     cancelPositionId,
   } = data;
 
   const {
     setAppliedPositions,
-    setSelectedPosition,
-    setComment,
-    setPositionComments,
     setHasSubmittedApplication,
     setShowWarning,
     setShowSuccessToast,
@@ -37,7 +32,6 @@ export const useCollaborationActions = (data, setters) => {
     setShowApplyModal,
     setApplyForm,
     setIsSaved,
-    setActivePositionTab,
     setPositions,
     updateProjectData,
     updatePositions,

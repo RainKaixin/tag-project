@@ -24,6 +24,17 @@ export const validateEmail = email => {
 };
 
 /**
+ * 验证是否为 SCAD 邮箱
+ * @param {string} email - 邮箱地址
+ * @returns {boolean} 是否为 SCAD 邮箱
+ */
+export const validateScadEmail = email => {
+  if (!email) return false;
+  const emailLower = email.toLowerCase();
+  return emailLower.endsWith('@scad.edu');
+};
+
+/**
  * 验证验证码格式
  * @param {string} code - 验证码
  * @returns {boolean} 是否有效
@@ -64,6 +75,9 @@ export const validateFormData = formData => {
     errors.email = 'Please enter your email address';
   } else if (!validateEmail(formData.email)) {
     errors.email = 'Please enter a valid email address';
+  } else if (!validateScadEmail(formData.email)) {
+    errors.email =
+      'Only @scad.edu email addresses are allowed for registration';
   }
 
   // 验证验证码

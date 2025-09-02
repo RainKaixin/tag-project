@@ -18,6 +18,10 @@ const RegisterHeader = () => {
       <h2 className='text-3xl font-bold text-gray-900 mb-2'>
         Create your account
       </h2>
+      <p className='text-sm text-gray-600 mb-4 whitespace-nowrap'>
+        Only <span className='text-red-600 font-semibold'>scad.edu</span> emails
+        are currently eligible for TAG registration.
+      </p>
     </div>
   );
 };

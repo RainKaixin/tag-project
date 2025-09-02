@@ -1,7 +1,9 @@
 // register-form v1: 注册表单组件
 // 从 RegisterPage.js 中提取的表单字段
 
-import React from 'react';
+import React, { useState } from 'react';
+
+import { validateScadEmail } from '../utils/formDataHelpers';
 
 /**
  * RegisterForm 组件 - 注册表单字段
@@ -24,9 +26,20 @@ const RegisterForm = ({
   isLoading,
   isSendingCode,
 }) => {
+  // 检查邮箱是否为有效的 SCAD 邮箱（保留逻辑，暂时不启用）
+  const isScadEmail = validateScadEmail(formData.email);
+
+  // 开发阶段：暂时关闭邮箱限制，允许所有邮箱注册
+  // TODO: 生产环境时启用此限制
+  const isDevelopmentMode = true; // 开发模式标志
+  const allowAllEmails = isDevelopmentMode; // 是否允许所有邮箱
+
+  // 密码显示状态
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   return (
     <form onSubmit={onSubmit} className='space-y-6'>
-      {/* Email Field with Send Code Button */}
       <div>
         <label
           htmlFor='email'
@@ -36,21 +49,6 @@ const RegisterForm = ({
         </label>
         <div className='flex space-x-2'>
           <div className='relative flex-1'>
-            <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-              <svg
-                className='h-5 w-5 text-gray-400'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
-                />
-              </svg>
-            </div>
             <input
               id='email'
               name='email'
@@ -59,7 +57,7 @@ const RegisterForm = ({
               value={formData.email}
               onChange={onInputChange}
               placeholder='your.name@university.edu'
-              className={`block w-full pl-10 pr-3 py-3 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm ${
+              className={`block w-full px-3 py-3 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm ${
                 errors.email ? 'border-red-300' : 'border-gray-300'
               }`}
             />
@@ -67,8 +65,12 @@ const RegisterForm = ({
           <button
             type='button'
             onClick={() => onSendCode(formData.email)}
-            disabled={isSendingCode}
-            className='px-4 py-3 text-sm font-medium text-white bg-tag-blue hover:bg-tag-dark-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tag-blue disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 rounded-md whitespace-nowrap'
+            disabled={isSendingCode || (!allowAllEmails && !isScadEmail)}
+            className={`px-4 py-3 text-sm font-medium rounded-md whitespace-nowrap transition-colors duration-200 ${
+              (allowAllEmails || isScadEmail) && !isSendingCode
+                ? 'text-white bg-tag-blue hover:bg-tag-dark-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tag-blue'
+                : 'text-gray-400 bg-gray-200 cursor-not-allowed'
+            }`}
           >
             {isSendingCode ? 'Sending...' : 'Send Code'}
           </button>
@@ -87,21 +89,6 @@ const RegisterForm = ({
           Verification Code
         </label>
         <div className='relative'>
-          <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-            <svg
-              className='h-5 w-5 text-gray-400'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
-              />
-            </svg>
-          </div>
           <input
             id='verificationCode'
             name='verificationCode'
@@ -111,7 +98,7 @@ const RegisterForm = ({
             onChange={onInputChange}
             placeholder='Enter 6-digit code'
             maxLength='6'
-            className={`block w-full pl-10 pr-3 py-3 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm ${
+            className={`block w-full px-3 py-3 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm ${
               errors.verificationCode ? 'border-red-300' : 'border-gray-300'
             }`}
           />
@@ -130,33 +117,59 @@ const RegisterForm = ({
           Password
         </label>
         <div className='relative'>
-          <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-            <svg
-              className='h-5 w-5 text-gray-400'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'
-              />
-            </svg>
-          </div>
           <input
             id='password'
             name='password'
-            type='password'
+            type={showPassword ? 'text' : 'password'}
             required
             value={formData.password}
             onChange={onInputChange}
-            placeholder='••••••••'
-            className={`block w-full pl-10 pr-3 py-3 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm ${
+            placeholder='Enter your password'
+            className={`block w-full pr-10 px-3 py-3 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm ${
               errors.password ? 'border-red-300' : 'border-gray-300'
             }`}
           />
+          <button
+            type='button'
+            onClick={() => setShowPassword(!showPassword)}
+            className='absolute inset-y-0 right-0 pr-3 flex items-center'
+          >
+            {showPassword ? (
+              <svg
+                className='h-5 w-5 text-gray-400 hover:text-gray-600'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21'
+                />
+              </svg>
+            ) : (
+              <svg
+                className='h-5 w-5 text-gray-400 hover:text-gray-600'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'
+                />
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'
+                />
+              </svg>
+            )}
+          </button>
         </div>
         {errors.password && (
           <p className='mt-1 text-sm text-red-600'>{errors.password}</p>
@@ -172,33 +185,59 @@ const RegisterForm = ({
           Confirm Password
         </label>
         <div className='relative'>
-          <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-            <svg
-              className='h-5 w-5 text-gray-400'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'
-              />
-            </svg>
-          </div>
           <input
             id='confirmPassword'
             name='confirmPassword'
-            type='password'
+            type={showConfirmPassword ? 'text' : 'password'}
             required
             value={formData.confirmPassword}
             onChange={onInputChange}
-            placeholder='••••••••'
-            className={`block w-full pl-10 pr-3 py-3 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm ${
+            placeholder='Confirm your password'
+            className={`block w-full pr-10 px-3 py-3 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm ${
               errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
             }`}
           />
+          <button
+            type='button'
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className='absolute inset-y-0 right-0 pr-3 flex items-center'
+          >
+            {showConfirmPassword ? (
+              <svg
+                className='h-5 w-5 text-gray-400 hover:text-gray-600'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21'
+                />
+              </svg>
+            ) : (
+              <svg
+                className='h-5 w-5 text-gray-400 hover:text-gray-600'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'
+                />
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'
+                />
+              </svg>
+            )}
+          </button>
         </div>
         {errors.confirmPassword && (
           <p className='mt-1 text-sm text-red-600'>{errors.confirmPassword}</p>
