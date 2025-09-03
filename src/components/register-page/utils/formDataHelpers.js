@@ -75,10 +75,12 @@ export const validateFormData = formData => {
     errors.email = 'Please enter your email address';
   } else if (!validateEmail(formData.email)) {
     errors.email = 'Please enter a valid email address';
-  } else if (!validateScadEmail(formData.email)) {
-    errors.email =
-      'Only @scad.edu email addresses are allowed for registration';
   }
+  // 暂时禁用 SCAD 邮箱限制，允许测试
+  // else if (!validateScadEmail(formData.email)) {
+  //   errors.email =
+  //     'Only @scad.edu email addresses are allowed for registration';
+  // }
 
   // 验证验证码
   if (!formData.verificationCode) {

@@ -1,7 +1,5 @@
 import React from 'react';
 
-import SupabaseTest from './SupabaseTest';
-
 const HeroSection = () => {
   return (
     <section className='pt-20 pb-16 bg-white'>
@@ -22,11 +20,6 @@ const HeroSection = () => {
         >
           About TAG
         </button>
-
-        {/* Supabase 測試組件 */}
-        <div className='mt-16'>
-          <SupabaseTest />
-        </div>
       </div>
     </section>
   );

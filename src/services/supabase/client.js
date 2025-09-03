@@ -25,15 +25,20 @@ export const checkSupabaseConnection = async () => {
   }
 
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('count')
-      .limit(1);
+    // 使用更通用的连接测试方法
+    // 尝试获取当前用户会话，这不需要特定的表
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+
     if (error) {
       console.warn('⚠️ Supabase连接失败，将使用mock数据:', error.message);
       return false;
     }
+
     console.log('✅ Supabase连接成功');
+    console.log('ℹ️ 当前会话状态:', session ? '已认证' : '未认证');
     return true;
   } catch (error) {
     console.warn('⚠️ Supabase连接检查失败，将使用mock数据:', error.message);

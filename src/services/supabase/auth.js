@@ -131,3 +131,106 @@ export const updatePassword = async newPassword => {
     return { success: false, error: error.message };
   }
 };
+
+// 发送 OTP 验证码
+export const sendOTP = async email => {
+  try {
+    // 使用 supabase.functions.invoke 调用 Edge Function
+    const { data, error } = await supabase.functions.invoke(
+      'send-verification-code',
+      {
+        body: { email },
+      }
+    );
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message || 'Failed to send verification code',
+      };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// 验证 OTP
+export const verifyOTP = async (email, token) => {
+  try {
+    // 使用 supabase.functions.invoke 调用 Edge Function
+    const { data, error } = await supabase.functions.invoke(
+      'verify-code-only',
+      {
+        body: {
+          email,
+          code: token,
+        },
+      }
+    );
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message || 'Failed to verify code',
+      };
+    }
+
+    // OTP 驗證成功，返回成功狀態
+    return {
+      success: true,
+      user: { email: data.email }, // 暫時返回基本信息
+      session: null, // 還沒有會話
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// 设置用户密码
+export const setUserPassword = async password => {
+  try {
+    const { data, error } = await supabase.auth.updateUser({
+      password: password,
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, user: data.user };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// 創建用戶並設置密碼（使用我們的 Edge Function）
+export const createUserWithPassword = async (email, code, password) => {
+  try {
+    // 使用 supabase.functions.invoke 调用 Edge Function
+    const { data, error } = await supabase.functions.invoke('verify-code', {
+      body: {
+        email,
+        code,
+        password,
+      },
+    });
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message || 'Failed to create user',
+      };
+    }
+
+    // 用戶創建成功，返回用戶信息和會話
+    return {
+      success: true,
+      user: data.user,
+      session: data.session,
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};

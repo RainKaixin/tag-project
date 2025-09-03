@@ -12,6 +12,7 @@ import MilestonePage from '../components/MilestonePage';
 import NotificationCenter from '../components/NotificationCenter';
 import ProtectedRoute from '../components/ProtectedRoute';
 import RegisterPage from '../components/register-page/RegisterPage_refactored';
+import SupabaseConnectionTest from '../components/SupabaseConnectionTest';
 import TAGMePage from '../components/TAGMePage';
 import CollaborationTestPage from '../components/testing/CollaborationTestPage';
 import NotificationTest from '../components/testing/NotificationTest';
@@ -202,6 +203,9 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+
+      {/* Supabase 连接测试页面 - 临时添加 */}
+      <Route path='/test-supabase' element={<SupabaseConnectionTest />} />
 
       {/* 标签聚合页面 - 需要保护 */}
       <Route

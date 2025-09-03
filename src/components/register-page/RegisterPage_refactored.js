@@ -33,6 +33,10 @@ const RegisterPage_refactored = () => {
     setSendingCode,
     setError,
     setGeneralError,
+    onStepChange: step => {
+      // 這裡可以處理步驟變化
+      console.log('Step changed to:', step);
+    },
   });
 
   return (

@@ -4,7 +4,12 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { signUp } from '../../../services/supabase/auth';
+import {
+  sendOTP,
+  verifyOTP,
+  createUserWithPassword,
+} from '../../../services/supabase/auth';
+import { getErrorMessage, AUTH_ERRORS } from '../../../utils/authErrorHandler';
 
 /**
  * useRegisterActions Hook - 处理注册表单的操作逻辑
@@ -24,29 +29,38 @@ const useRegisterActions = ({
   setSendingCode,
   setError,
   setGeneralError,
+  onStepChange, // 新增：步驟控制回調
 }) => {
   const navigate = useNavigate();
 
-  // 发送验证码
+  // 发送 OTP 验证码
   const sendVerificationCode = useCallback(
     async email => {
       if (!email) {
-        setError('email', 'Please enter your email address');
+        setError('email', AUTH_ERRORS.EMPTY_FIELD);
         return;
       }
 
       setSendingCode(true);
       try {
-        // 使用 Supabase 发送验证码
-        // 注意：Supabase v2 中，signUp 会自动发送验证邮件
-        // 我们这里模拟发送成功，实际注册时会处理
-        console.log('Preparing to send verification code to:', email);
+        // 使用 Supabase OTP 发送验证码
+        const { success, error } = await sendOTP(email);
 
-        // 模拟发送成功
-        setTimeout(() => {
+        if (success) {
           setSendingCode(false);
-          alert('Verification code has been sent to your email');
-        }, 1000);
+          // 提示用户检查邮箱
+          setError(
+            'email',
+            '✅ Verification code sent! Please check your inbox.'
+          );
+          // 發送成功後，通知組件跳轉到 OTP 驗證步驟
+          if (onStepChange) {
+            onStepChange('otp');
+          }
+        } else {
+          setSendingCode(false);
+          setError('email', getErrorMessage({ message: error }));
+        }
       } catch (error) {
         console.error('Failed to send verification code:', error);
         setSendingCode(false);
@@ -56,7 +70,7 @@ const useRegisterActions = ({
     [setSendingCode, setError]
   );
 
-  // 处理表单提交
+  // 处理表单提交 - 验证 OTP 并设置密码
   const handleSubmit = useCallback(
     async e => {
       e.preventDefault();
@@ -67,28 +81,31 @@ const useRegisterActions = ({
 
       setLoading(true);
       try {
-        // 使用 Supabase 实现真实的注册逻辑
-        const { success, user, error } = await signUp(
+        // 使用我們的 Edge Function 創建用戶並設置密碼
+        const {
+          success: createSuccess,
+          user,
+          session,
+          error: createError,
+        } = await createUserWithPassword(
           formData.email,
-          formData.password,
-          {
-            // 可以在这里添加额外的用户数据
-            // 例如：display_name, avatar_url 等
-          }
+          formData.verificationCode,
+          formData.password
         );
 
-        if (success) {
-          console.log('Registration successful:', user);
+        if (!createSuccess) {
           setLoading(false);
-          alert(
-            'Registration successful! Please check your email to verify your account, then go to login page.'
-          );
-          navigate('/login');
-        } else {
-          console.error('Registration failed:', error);
-          setLoading(false);
-          setGeneralError(error || 'Registration failed, please try again');
+          setGeneralError(getErrorMessage({ message: createError }));
+          return;
         }
+
+        // 注册成功！
+        console.log('Registration successful:', user);
+        setLoading(false);
+        alert('Registration successful! You are now logged in.');
+
+        // 用户已经自动登录，跳转到主页
+        navigate('/');
       } catch (error) {
         console.error('Registration error:', error);
         setLoading(false);
