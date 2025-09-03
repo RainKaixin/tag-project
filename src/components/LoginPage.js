@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../services/supabase/client.js';
 
 import { ForgotPasswordModal } from './forgot-password';
 
@@ -16,6 +17,27 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // 强制清除任何可能的默认值
+  React.useEffect(() => {
+    // 延迟执行，确保DOM已渲染
+    const timer = setTimeout(() => {
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+
+      if (emailInput && emailInput.value !== '') {
+        emailInput.value = '';
+        setFormData(prev => ({ ...prev, email: '' }));
+      }
+
+      if (passwordInput && passwordInput.value !== '') {
+        passwordInput.value = '';
+        setFormData(prev => ({ ...prev, password: '' }));
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleInputChange = e => {
     const { name, value, type, checked } = e.target;
@@ -33,9 +55,24 @@ const LoginPage = () => {
       const result = await login(formData.email, formData.password);
 
       if (result.success) {
-        // 登錄成功，跳轉到首頁
+        // 登錄成功，獲取 session 並跳轉到用戶的個人頁面
         setErrorMessage('');
-        navigate('/');
+
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          if (session?.user?.id) {
+            // 跳轉到用戶的個人頁面
+            navigate(`/artist/${session.user.id}`);
+          } else {
+            // 如果沒有 session，跳轉到首頁
+            navigate('/');
+          }
+        } catch (error) {
+          console.warn('Failed to get session, redirecting to home:', error);
+          navigate('/');
+        }
       } else {
         // 登錄失敗，顯示錯誤信息
         console.error('Login failed:', result.error);
@@ -98,6 +135,7 @@ const LoginPage = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder='your.name@university.edu'
+                    autoComplete='off'
                     className='block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm'
                   />
                 </div>
@@ -135,7 +173,8 @@ const LoginPage = () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder='••••••••'
-                    className='block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm'
+                    autoComplete='off'
+                    className='block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-tag-blue focus:border-tag-blue sm:text-sm'
                   />
                 </div>
               </div>

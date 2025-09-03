@@ -139,9 +139,14 @@ export const artistService = {
     } catch (error) {
       console.error('[artistService] Error getting public artists:', error);
 
-      // 如果出错，回退到MockUsers（仅用于测试）
-      console.log('[artistService] Falling back to MockUsers');
-      return await mockUsersAdapter.getPublicArtists();
+      // 如果出错，返回错误信息（不再回退到MockUsers）
+      console.error(
+        '[artistService] Error getting public artists, not falling back to MockUsers'
+      );
+      return {
+        success: false,
+        error: error.message,
+      };
     }
   },
 
@@ -172,17 +177,23 @@ export const artistService = {
         return supabaseArtist;
       }
 
-      // 优先级3: MockUsers (fallback)
+      // 不再使用 MockUsers 作为回退
       console.log(
-        `[artistService] Using MockUsers fallback for artist ${artistId}`
+        `[artistService] No artist profile found for ${artistId}, returning null`
       );
-      return await mockUsersAdapter.getArtistProfile(artistId);
+      return {
+        success: false,
+        error: 'Artist profile not found',
+      };
     } catch (error) {
       console.error(
         `[artistService] Error getting artist profile ${artistId}:`,
         error
       );
-      return await mockUsersAdapter.getArtistProfile(artistId);
+      return {
+        success: false,
+        error: error.message,
+      };
     }
   },
 

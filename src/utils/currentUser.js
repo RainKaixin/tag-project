@@ -1,6 +1,7 @@
 import { storage } from '../services/storage/index';
 
 import { getCachedAvatar, cacheAvatar } from './avatarCache.js';
+import { isMock } from './envCheck.js';
 import { getUserInfo } from './mockUsers.js';
 
 const KEY = 'tag.currentUserId';
@@ -33,7 +34,7 @@ async function remove() {
 export const getCurrentUserId = () => {
   // 同步版本，用于兼容现有代码
   try {
-    if (typeof window === 'undefined') return 'alice';
+    if (typeof window === 'undefined') return null;
 
     // 检查新的统一键名
     let stored = window.localStorage.getItem(KEY);
@@ -63,23 +64,41 @@ export const getCurrentUserId = () => {
       }
     }
 
-    // 如果仍然没有值，设置默认值
+    // 如果仍然没有值，返回 null（不再设置默认值）
     if (!stored) {
-      console.log('[currentUser] Setting default user ID: alice');
-      window.localStorage.setItem(KEY, 'alice');
-      stored = 'alice';
+      console.log('[currentUser] No user ID found, returning null');
     }
 
     return stored;
   } catch (error) {
     console.warn('Failed to get current user ID:', error);
-    return 'alice';
+    return null;
   }
+};
+
+// 获取当前艺术家ID，不再回落到默认用户
+export const getCurrentArtistId = session => {
+  return session?.user?.id ?? null;
 };
 
 export const getCurrentUser = () => {
   const userId = getCurrentUserId();
+
+  // 如果 userId 为空，返回 null（不再返回默认用户）
+  if (!userId) {
+    console.log('[getCurrentUser] No userId found, returning null');
+    return null;
+  }
+
   const user = getUserInfo(userId);
+
+  // 如果 user 为空，返回 null（不再返回默认用户）
+  if (!user) {
+    console.log(
+      `[getCurrentUser] No user info found for userId: ${userId}, returning null`
+    );
+    return null;
+  }
 
   // 优先从 localStorage 获取最新的头像数据
   if (typeof window !== 'undefined') {
@@ -131,9 +150,7 @@ export const clearCurrentUserId = () => {
 
 export const getCurrentUserAvatar = () => {
   const user = getCurrentUser();
-  return (
-    user?.avatar || getDefaultAvatarUrl() // 使用统一的默认头像
-  );
+  return user?.avatar || null; // 不再使用默认头像，返回 null
 };
 
 /**

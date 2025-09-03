@@ -4,8 +4,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 
 import { useAppContext } from '../../../context/AppContext';
+import { useAuth } from '../../../context/AuthContext';
 import { getPublicPortfolio } from '../../../services/supabase/portfolio';
-import { getCurrentUser } from '../../../utils/currentUser.js';
 import {
   getArtistById,
   getCollaborationsData,
@@ -20,12 +20,13 @@ const useArtistState = () => {
   const { id: routeArtistId } = useParams();
   const location = useLocation();
   const { state: appState } = useAppContext();
+  const { user: authUser } = useAuth();
+
   // 修复路由判断：同时支持 /me 和 /artist/me 路由
   const isMeRoute =
     location.pathname === '/me' || location.pathname === '/artist/me';
 
-  const [currentUser, setCurrentUser] = useState(getCurrentUser());
-  const currentUserId = currentUser?.id?.toString?.() ?? null;
+  const currentUserId = authUser?.id?.toString?.() ?? null;
 
   // ！！！用独立状态存"被查看者"
   const [viewedUser, setViewedUser] = useState(null);
@@ -53,20 +54,12 @@ const useArtistState = () => {
     };
   }, [appState.navigationHistory]);
 
-  // 监听用户切换事件
+  // 监听认证用户变化，清理艺术家缓存
   useEffect(() => {
-    const handleUserChange = () => {
-      setCurrentUser(getCurrentUser());
-
-      // 清理艺术家缓存，确保数据重新获取
-      if (routeArtistId) {
-        invalidate(['artist', routeArtistId.toString()]);
-      }
-    };
-
-    window.addEventListener('user:changed', handleUserChange);
-    return () => window.removeEventListener('user:changed', handleUserChange);
-  }, [routeArtistId]);
+    if (routeArtistId) {
+      invalidate(['artist', routeArtistId.toString()]);
+    }
+  }, [routeArtistId, authUser?.id]);
 
   // 监听头像更新事件，清除相关缓存并更新头像
   useEffect(() => {
@@ -308,18 +301,17 @@ const useArtistState = () => {
 
   return {
     loading,
-    currentUser, // 登录者
+    currentUser: authUser, // 登录者（从 AuthContext 获取）
     artist: viewedUser, // 被查看者（页面主体请用这个）
     artworks: viewedArtworks,
     collaborations,
     isFollowing,
+    setIsFollowing,
     followersCount,
     expandedCardId,
     isOwnProfile,
     shouldShowBackToOwnerView,
     sourceInfo: getSourceInfo, // 添加来源信息
-    setCurrentUser,
-    setIsFollowing,
     setFollowersCount,
     setExpandedCardId,
     toggleFollow,

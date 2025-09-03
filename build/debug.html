@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debug Description Display</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .output {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 10px 0;
+      }
+      button {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔍 Debug Description Display Issue</h1>
+    <button onclick="runDebug()">Run Debug</button>
+    <div id="output" class="output"></div>
+
+    <script>
+      function log(message) {
+        const output = document.getElementById('output');
+        output.innerHTML += '<p>' + message + '</p>';
+        console.log(message);
+      }
+
+      function runDebug() {
+        document.getElementById('output').innerHTML = '';
+        log('🔍 Debugging description display issue...');
+
+        // 检查 localStorage 中的协作数据
+        const stored = localStorage.getItem('mock_collaborations');
+        log('📦 Raw stored data: ' + (stored ? 'Found' : 'Not found'));
+
+        if (stored) {
+          const collaborations = JSON.parse(stored);
+          log('📋 Total collaborations: ' + collaborations.length);
+
+          // 检查每个协作项目的 description 字段
+          collaborations.forEach((collab, index) => {
+            log(`<br><strong>${index + 1}. ${collab.title}:</strong>`);
+            log(`   Description: "${collab.description}"`);
+            log(`   Description length: ${collab.description?.length || 0}`);
+            log(`   Description type: ${typeof collab.description}`);
+            log(`   Has description: ${!!collab.description}`);
+          });
+
+          // 模拟 TAGMe 页面的数据转换
+          log('<br>🔍 Simulating TAGMe data conversion...');
+
+          // 模拟 formatAPIDataForList
+          const formatAPIDataForList = apiDataList => {
+            return apiDataList.map(item => ({
+              id: item.id,
+              title: item.title,
+              subtitle: item.description,
+              description: item.description, // 添加 description 字段
+              projectVision: item.projectVision,
+              whyThisMatters: item.whyThisMatters,
+              image: item.heroImage || null,
+              posterPreview: item.posterPreview || item.heroImage || null,
+              categories: item.projectType ? [item.projectType] : [],
+              author: {
+                id: item.author?.id || null,
+                name: item.author?.name || 'Unknown',
+                avatar: item.author?.avatar || null,
+              },
+              likes: item.likes || 0,
+              views: item.views || 0,
+              isLiked: false,
+              isBookmarked: false,
+              isInitiator: false,
+              role: item.author?.role || 'Initiator',
+              duration: item.duration || '',
+              meetingSchedule: item.meetingSchedule || '',
+              applicationDeadline: item.applicationDeadline || '',
+              status:
+                item.status === 'active' ? 'Open for Collaboration' : 'Closed',
+              skills: item.roles?.map(role => role.title) || [],
+              teamSize: item.teamSize || '',
+              currentMembers: 0,
+            }));
+          };
+
+          // 筛选 active 状态的协作项目
+          const activeCollaborations = collaborations.filter(
+            c => c.status === 'active'
+          );
+          log('🔍 Active collaborations: ' + activeCollaborations.length);
+
+          // 格式化為列表格式
+          const formattedCollaborations =
+            formatAPIDataForList(activeCollaborations);
+
+          log('<br>📄 Final formatted collaborations:');
+          formattedCollaborations.forEach((collab, index) => {
+            log(`<br><strong>${index + 1}. ${collab.title}:</strong>`);
+            log(`   Description: "${collab.description}"`);
+            log(`   Description length: ${collab.description?.length || 0}`);
+            log(`   Has description: ${!!collab.description}`);
+          });
+        } else {
+          log('❌ No collaborations found in localStorage');
+        }
+
+        log('<br>✅ Debug completed!');
+      }
+    </script>
+  </body>
+</html>

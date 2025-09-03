@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 
-import { getCurrentUserAvatar } from '../../../utils/currentUser';
-import { getCurrentUser } from '../../../utils/currentUser';
+import { useAuth } from '../../../context/AuthContext';
 import { getArtistById } from '../../artist-profile/utils/artistHelpers';
 
 import CommentReplyForm from './CommentReplyForm';
@@ -19,6 +18,7 @@ const ReplyItem = ({
   onDeleteClick,
   formatTime,
 }) => {
+  const { user: authUser } = useAuth();
   const [replyAuthorInfo, setReplyAuthorInfo] = useState(null);
   const [isLoadingReply, setIsLoadingReply] = useState(true);
 
@@ -50,14 +50,14 @@ const ReplyItem = ({
   // 获取回复作者的头像
   const getReplyAuthorAvatar = () => {
     if (isLoadingReply) {
-      return getCurrentUserAvatar(); // 加载时显示默认头像
+      return replyAuthorInfo?.avatar || '/default-avatar.png'; // 加载时显示默认头像
     }
 
     if (replyAuthorInfo?.avatar) {
       return replyAuthorInfo.avatar;
     }
 
-    return getCurrentUserAvatar(); // 回退到默认头像
+    return '/default-avatar.png'; // 回退到默认头像
   };
 
   return (
@@ -156,7 +156,7 @@ const CommentItem = ({
   onSubmitReply,
   className = '',
 }) => {
-  const currentUser = getCurrentUser();
+  const { user: currentUser } = useAuth();
   const isOwnComment = currentUser && comment.authorId === currentUser.id;
   const isReplyingToThis = replyingTo?.parentId === comment.id;
 
@@ -201,14 +201,14 @@ const CommentItem = ({
   // 获取评论作者的头像
   const getAuthorAvatar = () => {
     if (isLoading) {
-      return getCurrentUserAvatar(); // 加载时显示默认头像
+      return authorInfo?.avatar || '/default-avatar.png'; // 加载时显示默认头像
     }
 
     if (authorInfo?.avatar) {
       return authorInfo.avatar;
     }
 
-    return getCurrentUserAvatar(); // 回退到默认头像
+    return '/default-avatar.png'; // 回退到默认头像
   };
 
   // 获取评论作者的显示名称

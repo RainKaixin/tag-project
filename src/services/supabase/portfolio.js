@@ -1,7 +1,6 @@
-import { getCurrentUserId } from '../../utils/currentUser.js';
 import imageStorage from '../../utils/indexedDB.js';
-import { getUserInfo } from '../../utils/mockUsers.js';
-import { storage } from '../storage/index';
+
+import { supabase } from './client';
 
 // Portfolio 表结构
 /**
@@ -43,14 +42,13 @@ import { storage } from '../storage/index';
  *   FOR SELECT USING (auth.uid() = user_id);
  */
 
-// 从 IndexedDB 获取图片 URL
+// 从 Supabase Storage 获取图片 URL
 export const getPortfolioImageUrl = async filePath => {
-  // Mock API: 从 IndexedDB 读取 Data URL
-  console.log(`[Portfolio] Mock API: Getting image URL for ${filePath}`);
+  console.log(`[Portfolio] Supabase: Getting image URL for ${filePath}`);
 
   // 安全检查：如果 filePath 为空或 undefined，直接返回错误
   if (!filePath) {
-    console.warn('[Portfolio] Mock API: filePath is empty or undefined');
+    console.warn('[Portfolio] filePath is empty or undefined');
     return {
       success: false,
       error: 'Invalid file path',
@@ -58,32 +56,41 @@ export const getPortfolioImageUrl = async filePath => {
   }
 
   try {
+    // 首先尝试从 IndexedDB 获取（用于兼容性）
     const url = await imageStorage.getImageUrl(filePath);
 
-    if (!url) {
-      console.log(`[Portfolio] Mock API: 未命中 - queryKey: ${filePath}`);
+    if (url) {
+      console.log(
+        `[Portfolio] Found image in IndexedDB: ${filePath}, url: ${url.substring(
+          0,
+          32
+        )}...`
+      );
+
       return {
-        success: false,
-        error: 'Image not found',
+        success: true,
+        data: {
+          url: url,
+          path: filePath,
+        },
       };
     }
 
+    // 如果 IndexedDB 中没有，尝试从 Supabase Storage 获取
     console.log(
-      `[Portfolio] Mock API: 命中 - queryKey: ${filePath}, url: ${url.substring(
-        0,
-        32
-      )}...`
+      `[Portfolio] Image not found in IndexedDB, trying Supabase Storage: ${filePath}`
     );
 
+    // 这里应该调用 Supabase Storage 的 getPublicUrl 方法
+    // 但由于我们使用的是 IndexedDB 存储，暂时返回 IndexedDB 的结果
+    console.log(`[Portfolio] Image not found for: ${filePath}`);
+
     return {
-      success: true,
-      data: {
-        url: url,
-        path: filePath,
-      },
+      success: false,
+      error: 'Image not found',
     };
   } catch (error) {
-    console.error('[Portfolio] Mock API: Error getting image URL:', error);
+    console.error('[Portfolio] Error getting image URL:', error);
     return {
       success: false,
       error: error.message,
@@ -93,20 +100,18 @@ export const getPortfolioImageUrl = async filePath => {
 
 // 批量获取图片 URL（用于作品列表显示）
 export const getPortfolioImageUrls = async imagePaths => {
-  // Mock API: 批量从 IndexedDB 读取 Data URL
+  // 从 IndexedDB 批量读取图片 URL
 
   // 安全检查：如果 imagePaths 为空或 undefined，返回空数组
   if (!imagePaths || !Array.isArray(imagePaths)) {
-    console.warn('[Portfolio] Mock API: imagePaths is empty or not an array');
+    console.warn('[Portfolio] imagePaths is empty or not an array');
     return {
       success: true,
       data: [],
     };
   }
 
-  console.log(
-    `[Portfolio] Mock API: Getting image URLs for ${imagePaths.length} images`
-  );
+  console.log(`[Portfolio] Getting image URLs for ${imagePaths.length} images`);
 
   try {
     const imageUrls = [];
@@ -116,23 +121,19 @@ export const getPortfolioImageUrls = async imagePaths => {
       if (result.success) {
         imageUrls.push(result.data.url);
       } else {
-        console.warn(
-          `[Portfolio] Mock API: Failed to get image for ${imagePath}`
-        );
+        console.warn(`[Portfolio] Failed to get image for ${imagePath}`);
         imageUrls.push(''); // 使用空字符串作为占位符
       }
     }
 
-    console.log(
-      `[Portfolio] Mock API: Retrieved ${imageUrls.length} image URLs`
-    );
+    console.log(`[Portfolio] Retrieved ${imageUrls.length} image URLs`);
 
     return {
       success: true,
       data: imageUrls,
     };
   } catch (error) {
-    console.error('[Portfolio] Mock API: Error getting image URLs:', error);
+    console.error('[Portfolio] Error getting image URLs:', error);
     return {
       success: false,
       error: error.message,
@@ -141,69 +142,64 @@ export const getPortfolioImageUrls = async imagePaths => {
 };
 
 // 获取当前用户的所有作品
-export const getMyPortfolio = async () => {
-  // Mock API: 从 localStorage 读取数据
-  console.log('[Portfolio] Mock API: Reading from localStorage');
+export const getMyPortfolio = async (userId = null) => {
+  console.log('[Portfolio] Supabase: Reading portfolio from database');
 
   try {
-    const userId = getCurrentUserId();
-    const key = `portfolio_${userId}`;
-    const data = await storage.getItem(key);
-
-    // 安全地解析 JSON 数据
-    let portfolio = [];
-    try {
-      portfolio = data ? JSON.parse(data) : [];
-    } catch (parseError) {
-      console.warn(
-        `[Portfolio] Mock API: Failed to parse portfolio data for user ${userId}:`,
-        parseError
-      );
-      // 如果解析失败，返回空数组
-      portfolio = [];
+    // 如果没有提供 userId，尝试从当前会话获取
+    if (!userId) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('[Portfolio] No authenticated user found');
+        return {
+          success: false,
+          error: 'User not authenticated',
+        };
+      }
+      userId = user.id;
     }
 
-    // 确保 portfolio 是数组
-    if (!Array.isArray(portfolio)) {
-      console.warn(
-        `[Portfolio] Mock API: Portfolio data for user ${userId} is not an array`
-      );
-      portfolio = [];
+    console.log(`[Portfolio] Reading portfolio for user: ${userId}`);
+
+    // 从 Supabase 数据库读取作品
+    const { data, error } = await supabase
+      .from('portfolio')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[Portfolio] Supabase select error:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
     }
 
-    console.log(
-      `[Portfolio] Mock API: Found ${portfolio.length} items for user ${userId}`
-    );
+    console.log(`[Portfolio] Found ${data.length} items for user ${userId}`);
 
-    // 为每个作品获取正确的图片 URL
-    const portfolioWithImages = await Promise.all(
-      portfolio.map(async item => {
-        if (
-          item.imagePaths &&
-          item.imagePaths.length > 0 &&
-          item.imagePaths[0]
-        ) {
-          // 获取第一张图片作为缩略图
-          const thumbnailResult = await getPortfolioImageUrl(
-            item.imagePaths[0]
-          );
-          if (thumbnailResult.success) {
-            return {
-              ...item,
-              thumbnailPath: thumbnailResult.data.url,
-            };
-          }
-        }
-        return item;
-      })
-    );
+    // 转换数据格式以匹配现有接口
+    const portfolioWithImages = data.map(item => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      category: item.category,
+      tags: item.tags,
+      imagePaths: item.image_paths,
+      thumbnailPath: item.thumbnail_path,
+      isPublic: item.is_public,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    }));
 
     return {
       success: true,
       data: portfolioWithImages,
     };
   } catch (error) {
-    console.error('[Portfolio] Mock API: Error reading portfolio:', error);
+    console.error('[Portfolio] Error reading portfolio:', error);
     return {
       success: false,
       error: error.message,
@@ -213,75 +209,59 @@ export const getMyPortfolio = async () => {
 
 // 获取指定用户的公开作品
 export const getPublicPortfolio = async userId => {
-  // Mock API: 从 localStorage 读取公开数据
   console.log(
-    `[Portfolio] Mock API: Reading public portfolio for user ${userId}`
+    `[Portfolio] Supabase: Reading public portfolio for user ${userId}`
   );
 
   try {
-    const key = `portfolio_${userId}`;
-    const data = await storage.getItem(key);
-
-    // 安全地解析 JSON 数据
-    let portfolio = [];
-    try {
-      portfolio = data ? JSON.parse(data) : [];
-    } catch (parseError) {
-      console.warn(
-        `[Portfolio] Mock API: Failed to parse portfolio data for user ${userId}:`,
-        parseError
-      );
-      // 如果解析失败，返回空数组
-      portfolio = [];
+    if (!userId) {
+      console.error('[Portfolio] No userId provided');
+      return {
+        success: false,
+        error: 'User ID is required',
+      };
     }
 
-    // 确保 portfolio 是数组
-    if (!Array.isArray(portfolio)) {
-      console.warn(
-        `[Portfolio] Mock API: Portfolio data for user ${userId} is not an array`
-      );
-      portfolio = [];
-    }
+    // 从 Supabase 数据库读取指定用户的公开作品
+    const { data, error } = await supabase
+      .from('portfolio')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_public', true)
+      .order('created_at', { ascending: false });
 
-    // 过滤出公开的作品
-    const publicPortfolio = portfolio.filter(item => item.isPublic !== false);
+    if (error) {
+      console.error('[Portfolio] Supabase select error:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
 
     console.log(
-      `[Portfolio] Mock API: Found ${publicPortfolio.length} public items for user ${userId}`
+      `[Portfolio] Found ${data.length} public items for user ${userId} from database`
     );
 
-    // 为每个作品获取正确的图片 URL
-    const publicPortfolioWithImages = await Promise.all(
-      publicPortfolio.map(async item => {
-        if (
-          item.imagePaths &&
-          item.imagePaths.length > 0 &&
-          item.imagePaths[0]
-        ) {
-          // 获取第一张图片作为缩略图
-          const thumbnailResult = await getPortfolioImageUrl(
-            item.imagePaths[0]
-          );
-          if (thumbnailResult.success) {
-            return {
-              ...item,
-              thumbnailPath: thumbnailResult.data.url,
-            };
-          }
-        }
-        return item;
-      })
-    );
+    // 转换数据格式以匹配现有接口
+    const publicPortfolioWithImages = data.map(item => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      category: item.category,
+      tags: item.tags,
+      imagePaths: item.image_paths,
+      thumbnailPath: item.thumbnail_path,
+      isPublic: item.is_public,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    }));
 
     return {
       success: true,
       data: publicPortfolioWithImages,
     };
   } catch (error) {
-    console.error(
-      '[Portfolio] Mock API: Error reading public portfolio:',
-      error
-    );
+    console.error('[Portfolio] Error reading public portfolio:', error);
     return {
       success: false,
       error: error.message,
@@ -291,110 +271,56 @@ export const getPublicPortfolio = async userId => {
 
 // 获取所有公开作品（用于公共画廊）
 export const getAllPublicPortfolios = async () => {
-  // Mock API: 从 localStorage 读取所有用户的公开数据
-  console.log('[Portfolio] Mock API: Reading all public portfolios');
+  console.log(
+    '[Portfolio] Supabase: Reading all public portfolios from database'
+  );
 
   try {
-    const allPortfolios = [];
+    // 从 Supabase 数据库读取所有公开作品
+    const { data, error } = await supabase
+      .from('portfolio')
+      .select('*')
+      .eq('is_public', true)
+      .order('created_at', { ascending: false });
 
-    // 获取所有存储键
-    const keys = await storage.keys();
-
-    // 遍历所有 portfolio 相关的键
-    for (const key of keys) {
-      // 只处理 portfolio 数据，跳过图片数据
-      if (key && key.startsWith('portfolio_') && !key.includes('image_')) {
-        const userId = key.replace('portfolio_', '');
-        const data = await storage.getItem(key);
-
-        // 安全地解析 JSON 数据
-        let portfolio = [];
-        try {
-          portfolio = data ? JSON.parse(data) : [];
-        } catch (parseError) {
-          console.warn(
-            `[Portfolio] Mock API: Failed to parse portfolio data for user ${userId}:`,
-            parseError
-          );
-          // 如果解析失败，跳过这个用户的数据
-          continue;
-        }
-
-        // 确保 portfolio 是数组
-        if (!Array.isArray(portfolio)) {
-          console.warn(
-            `[Portfolio] Mock API: Portfolio data for user ${userId} is not an array`
-          );
-          continue;
-        }
-
-        // 过滤出公开的作品并添加用户信息
-        const publicItemsPromises = portfolio
-          .filter(item => item && item.id && item.isPublic !== false) // 确保项目有效
-          .map(async item => {
-            // 获取用户档案数据
-            const { getProfile } = await import(
-              '../mock/userProfileService.js'
-            );
-            const profileResult = await getProfile(userId);
-            const profile = profileResult.success ? profileResult.data : null;
-
-            return {
-              ...item,
-              profiles: {
-                id: userId,
-                full_name:
-                  profile?.fullName ||
-                  getUserInfo(userId)?.name ||
-                  'Unknown Artist',
-                avatar_url: getUserInfo(userId)?.avatar || '',
-                role: profile?.title || getUserInfo(userId)?.role || 'Design',
-              },
-            };
-          });
-
-        const publicItems = await Promise.all(publicItemsPromises);
-        allPortfolios.push(...publicItems);
-      }
+    if (error) {
+      console.error('[Portfolio] Supabase select error:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
     }
 
-    // 为每个作品获取正确的图片 URL
-    const allPortfoliosWithImages = await Promise.all(
-      allPortfolios.map(async item => {
-        if (item.imagePaths && item.imagePaths.length > 0) {
-          // 获取第一张图片作为缩略图
-          const thumbnailResult = await getPortfolioImageUrl(
-            item.imagePaths[0]
-          );
-          if (thumbnailResult.success) {
-            return {
-              ...item,
-              thumbnailPath: thumbnailResult.data.url,
-            };
-          }
-        }
-        return item;
-      })
-    );
-
-    // 按创建时间排序
-    allPortfoliosWithImages.sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    );
-
     console.log(
-      `[Portfolio] Mock API: Found ${allPortfoliosWithImages.length} total public items`
+      `[Portfolio] Found ${data.length} total public items from database`
     );
+
+    // 转换数据格式以匹配现有接口
+    const allPortfoliosWithImages = data.map(item => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      category: item.category,
+      tags: item.tags,
+      imagePaths: item.image_paths,
+      thumbnailPath: item.thumbnail_path,
+      isPublic: item.is_public,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+      profiles: {
+        id: item.user_id,
+        full_name: 'Unknown Artist', // 暂时使用默认值，后续可以从 profiles 表获取
+        avatar_url: '',
+        role: 'Design',
+      },
+    }));
 
     return {
       success: true,
       data: allPortfoliosWithImages,
     };
   } catch (error) {
-    console.error(
-      '[Portfolio] Mock API: Error reading all public portfolios:',
-      error
-    );
+    console.error('[Portfolio] Error reading all public portfolios:', error);
     return {
       success: false,
       error: error.message,
@@ -404,77 +330,67 @@ export const getAllPublicPortfolios = async () => {
 
 // 创建新作品
 export const createPortfolioItem = async portfolioData => {
-  // Mock API: 保存到 localStorage
-  console.log('[Portfolio] Mock API: Creating new portfolio item');
+  console.log('[Portfolio] Supabase: Creating new portfolio item');
 
   try {
-    const userId = getCurrentUserId();
-    const key = `portfolio_${userId}`;
-
-    // 读取现有数据
-    const existingData = await storage.getItem(key);
-
-    // 安全地解析 JSON 数据
-    let portfolio = [];
-    try {
-      portfolio = existingData ? JSON.parse(existingData) : [];
-    } catch (parseError) {
-      console.warn(
-        `[Portfolio] Mock API: Failed to parse portfolio data for user ${userId}:`,
-        parseError
-      );
-      // 如果解析失败，使用空数组
-      portfolio = [];
+    // 从 portfolioData 获取用户ID
+    const userId = portfolioData.userId;
+    if (!userId) {
+      console.error('[Portfolio] No userId provided in portfolioData');
+      return {
+        success: false,
+        error: 'User ID is required',
+      };
     }
 
-    // 确保 portfolio 是数组
-    if (!Array.isArray(portfolio)) {
-      console.warn(
-        `[Portfolio] Mock API: Portfolio data for user ${userId} is not an array`
-      );
-      portfolio = [];
-    }
-
-    // 创建新作品
-    const newItem = {
-      id: `mock_${Date.now()}_${Math.random().toString(36).substring(2)}`,
+    // 准备插入数据
+    const insertData = {
+      user_id: userId,
       title: portfolioData.title || 'Untitled',
       description: portfolioData.description || '',
       category: portfolioData.category || '',
       tags: portfolioData.tags || [],
-      imagePaths: portfolioData.imagePaths || [],
-      thumbnailPath: portfolioData.thumbnailPath || '',
-      // 统一保存imageKey，确保与IndexedDB的key一致
-      imageKey:
-        portfolioData.imagePaths?.[0] || portfolioData.thumbnailPath || '',
-      isPublic: portfolioData.isPublic !== false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      image_paths: portfolioData.imagePaths || [],
+      thumbnail_path: portfolioData.thumbnailPath || '',
+      is_public: portfolioData.isPublic !== false,
     };
 
-    // 调试信息：检查标签数据
-    console.log('[Portfolio] Creating item with tags:', portfolioData.tags);
-    console.log('[Portfolio] New item tags:', newItem.tags);
+    console.log('[Portfolio] Inserting data:', insertData);
 
-    // 添加到数组开头
-    portfolio.unshift(newItem);
+    // 插入到 Supabase 数据库
+    const { data, error } = await supabase
+      .from('portfolio')
+      .insert(insertData)
+      .select()
+      .single();
 
-    // 保存回存储
-    await storage.setItem(key, JSON.stringify(portfolio));
+    if (error) {
+      console.error('[Portfolio] Supabase insert error:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
 
-    console.log(
-      `[Portfolio] Mock API: Created item ${newItem.id} for user ${userId}`
-    );
+    console.log('[Portfolio] Successfully created item:', data);
 
     return {
       success: true,
-      data: newItem,
+      data: {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        tags: data.tags,
+        imagePaths: data.image_paths,
+        thumbnailPath: data.thumbnail_path,
+        isPublic: data.is_public,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      },
     };
   } catch (error) {
-    console.error(
-      '[Portfolio] Mock API: Error creating portfolio item:',
-      error
-    );
+    console.error('[Portfolio] Error creating portfolio item:', error);
     return {
       success: false,
       error: error.message,
@@ -483,67 +399,69 @@ export const createPortfolioItem = async portfolioData => {
 };
 
 // 更新作品
-export const updatePortfolioItem = async (itemId, updates) => {
-  // Mock API: 更新 localStorage 中的数据
-  console.log(`[Portfolio] Mock API: Updating item ${itemId}`);
+export const updatePortfolioItem = async (itemId, updates, userId = null) => {
+  console.log(`[Portfolio] Supabase: Updating item ${itemId}`);
 
   try {
-    const userId = getCurrentUserId();
-    const key = `portfolio_${userId}`;
-
-    // 读取现有数据
-    const existingData = await storage.getItem(key);
-
-    // 安全地解析 JSON 数据
-    let portfolio = [];
-    try {
-      portfolio = existingData ? JSON.parse(existingData) : [];
-    } catch (parseError) {
-      console.warn(
-        `[Portfolio] Mock API: Failed to parse portfolio data for user ${userId}:`,
-        parseError
-      );
-      // 如果解析失败，使用空数组
-      portfolio = [];
+    // 如果没有提供 userId，尝试从当前会话获取
+    if (!userId) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('[Portfolio] No authenticated user found');
+        return {
+          success: false,
+          error: 'User not authenticated',
+        };
+      }
+      userId = user.id;
     }
 
-    // 确保 portfolio 是数组
-    if (!Array.isArray(portfolio)) {
-      console.warn(
-        `[Portfolio] Mock API: Portfolio data for user ${userId} is not an array`
-      );
-      portfolio = [];
-    }
-
-    // 找到要更新的项目
-    const itemIndex = portfolio.findIndex(item => item.id === itemId);
-    if (itemIndex === -1) {
-      throw new Error('Portfolio item not found');
-    }
-
-    // 更新项目
-    portfolio[itemIndex] = {
-      ...portfolio[itemIndex],
+    // 准备更新数据
+    const updateData = {
       ...updates,
-      updatedAt: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
-    // 保存回存储
-    await storage.setItem(key, JSON.stringify(portfolio));
+    console.log('[Portfolio] Updating data:', updateData);
 
-    console.log(
-      `[Portfolio] Mock API: Updated item ${itemId} for user ${userId}`
-    );
+    // 更新 Supabase 数据库
+    const { data, error } = await supabase
+      .from('portfolio')
+      .update(updateData)
+      .eq('id', itemId)
+      .eq('user_id', userId) // 确保只能更新自己的作品
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[Portfolio] Supabase update error:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    console.log('[Portfolio] Successfully updated item:', data);
 
     return {
       success: true,
-      data: portfolio[itemIndex],
+      data: {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        tags: data.tags,
+        imagePaths: data.image_paths,
+        thumbnailPath: data.thumbnail_path,
+        isPublic: data.is_public,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      },
     };
   } catch (error) {
-    console.error(
-      '[Portfolio] Mock API: Error updating portfolio item:',
-      error
-    );
+    console.error('[Portfolio] Error updating portfolio item:', error);
     return {
       success: false,
       error: error.message,
@@ -552,72 +470,50 @@ export const updatePortfolioItem = async (itemId, updates) => {
 };
 
 // 删除作品
-export const deletePortfolioItem = async itemId => {
-  // Mock API: 从 localStorage 删除数据
-  console.log(`[Portfolio] Mock API: Deleting item ${itemId}`);
+export const deletePortfolioItem = async (itemId, userId = null) => {
+  console.log(`[Portfolio] Supabase: Deleting item ${itemId}`);
 
   try {
-    const userId = getCurrentUserId();
-    const key = `portfolio_${userId}`;
-
-    // 读取现有数据
-    const existingData = await storage.getItem(key);
-
-    // 安全地解析 JSON 数据
-    let portfolio = [];
-    try {
-      portfolio = existingData ? JSON.parse(existingData) : [];
-    } catch (parseError) {
-      console.warn(
-        `[Portfolio] Mock API: Failed to parse portfolio data for user ${userId}:`,
-        parseError
-      );
-      // 如果解析失败，使用空数组
-      portfolio = [];
-    }
-
-    // 确保 portfolio 是数组
-    if (!Array.isArray(portfolio)) {
-      console.warn(
-        `[Portfolio] Mock API: Portfolio data for user ${userId} is not an array`
-      );
-      portfolio = [];
-    }
-
-    // 找到要删除的项目
-    const itemIndex = portfolio.findIndex(item => item.id === itemId);
-    if (itemIndex === -1) {
-      throw new Error('Portfolio item not found');
-    }
-
-    // 获取要删除的作品信息，用于删除相关图片
-    const itemToDelete = portfolio[itemIndex];
-
-    // 删除相关的图片文件
-    if (itemToDelete.imagePaths && itemToDelete.imagePaths.length > 0) {
-      for (const imagePath of itemToDelete.imagePaths) {
-        await deletePortfolioImage(imagePath);
+    // 如果没有提供 userId，尝试从当前会话获取
+    if (!userId) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('[Portfolio] No authenticated user found');
+        return {
+          success: false,
+          error: 'User not authenticated',
+        };
       }
+      userId = user.id;
     }
 
-    // 删除项目
-    portfolio.splice(itemIndex, 1);
+    console.log('[Portfolio] Deleting item:', itemId, 'for user:', userId);
 
-    // 保存回存储
-    await storage.setItem(key, JSON.stringify(portfolio));
+    // 从 Supabase 数据库删除
+    const { error } = await supabase
+      .from('portfolio')
+      .delete()
+      .eq('id', itemId)
+      .eq('user_id', userId); // 确保只能删除自己的作品
 
-    console.log(
-      `[Portfolio] Mock API: Deleted item ${itemId} for user ${userId}`
-    );
+    if (error) {
+      console.error('[Portfolio] Supabase delete error:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    console.log('[Portfolio] Successfully deleted item:', itemId);
 
     return {
       success: true,
+      data: { id: itemId },
     };
   } catch (error) {
-    console.error(
-      '[Portfolio] Mock API: Error deleting portfolio item:',
-      error
-    );
+    console.error('[Portfolio] Error deleting portfolio item:', error);
     return {
       success: false,
       error: error.message,

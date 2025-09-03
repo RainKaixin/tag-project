@@ -25,7 +25,6 @@ const NavBar = () => {
     setters: {
       setShowDropdown: state.setShowDropdown,
       setUnreadCount: state.setUnreadCount,
-      setCurrentMockUser: state.setCurrentMockUser,
     },
     user,
   });
@@ -97,7 +96,7 @@ const NavBar = () => {
             {!loading && (
               <UserDropdown
                 user={currentUser}
-                currentMockUser={state.currentMockUser}
+                currentUser={state.currentUser}
                 showDropdown={state.showDropdown}
                 onToggle={actions.handleDropdownToggle}
                 onSettingsClick={actions.handleSettingsClick}

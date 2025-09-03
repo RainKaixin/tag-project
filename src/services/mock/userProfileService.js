@@ -61,10 +61,11 @@ function normalizeProfile(profile) {
 
 // 获取默认 Profile
 function getDefaultProfile(userId) {
+  // 为Mock用户（alice, bryan等）返回空白档案，而不是测试数据
   return {
     id: userId,
     fullName: '',
-    title: '',
+    title: 'Artist',
     school: '',
     pronouns: '',
     majors: [],
@@ -136,6 +137,57 @@ function validateProfile(profile) {
 // 获取用户档案（读）
 export const getProfile = async userId => {
   try {
+    // Phase 2.1: 优先尝试Supabase，失败时回退到Mock API
+    try {
+      const { getProfile: supabaseGetProfile, checkSupabaseConnection } =
+        await import('../supabase/userProfileService.js');
+
+      // 检查Supabase连接
+      const isConnected = await checkSupabaseConnection();
+      if (isConnected) {
+        console.log(
+          '[userProfileService] Attempting to get profile from Supabase...'
+        );
+        const supabaseResult = await supabaseGetProfile(userId);
+
+        if (supabaseResult.success) {
+          console.log(
+            '[userProfileService] Successfully retrieved profile from Supabase'
+          );
+
+          // 尝试从头像存储中读取头像数据（保持现有逻辑）
+          try {
+            const avatarData = window.localStorage.getItem(
+              `tag.avatars.${userId}`
+            );
+            if (avatarData) {
+              const parsedAvatarData = JSON.parse(avatarData);
+              if (parsedAvatarData && parsedAvatarData.avatarUrl) {
+                supabaseResult.data.avatar = parsedAvatarData.avatarUrl;
+                console.log(
+                  '[userProfileService] Loaded avatar from tag.avatars storage'
+                );
+              }
+            }
+          } catch (error) {
+            console.warn(
+              '[userProfileService] Failed to load avatar from tag.avatars storage:',
+              error
+            );
+          }
+
+          return supabaseResult;
+        }
+      }
+    } catch (supabaseError) {
+      console.warn(
+        '[userProfileService] Supabase fallback failed, using Mock API:',
+        supabaseError.message
+      );
+    }
+
+    // 回退到Mock API（原有逻辑）
+    console.log('[userProfileService] Using Mock API fallback');
     const existingData = readUserProfileData(userId);
     const defaultProfile = getDefaultProfile(userId);
 
@@ -179,7 +231,7 @@ export const getProfile = async userId => {
 
     const normalizedProfile = normalizeProfile(mergedProfile);
 
-    console.log('[userProfileService] Loading profile data:', {
+    console.log('[userProfileService] Loading profile data from Mock API:', {
       userId,
       socialLinks: normalizedProfile.socialLinks,
       fullProfile: normalizedProfile,
@@ -234,8 +286,51 @@ export const saveProfile = async (userId, patch) => {
       };
     }
 
+    // Phase 2.1: 优先尝试保存到Supabase，失败时回退到Mock API
+    try {
+      const { saveProfile: supabaseSaveProfile, checkSupabaseConnection } =
+        await import('../supabase/userProfileService.js');
+
+      // 检查Supabase连接
+      const isConnected = await checkSupabaseConnection();
+      if (isConnected) {
+        console.log(
+          '[userProfileService] Attempting to save profile to Supabase...'
+        );
+        const supabaseResult = await supabaseSaveProfile(
+          userId,
+          normalizedProfile
+        );
+
+        if (supabaseResult.success) {
+          console.log(
+            '[userProfileService] Successfully saved profile to Supabase'
+          );
+
+          // 同时保存到Mock API作为备份
+          const writeSuccess = writeUserProfileData(userId, normalizedProfile);
+          if (!writeSuccess) {
+            console.warn('[userProfileService] Failed to backup to Mock API');
+          }
+
+          // 处理头像存储和事件广播（保持现有逻辑）
+          await handleAvatarStorageAndEvents(userId, normalizedProfile);
+
+          return supabaseResult;
+        }
+      }
+    } catch (supabaseError) {
+      console.warn(
+        '[userProfileService] Supabase save failed, using Mock API:',
+        supabaseError.message
+      );
+    }
+
+    // 回退到Mock API（原有逻辑）
+    console.log('[userProfileService] Using Mock API fallback for save');
+
     // 写入持久化存储
-    console.log('[userProfileService] Saving profile data:', {
+    console.log('[userProfileService] Saving profile data to Mock API:', {
       userId,
       socialLinks: normalizedProfile.socialLinks,
       fullProfile: normalizedProfile,
@@ -249,45 +344,12 @@ export const saveProfile = async (userId, patch) => {
       };
     }
 
-    console.log('[userProfileService] Profile data saved successfully');
+    console.log(
+      '[userProfileService] Profile data saved successfully to Mock API'
+    );
 
-    // 如果有头像数据，使用 IndexedDB 和 localStorage 存储
-    if (normalizedProfile.avatar) {
-      try {
-        // 使用新的头像存储系统存储到 IndexedDB
-        const result = await avatarStorage.storeAvatar(
-          userId,
-          normalizedProfile.avatar
-        );
-        if (result.success) {
-          console.log(
-            `[userProfileService] Avatar stored in IndexedDB for user: ${userId}`
-          );
-        } else {
-          console.warn(
-            `[userProfileService] Failed to store avatar in IndexedDB for user: ${userId}`
-          );
-        }
-
-        // 同时存储到 localStorage，确保右上角头像能正确显示
-        const avatarData = {
-          avatarUrl: normalizedProfile.avatar,
-          timestamp: Date.now(),
-        };
-        localStorage.setItem(
-          `tag.avatars.${userId}`,
-          JSON.stringify(avatarData)
-        );
-        console.log(
-          `[userProfileService] Avatar stored in localStorage for user: ${userId}`
-        );
-      } catch (error) {
-        console.error(`[userProfileService] Error storing avatar: ${error}`);
-      }
-    }
-
-    // 广播事件
-    broadcastProfileUpdated(normalizedProfile);
+    // 处理头像存储和事件广播
+    await handleAvatarStorageAndEvents(userId, normalizedProfile);
 
     return {
       success: true,
@@ -360,4 +422,42 @@ export const updateUserProfile = async (userId, profileData) => {
   };
 
   return await saveProfile(userId, patch);
+};
+
+// 处理头像存储和事件广播的辅助函数
+const handleAvatarStorageAndEvents = async (userId, normalizedProfile) => {
+  // 如果有头像数据，使用 IndexedDB 和 localStorage 存储
+  if (normalizedProfile.avatar) {
+    try {
+      // 使用新的头像存储系统存储到 IndexedDB
+      const result = await avatarStorage.storeAvatar(
+        userId,
+        normalizedProfile.avatar
+      );
+      if (result.success) {
+        console.log(
+          `[userProfileService] Avatar stored in IndexedDB for user: ${userId}`
+        );
+      } else {
+        console.warn(
+          `[userProfileService] Failed to store avatar in IndexedDB for user: ${userId}`
+        );
+      }
+
+      // 同时存储到 localStorage，确保右上角头像能正确显示
+      const avatarData = {
+        avatarUrl: normalizedProfile.avatar,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(`tag.avatars.${userId}`, JSON.stringify(avatarData));
+      console.log(
+        `[userProfileService] Avatar stored in localStorage for user: ${userId}`
+      );
+    } catch (error) {
+      console.error(`[userProfileService] Error storing avatar: ${error}`);
+    }
+  }
+
+  // 广播事件
+  broadcastProfileUpdated(normalizedProfile);
 };

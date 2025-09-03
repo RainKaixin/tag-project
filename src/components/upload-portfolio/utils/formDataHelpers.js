@@ -68,9 +68,15 @@ export const validateFormData = (formData, selectedFiles) => {
  * 格式化表單數據用於提交
  * @param {Object} formData - 表單數據
  * @param {Array} uploadedFiles - 上傳的文件
+ * @param {string} userId - 用戶ID
  * @returns {Object} 格式化後的數據
  */
-export const formatFormDataForSubmission = (formData, uploadedFiles) => ({
+export const formatFormDataForSubmission = (
+  formData,
+  uploadedFiles,
+  userId
+) => ({
+  userId: userId, // 添加用戶ID
   title: formData.title.trim(),
   category: 'design', // 默認分類
   description: formData.description.trim(),

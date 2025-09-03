@@ -2,11 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 
+import { useAuth } from '../../../context/AuthContext';
 import { notificationService } from '../../../services';
-import {
-  getCurrentUserId,
-  getCurrentUser,
-} from '../../../utils/currentUser.js';
 
 /**
  * 导航栏状态管理Hook
@@ -17,13 +14,8 @@ const useNavbarState = user => {
   // 未读通知计数
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // 当前模拟用户
-  const [currentMockUser, setCurrentMockUser] = useState(null);
-
-  // 初始化当前用户
-  useEffect(() => {
-    setCurrentMockUser(getCurrentUser());
-  }, []);
+  // 从 AuthContext 获取当前用户
+  const { user: currentUser } = useAuth();
 
   // 下拉菜单状态
   const [showDropdown, setShowDropdown] = useState(false);
@@ -31,8 +23,13 @@ const useNavbarState = user => {
   // 加载未读通知计数
   const loadUnreadCount = async () => {
     try {
+      if (!currentUser?.id) {
+        setUnreadCount(0);
+        return;
+      }
+
       const result = await notificationService.getUserNotifications(
-        getCurrentUserId()
+        currentUser.id
       );
       if (result.success) {
         const notifications = result.data || [];
@@ -66,9 +63,9 @@ const useNavbarState = user => {
       const id = e?.detail?.userId;
       console.log('[useNavbarState] Notification change event:', e);
       console.log('[useNavbarState] Event userId:', id);
-      console.log('[useNavbarState] Current userId:', getCurrentUserId());
+      console.log('[useNavbarState] Current userId:', currentUser?.id);
 
-      if (!id || id === getCurrentUserId()) {
+      if (!id || id === currentUser?.id) {
         console.log('[useNavbarState] Reloading unread count...');
         if (mounted) {
           // 延迟加载未读计数，避免频繁调用
@@ -81,27 +78,13 @@ const useNavbarState = user => {
       }
     };
 
-    // 监听用户切换事件
-    const onUserChange = e => {
-      const id = e?.detail?.userId;
-      if (id && mounted) {
-        setCurrentMockUser(getCurrentUser());
-        // 延迟加载未读计数，避免频繁调用
-        setTimeout(() => {
-          if (mounted) {
-            loadUnreadCount();
-          }
-        }, 100);
-      }
-    };
+    // 不再需要监听用户切换事件，直接从 useAuth 获取
 
     window.addEventListener('notif:unreadChanged', onChange);
-    window.addEventListener('user:changed', onUserChange);
 
     return () => {
       mounted = false;
       window.removeEventListener('notif:unreadChanged', onChange);
-      window.removeEventListener('user:changed', onUserChange);
     };
   }, []); // 空依赖数组，只在挂载时执行
 
@@ -127,12 +110,11 @@ const useNavbarState = user => {
   return {
     // 状态
     unreadCount,
-    currentMockUser,
+    currentUser, // 从 AuthContext 获取的用户
     showDropdown,
 
     // 设置函数
     setUnreadCount,
-    setCurrentMockUser,
     setShowDropdown,
 
     // 操作函数

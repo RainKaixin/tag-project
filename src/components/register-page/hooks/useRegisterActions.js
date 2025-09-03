@@ -104,8 +104,12 @@ const useRegisterActions = ({
         setLoading(false);
         alert('Registration successful! You are now logged in.');
 
-        // 用户已经自动登录，跳转到主页
-        navigate('/');
+        // 用户已经自动登录，跳转到用户的个人页面
+        if (user?.id) {
+          navigate(`/artist/${user.id}`);
+        } else {
+          navigate('/');
+        }
       } catch (error) {
         console.error('Registration error:', error);
         setLoading(false);

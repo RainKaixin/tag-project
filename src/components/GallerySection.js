@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import { useAppContext } from '../context/AppContext';
-import { getCurrentUser } from '../utils/currentUser.js';
+import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '../utils/navigation';
 
 import ArtistsList from './ArtistsList';
@@ -14,7 +14,7 @@ import { FilterPanel } from './ui';
 const GallerySection = () => {
   const [activeTab, setActiveTab] = useState('Works');
   const [isInitializing, setIsInitializing] = useState(true);
-  const [currentUser, setCurrentUser] = useState(getCurrentUser());
+  const { user: currentUser } = useAuth();
   const { navigateToArtist } = useNavigation();
   const { state } = useAppContext();
   const location = useLocation();
@@ -186,17 +186,7 @@ const GallerySection = () => {
     }
   }, [location.state, state.scrollPositions, state.navigationHistory]);
 
-  // 监听用户切换事件
-  useEffect(() => {
-    const handleUserChange = () => {
-      setCurrentUser(getCurrentUser());
-    };
-
-    window.addEventListener('user:changed', handleUserChange);
-    return () => {
-      window.removeEventListener('user:changed', handleUserChange);
-    };
-  }, []);
+  // 不再需要监听用户切换事件，直接从 useAuth 获取
 
   const tabs = ['Works', 'Artists', 'Market'];
 

@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { useAppContext } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import FavoritesSection from '../favorites/FavoritesSection';
 import { LoadingSpinner } from '../ui';
 
@@ -26,6 +27,7 @@ import { isArtistExists } from './utils/artistHelpers';
  */
 const ArtistProfile = () => {
   const { id } = useParams();
+  const { user, loading: authLoading, status } = useAuth();
 
   // 使用自定义hooks管理状态
   const artistState = useArtistState();
@@ -62,6 +64,28 @@ const ArtistProfile = () => {
   const [followersModalOpen, setFollowersModalOpen] = React.useState(false);
   const [followingModalOpen, setFollowingModalOpen] = React.useState(false);
 
+  // 等待认证状态就绪
+  if (authLoading) {
+    return <LoadingSpinner />;
+  }
+
+  // 处理路由参数为 "me" 的情况
+  if (id === 'me') {
+    if (status === 'SIGNED_OUT') {
+      // 未登录，跳转到登录页面
+      window.location.href = '/login';
+      return <LoadingSpinner />;
+    }
+    if (status === 'LOADING') {
+      // 认证状态加载中
+      return <LoadingSpinner />;
+    }
+    if (status === 'SIGNED_IN' && !user?.id) {
+      // 已认证但没有用户ID，显示加载状态
+      return <LoadingSpinner />;
+    }
+  }
+
   // 优先用 artistState.loading，防止错误闪烁
   if (artistState.loading) {
     return <LoadingSpinner />;
@@ -92,7 +116,7 @@ const ArtistProfile = () => {
   return (
     <div
       className='bg-white min-h-screen'
-      key={`${artistState.artist?.id}-${artistState.isOwnProfile}`}
+      key={`${id}-${user?.id ?? 'anonymous'}`}
     >
       {/* Header Section */}
       <ArtistHeader

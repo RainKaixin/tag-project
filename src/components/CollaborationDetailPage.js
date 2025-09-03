@@ -389,7 +389,7 @@ const CollaborationDetailPage = () => {
   // 调试：检查项目数据
 
   // 添加调试组件显示
-  const showDebugInfo = process.env.NODE_ENV === 'development';
+  const showDebugInfo = import.meta?.env?.MODE === 'development';
 
   // 如果没有项目数据，显示加载状态
   if (!data.project) {

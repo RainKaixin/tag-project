@@ -3,12 +3,12 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { useAuth } from '../../../context/AuthContext';
 import { artistService } from '../../../services/index.js';
 import {
   createPortfolioItem,
   uploadPortfolioImage,
 } from '../../../services/supabase/portfolio';
-import { getCurrentUser } from '../../../utils/currentUser';
 import { formatFormDataForSubmission } from '../utils/formDataHelpers';
 
 /**
@@ -17,6 +17,7 @@ import { formatFormDataForSubmission } from '../utils/formDataHelpers';
  */
 export const usePortfolioActions = () => {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -42,7 +43,6 @@ export const usePortfolioActions = () => {
   // 處理文件上傳到 Supabase Storage
   const uploadFiles = useCallback(async () => {
     const uploadedFiles = [];
-    const currentUser = getCurrentUser();
 
     for (let i = 0; i < selectedFiles.length; i++) {
       const file = selectedFiles[i];
@@ -62,7 +62,7 @@ export const usePortfolioActions = () => {
 
     setUploadProgress(100);
     return uploadedFiles;
-  }, [selectedFiles]);
+  }, [selectedFiles, currentUser.id]);
 
   // 處理表單提交
   const handleSubmit = useCallback(
@@ -73,7 +73,6 @@ export const usePortfolioActions = () => {
         return;
       }
 
-      const currentUser = getCurrentUser();
       if (!currentUser) {
         setErrorMessage('Please log in to upload artwork');
         setShowErrorModal(true);
@@ -83,7 +82,7 @@ export const usePortfolioActions = () => {
       // 顯示確認彈窗
       setShowConfirmModal(true);
     },
-    [selectedFiles]
+    [selectedFiles, currentUser]
   );
 
   // 確認上傳
@@ -102,7 +101,8 @@ export const usePortfolioActions = () => {
 
         const portfolioData = formatFormDataForSubmission(
           formData,
-          uploadedFiles
+          uploadedFiles,
+          currentUser?.id
         );
 
         console.log(
@@ -115,7 +115,6 @@ export const usePortfolioActions = () => {
 
         if (result.success) {
           // 確保藝術家被索引
-          const currentUser = getCurrentUser();
           if (currentUser && currentUser.id) {
             try {
               await artistService.ensureArtistIndexed(currentUser.id);

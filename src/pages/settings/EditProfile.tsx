@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { invalidate } from '../../components/artist-profile/utils/artistHelpers';
+import { useAuth } from '../../context/AuthContext';
 import { saveProfile, getProfile } from '../../services';
 import { updateCurrentUserAvatar } from '../../services/avatarService';
 import {
@@ -14,7 +15,6 @@ import {
   checkLocalStorageStatus,
 } from '../../utils/avatarCache';
 import avatarStorage from '../../utils/avatarStorage';
-import { getCurrentUser } from '../../utils/currentUser';
 
 import BasicInfoCard from './components/BasicInfoCard';
 import PortfolioGridCard from './components/PortfolioGridCard';
@@ -26,29 +26,27 @@ import styles from './EditProfile.module.css';
 import type { ProfileData, PortfolioItem, BasicInfo, LinkItem } from './types';
 
 // 从当前用户数据获取初始值
-const currentUser = getCurrentUser();
-const initialProfileData: ProfileData = {
-  fullName: currentUser?.name || '',
-  title: currentUser?.role || '',
-  school: currentUser?.school || '',
-  pronouns: currentUser?.pronouns || '',
-  majors: currentUser?.majors || [],
-  minors: [],
-  bio: currentUser?.bio || '',
-  avatar: currentUser?.avatar || null,
-  socialLinks: {
-    instagram: currentUser?.socialLinks?.instagram || '',
-    portfolio: currentUser?.socialLinks?.portfolio || '',
-    discord: currentUser?.socialLinks?.discord || '',
-    otherLinks: currentUser?.socialLinks?.otherLinks || [],
-  },
-  skills: currentUser?.skills || [],
-};
-
-// 移除冗余的初始作品数据，现在使用 Mock API 加载真实数据
-
 const EditProfile = () => {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
+
+  const initialProfileData: ProfileData = {
+    fullName: currentUser?.name || '',
+    title: currentUser?.role || '',
+    school: currentUser?.school || '',
+    pronouns: currentUser?.pronouns || '',
+    majors: currentUser?.majors || [],
+    minors: [],
+    bio: currentUser?.bio || '',
+    avatar: currentUser?.avatar || null,
+    socialLinks: {
+      instagram: currentUser?.socialLinks?.instagram || '',
+      portfolio: currentUser?.socialLinks?.portfolio || '',
+      discord: currentUser?.socialLinks?.discord || '',
+      otherLinks: currentUser?.socialLinks?.otherLinks || [],
+    },
+    skills: currentUser?.skills || [],
+  };
 
   // 使用已经包含头像的初始数据
   const initialDataWithAvatar: ProfileData = {
@@ -67,7 +65,9 @@ const EditProfile = () => {
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
-        const userId = currentUser?.id || 'alice';
+        const userId = currentUser?.id;
+        if (!userId) return;
+
         const result = await getProfile(userId);
 
         if (result.success && result.data) {

@@ -1,5 +1,6 @@
 // favorites-service-localStorage v1: 统一存储适配器
 
+import { isMock } from '../../utils/envCheck.js';
 import { storage } from '../storage/index';
 
 /**
@@ -7,23 +8,37 @@ import { storage } from '../storage/index';
  * 使用统一存储接口模拟收藏功能
  */
 const localStorageAdapter = {
-  // 存储键名
-  STORAGE_KEY: 'tag_favorites',
-  COUNTERS_KEY: 'tag_favorite_counters',
+  // 存储键名 - 按用户命名空间隔离
+  getStorageKey: userId => {
+    // 如果没有 userId，返回 null（不再使用默认用户）
+    if (!userId) {
+      return null;
+    }
+    return `u.${userId}.favorites`;
+  },
+
+  getCountersKey: userId => {
+    // 如果没有 userId，返回 null（不再使用默认用户）
+    if (!userId) {
+      return null;
+    }
+    return `u.${userId}.favorite_counters`;
+  },
 
   /**
    * 获取存储的收藏数据
    * @returns {Promise<Object>} 收藏数据
    */
-  async _getStorage() {
+  async _getStorage(userId) {
     try {
-      const data = await storage.getItem(this.STORAGE_KEY);
+      const storageKey = this.getStorageKey(userId);
+      const data = await storage.getItem(storageKey);
       const parsedData = data ? JSON.parse(data) : {};
 
       // 如果没有数据，初始化默认收藏数据
       if (Object.keys(parsedData).length === 0) {
         const defaultData = this._getDefaultFavorites();
-        await this._setStorage(defaultData);
+        await this._setStorage(userId, defaultData);
         return defaultData;
       }
 
@@ -48,11 +63,14 @@ const localStorageAdapter = {
    * 保存收藏数据到存储
    * @param {Object} data - 收藏数据
    */
-  async _setStorage(data) {
+  async _setStorage(userId, data) {
     try {
-      await storage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+      const storageKey = this.getStorageKey(userId);
+      await storage.setItem(storageKey, JSON.stringify(data));
+      return true;
     } catch (error) {
-      console.error('Failed to save favorites to storage:', error);
+      console.error('Failed to set favorites to storage:', error);
+      return false;
     }
   },
 
@@ -60,9 +78,10 @@ const localStorageAdapter = {
    * 获取收藏计数数据
    * @returns {Promise<Object>} 计数数据
    */
-  async _getCounters() {
+  async _getCounters(userId) {
     try {
-      const data = await storage.getItem(this.COUNTERS_KEY);
+      const countersKey = this.getCountersKey(userId);
+      const data = await storage.getItem(countersKey);
       return data ? JSON.parse(data) : {};
     } catch (error) {
       console.error('Failed to get favorite counters from storage:', error);
@@ -74,9 +93,10 @@ const localStorageAdapter = {
    * 保存收藏计数数据
    * @param {Object} data - 计数数据
    */
-  async _setCounters(data) {
+  async _setCounters(userId, data) {
     try {
-      await storage.setItem(this.COUNTERS_KEY, JSON.stringify(data));
+      const countersKey = this.getCountersKey(userId);
+      await storage.setItem(countersKey, JSON.stringify(data));
     } catch (error) {
       console.error('Failed to save favorite counters to storage:', error);
     }
@@ -97,7 +117,7 @@ const localStorageAdapter = {
    */
   async getFavorites(params) {
     const { userId, type = 'all', cursor, limit = 20 } = params;
-    const storage = await this._getStorage();
+    const storage = await this._getStorage(userId);
     const userFavorites = storage[userId] || [];
 
     // 筛选类型
@@ -146,8 +166,8 @@ const localStorageAdapter = {
    */
   async addFavorite(params) {
     const { userId, itemType, itemId } = params;
-    const storage = await this._getStorage();
-    const counters = await this._getCounters();
+    const storage = await this._getStorage(userId);
+    const counters = await this._getCounters(userId);
 
     // 检查是否已收藏
     const userFavorites = storage[userId] || [];
@@ -175,12 +195,12 @@ const localStorageAdapter = {
     // 保存到存储
     userFavorites.push(newFavorite);
     storage[userId] = userFavorites;
-    await this._setStorage(storage);
+    await this._setStorage(userId, storage);
 
     // 更新计数
     const counterKey = `${itemType}_${itemId}`;
     counters[counterKey] = (counters[counterKey] || 0) + 1;
-    await this._setCounters(counters);
+    await this._setCounters(userId, counters);
 
     // 模拟网络延迟
     await new Promise(resolve => setTimeout(resolve, 200));
@@ -198,8 +218,8 @@ const localStorageAdapter = {
    */
   async removeFavorite(params) {
     const { userId, itemType, itemId } = params;
-    const storage = await this._getStorage();
-    const counters = await this._getCounters();
+    const storage = await this._getStorage(userId);
+    const counters = await this._getCounters(userId);
 
     const userFavorites = storage[userId] || [];
     const existingIndex = userFavorites.findIndex(
@@ -217,12 +237,12 @@ const localStorageAdapter = {
     // 移除收藏
     const removedFavorite = userFavorites.splice(existingIndex, 1)[0];
     storage[userId] = userFavorites;
-    await this._setStorage(storage);
+    await this._setStorage(userId, storage);
 
     // 更新计数
     const counterKey = `${itemType}_${itemId}`;
     counters[counterKey] = Math.max(0, (counters[counterKey] || 1) - 1);
-    await this._setCounters(counters);
+    await this._setCounters(userId, counters);
 
     // 模拟网络延迟
     await new Promise(resolve => setTimeout(resolve, 200));
@@ -240,7 +260,7 @@ const localStorageAdapter = {
    */
   async checkFavoriteStatus(params) {
     const { userId, itemType, itemId } = params;
-    const storage = await this._getStorage();
+    const storage = await this._getStorage(userId);
     const userFavorites = storage[userId] || [];
 
     const favorite = userFavorites.find(
@@ -265,8 +285,8 @@ const localStorageAdapter = {
    * @returns {Promise<Object>} 收藏计数
    */
   async getFavoriteCount(params) {
-    const { itemType, itemId } = params;
-    const counters = await this._getCounters();
+    const { userId, itemType, itemId } = params;
+    const counters = await this._getCounters(userId);
     const counterKey = `${itemType}_${itemId}`;
 
     // 模拟网络延迟
@@ -287,7 +307,7 @@ const localStorageAdapter = {
    */
   async batchCheckFavoriteStatus(params) {
     const { userId, items } = params;
-    const storage = await this._getStorage();
+    const storage = await this._getStorage(userId);
     const userFavorites = storage[userId] || [];
 
     const result = {};
@@ -314,9 +334,9 @@ const localStorageAdapter = {
    * @param {string} userId - 用户ID
    */
   async clearUserFavorites(userId) {
-    const storage = await this._getStorage();
+    const storage = await this._getStorage(userId);
     delete storage[userId];
-    await this._setStorage(storage);
+    await this._setStorage(userId, storage);
   },
 
   /**

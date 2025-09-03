@@ -4,8 +4,8 @@ import { Resend } from 'resend';
 
 // === 环境变量（注意：名字不要以 SUPABASE_ 开头）===
 const resend = new Resend(Deno.env.get('RESEND_API_KEY')!);
-const PROJECT_URL = Deno.env.get('PROJECT_URL')!; // 例如 Dhttps://ooaicpvsjmmxuccqlzuh.supabase.co
-const SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY')!; // Service Role Key
+const PROJECT_URL = Deno.env.get('SUPABASE_URL')!; // 例如 https://ooaicpvsjmmxuccqlzuh.supabase.co
+const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!; // Service Role Key
 const FROM_EMAIL = Deno.env.get('FROM_EMAIL') ?? 'TAG <onboarding@resend.dev>'; // 你自己的域名发件人，如 TAG <noreply@rainwang.art>
 
 // 开发阶段先用 *；上线请改成你的站点域名，例如：https://tag.rainwang.art
@@ -80,7 +80,7 @@ serve(async req => {
 
     const supabase = createClient(PROJECT_URL, SERVICE_ROLE_KEY);
 
-    // 60 秒内不重发（存在有效未使用记录就拒绝）
+    // 10分钟内不重发（存在有效未使用记录就拒绝）
     const nowIso = new Date().toISOString();
     const { data: existing, error: exErr } = await supabase
       .from('verification_codes')
@@ -109,7 +109,7 @@ serve(async req => {
 
     const code = gen6Digits();
     const code_hash = await sha256Hex(code);
-    const expires_at = new Date(Date.now() + 60 * 1000).toISOString();
+    const expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10分钟有效期
 
     // 可选：清理过期/历史记录，避免一邮箱存很多行（不影响正确性）
     await supabase
@@ -120,7 +120,7 @@ serve(async req => {
 
     const { error: insErr } = await supabase
       .from('verification_codes')
-      .insert({ email, code_hash, expires_at, purpose: 'signup' });
+      .insert({ email, code_hash, expires_at });
 
     if (insErr) throw insErr;
 
@@ -128,15 +128,15 @@ serve(async req => {
     const { error: mailErr } = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
-      subject: 'TAG verification code（60 seconds valid）',
+      subject: 'TAG verification code（10 minutes valid）',
       html: `
         <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; line-height:1.6;">
           <p>Your verification code:</p>
           <p style="font-size:24px; letter-spacing:4px; font-weight:700;">${code}</p>
-          <p style="color:#666;">The verification code is valid for 60 seconds, please do not leak.</p>
+          <p style="color:#666;">The verification code is valid for 10 minutes, please do not leak.</p>
         </div>
       `,
-      text: `Your verification code: ${code}\n60 seconds valid, please do not leak.`,
+      text: `Your verification code: ${code}\n10 minutes valid, please do not leak.`,
     });
     if (mailErr) throw mailErr;
 

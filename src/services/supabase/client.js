@@ -1,13 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-// 从环境变量获取Supabase配置
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+// 从环境变量获取Supabase配置（兼容 CRA 和 Vite）
+const supabaseUrl =
+  process.env.REACT_APP_SUPABASE_URL || import.meta?.env?.VITE_SUPABASE_URL;
+const supabaseKey =
+  process.env.REACT_APP_SUPABASE_ANON_KEY ||
+  import.meta?.env?.VITE_SUPABASE_ANON_KEY;
 
 // 检查环境变量是否配置
 if (!supabaseUrl || !supabaseKey) {
   console.warn('⚠️ Supabase环境变量未配置，将使用mock数据');
-  console.warn('请设置 REACT_APP_SUPABASE_URL 和 REACT_APP_SUPABASE_ANON_KEY');
+  console.warn(
+    '请设置 REACT_APP_SUPABASE_URL 和 REACT_APP_SUPABASE_ANON_KEY (CRA) 或 VITE_SUPABASE_URL 和 VITE_SUPABASE_ANON_KEY (Vite)'
+  );
 }
 
 // 创建Supabase客户端

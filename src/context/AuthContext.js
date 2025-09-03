@@ -8,7 +8,6 @@ import {
   getSession,
   onAuthStateChange,
 } from '../services/supabase/auth.js';
-import { getCurrentUser as getMockUser } from '../utils/currentUser';
 
 const AuthContext = createContext();
 
@@ -23,12 +22,13 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState('LOADING'); // 添加状态管理
 
   // 加载用户状态
   useEffect(() => {
     const loadUser = async () => {
       try {
-        // 首先尝试从 Supabase 获取用户
+        // 只从 Supabase 获取用户，不再回退到 Mock 用户系统
         const { success, user: supabaseUser } = await getSupabaseUser();
 
         if (success && supabaseUser) {
@@ -40,20 +40,20 @@ export const AuthProvider = ({ children }) => {
               supabaseUser.user_metadata?.name ||
               supabaseUser.email?.split('@')[0],
             avatar: supabaseUser.user_metadata?.avatar_url,
-            // 保持与现有 Mock 用户结构兼容
             role: 'artist',
             isVerified: supabaseUser.email_confirmed_at ? true : false,
           });
+          setStatus('SIGNED_IN');
         } else {
-          // 回退到 Mock 用户系统（保持向后兼容）
-          const mockUser = getMockUser();
-          setUser(mockUser);
+          // 没有用户，设置为 null
+          setUser(null);
+          setStatus('SIGNED_OUT');
         }
       } catch (error) {
         console.error('[AuthContext] Error loading user:', error);
-        // 回退到 Mock 用户系统
-        const mockUser = getMockUser();
-        setUser(mockUser);
+        // 出错时设置为 null
+        setUser(null);
+        setStatus('SIGNED_OUT');
       } finally {
         setLoading(false);
       }
@@ -90,9 +90,11 @@ export const AuthProvider = ({ children }) => {
           role: 'artist',
           isVerified: supabaseUser.email_confirmed_at ? true : false,
         });
+        setStatus('SIGNED_IN');
       } else if (event === 'SIGNED_OUT') {
         // 用户登出
         setUser(null);
+        setStatus('SIGNED_OUT');
         // 清除本地存储
         localStorage.removeItem('tag_user');
         sessionStorage.removeItem('tag_user');
@@ -178,6 +180,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     loading,
+    status, // 添加状态到 context value
     login,
     register,
     logout,

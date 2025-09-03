@@ -17,7 +17,7 @@ const RightOwnerPanel = ({ project, owner, currentUser, eligibility }) => {
       };
       return idMapping[currentUser.id] || currentUser.id;
     }
-    return 2; // 默认值 (alice)
+    return null; // 不再使用默认值
   };
 
   const mockCurrentUser = currentUser || {

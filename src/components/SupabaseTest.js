@@ -113,7 +113,7 @@ const SupabaseTest = () => {
           </span>
         </div>
         <div className='mt-2 text-sm text-gray-600'>
-          URL: {process.env.REACT_APP_SUPABASE_URL || '未设置'}
+          URL: {import.meta?.env?.VITE_SUPABASE_URL || '未设置'}
         </div>
       </div>
 
@@ -215,13 +215,16 @@ const SupabaseTest = () => {
           <div>
             <strong>REACT_APP_SUPABASE_URL:</strong>
             <div className='text-gray-600 break-all'>
-              {process.env.REACT_APP_SUPABASE_URL || '未设置'}
+              {process.env.REACT_APP_SUPABASE_URL ||
+                import.meta?.env?.VITE_SUPABASE_URL ||
+                '未设置'}
             </div>
           </div>
           <div>
             <strong>REACT_APP_SUPABASE_ANON_KEY:</strong>
             <div className='text-gray-600 break-all'>
-              {process.env.REACT_APP_SUPABASE_ANON_KEY
+              {process.env.REACT_APP_SUPABASE_ANON_KEY ||
+              import.meta?.env?.VITE_SUPABASE_ANON_KEY
                 ? '✅ 已设置'
                 : '❌ 未设置'}
             </div>

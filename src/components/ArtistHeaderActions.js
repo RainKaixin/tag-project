@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
-import { getCurrentUser } from '../utils/currentUser.js';
+import { useAuth } from '../context/AuthContext';
 
 const ArtistHeaderActions = ({ viewedUser, onFollow }) => {
   const navigate = useNavigate();
-  const currentUser = getCurrentUser();
+  const { user: currentUser } = useAuth();
 
   const viewedUserId = viewedUser?.id;
 

@@ -2,12 +2,12 @@
 
 import { useCallback } from 'react';
 
+import { useAuth } from '../../../context/AuthContext';
 import {
   favoritesService,
   commentService,
   notificationService,
 } from '../../../services';
-import { getCurrentUser } from '../../../utils/currentUser';
 import { useNavigation } from '../../../utils/navigation';
 import { getArtistById } from '../../artist-profile/utils/artistHelpers';
 
@@ -19,6 +19,7 @@ import { getArtistById } from '../../artist-profile/utils/artistHelpers';
  */
 const useWorkDetailActions = ({ state, setters }) => {
   const { goBack, navigateToArtist, navigateToWork } = useNavigation();
+  const { user: currentUser } = useAuth();
 
   // 处理返回按钮点击
   const handleBackClick = useCallback(() => {
@@ -67,7 +68,6 @@ const useWorkDetailActions = ({ state, setters }) => {
       return;
     }
 
-    const currentUser = getCurrentUser();
     if (!currentUser) {
       console.warn('[WorkDetail] No current user found');
       return;
@@ -139,7 +139,6 @@ const useWorkDetailActions = ({ state, setters }) => {
       const text = (state.replyDrafts[parentId] || '').trim();
       if (!text) return;
 
-      const currentUser = getCurrentUser();
       if (!currentUser) {
         console.warn('[WorkDetail] No current user found for reply');
         return;
@@ -275,7 +274,6 @@ const useWorkDetailActions = ({ state, setters }) => {
   // 处理评论点赞
   const handleCommentLike = useCallback(
     async commentId => {
-      const currentUser = getCurrentUser();
       if (!currentUser) {
         console.warn('[WorkDetail] No current user found for comment like');
         return;
@@ -314,7 +312,6 @@ const useWorkDetailActions = ({ state, setters }) => {
   // 处理评论删除
   const handleCommentDelete = useCallback(
     async commentId => {
-      const currentUser = getCurrentUser();
       if (!currentUser) {
         console.warn('[WorkDetail] No current user found for comment delete');
         return;

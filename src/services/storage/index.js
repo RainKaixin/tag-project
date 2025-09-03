@@ -1,6 +1,9 @@
 // storage/index.js - 统一存储适配器工厂
 // 业务层只能从这里获取存储适配器，不得直接使用window.localStorage或indexedDB
 
+import { isMock } from '../../utils/envCheck.js';
+import imageStorage from '../../utils/indexedDB.js';
+
 // localStorage适配器实现
 class LocalStorageAdapter {
   async getItem(key) {
@@ -128,13 +131,9 @@ class StorageAdapterFactory {
       return this.instance;
     }
 
-    // 环境切换规则：NODE_ENV !== 'production' ⇒ localStorageAdapter
-    const isDevelopment = process.env.NODE_ENV !== 'production';
-
-    if (isDevelopment) {
-      console.log(
-        '[StorageFactory] Development mode: using LocalStorageAdapter'
-      );
+    // Mock 模式使用 LocalStorageAdapter
+    if (isMock()) {
+      console.log('[StorageFactory] Mock mode: using LocalStorageAdapter');
       const adapter = new LocalStorageAdapter();
 
       // 测试localStorage是否可用
@@ -149,8 +148,14 @@ class StorageAdapterFactory {
       }
     }
 
-    // 降级到内存存储
-    console.log('[StorageFactory] Using MemoryStorageAdapter');
+    // 非 Mock 模式使用 Supabase（这里应该返回 SupabaseStorageAdapter）
+    // TODO: 实现 SupabaseStorageAdapter
+    console.log(
+      '[StorageFactory] Non-Mock mode: should use SupabaseStorageAdapter'
+    );
+
+    // 临时降级到内存存储，直到 SupabaseStorageAdapter 实现
+    console.log('[StorageFactory] Temporarily using MemoryStorageAdapter');
     this.instance = new MemoryStorageAdapter();
     return this.instance;
   }
@@ -200,7 +205,6 @@ export const storage = {
 
 // 统一图片存储接口 - 重定向到 utils/indexedDB.js
 // 确保所有地方都通过统一的 imageStore.getImageUrl(key) 获取图片地址
-import imageStorage from '../../utils/indexedDB.js';
 
 export { imageStorage };
 

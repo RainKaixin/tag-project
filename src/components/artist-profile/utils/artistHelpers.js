@@ -1,10 +1,9 @@
 // artist-helpers v1: 艺术家档案工具函数集合
 
 import { getUnifiedAvatar } from '../../../services/avatarService.js';
-import { getProfile } from '../../../services/mock/userProfileService.js';
+import { getProfile } from '../../../services/supabase/userProfileService.js';
 import { getCachedAvatar } from '../../../utils/avatarCache.js';
 import avatarStorage from '../../../utils/avatarStorage.js';
-import { getCurrentUser } from '../../../utils/currentUser.js';
 import { MOCK_USERS } from '../../../utils/mockUsers.js';
 
 // 简单的内存缓存，用于存储艺术家数据
@@ -144,47 +143,54 @@ export const getArtistById = async userId => {
       return null;
     }
 
-    // 数字ID到字符串ID的映射
-    const idMapping = {
-      1: 'alex',
-      2: 'alice',
-      3: 'bryan',
-    };
-
-    // 尝试映射数字ID到字符串ID
-    const mappedId = idMapping[userId] || userId;
-
     // 检查缓存
-    const cacheKey = `artist_${mappedId}`;
+    const cacheKey = `artist_${userId}`;
     if (artistCache.has(cacheKey)) {
-      console.log(`[getArtistById] Using cached data for: ${mappedId}`);
+      console.log(`[getArtistById] Using cached data for: ${userId}`);
       return artistCache.get(cacheKey);
     }
 
-    const mockUser = MOCK_USERS[mappedId];
+    // 首先尝试从 Supabase 获取用户档案
+    const profileResult = await getProfile(userId);
+    let profile = null;
+    let mockUser = null;
 
-    if (!mockUser) {
-      console.warn(`[getArtistById] User not found for ID: ${userId}`);
-      return null;
+    if (profileResult.success && profileResult.data) {
+      // 找到了 Supabase 档案，使用它
+      profile = profileResult.data;
+      console.log(`[getArtistById] Found Supabase profile for: ${userId}`);
+    } else {
+      // 没有找到 Supabase 档案，检查是否是 Mock 用户
+      const idMapping = {
+        1: 'alex',
+        2: 'alice',
+        3: 'bryan',
+      };
+      const mappedId = idMapping[userId] || userId;
+      mockUser = MOCK_USERS[mappedId];
+
+      if (!mockUser) {
+        console.warn(
+          `[getArtistById] No profile found for ID: ${userId}, creating default profile`
+        );
+        // 创建默认档案
+        profile = createDefaultProfile(userId);
+      }
     }
-
-    // 获取用户档案数据
-    const profileResult = await getProfile(mappedId);
-    const profile = profileResult.success ? profileResult.data : null;
 
     // 使用統一的頭像服務獲取頭像數據
     let avatar = null;
     try {
-      avatar = await getUnifiedAvatar(mappedId);
+      avatar = await getUnifiedAvatar(userId);
       console.log(
         '[getArtistById] Using unified avatar service for:',
-        mappedId,
+        userId,
         avatar ? 'found' : 'not found'
       );
     } catch (error) {
       console.warn('[getArtistById] Failed to get unified avatar:', error);
       // 回退到 mockUser 的默認頭像
-      avatar = mockUser.avatar;
+      avatar = mockUser?.avatar || null;
     }
 
     // 使用选择器统一数据格式，严格遵循单一事实来源原则
@@ -211,7 +217,7 @@ export const getArtistById = async userId => {
 
     // 调试日志：检查 socialLinks 数据
     console.log('[getArtistById] Artist view socialLinks:', {
-      userId: mappedId,
+      userId: userId,
       profileSocialLinks: profileWithAvatar?.socialLinks,
       mockUserSocialLinks: mockUser?.socialLinks,
       finalSocialLinks: artistView.socialLinks,
@@ -219,7 +225,7 @@ export const getArtistById = async userId => {
 
     // 缓存结果
     artistCache.set(cacheKey, artistView);
-    console.log(`[getArtistById] Cached data for: ${mappedId}`);
+    console.log(`[getArtistById] Cached data for: ${userId}`);
 
     return artistView;
   } catch (error) {
@@ -301,25 +307,29 @@ export const getArtworksByUser = async userOrId => {
     }));
   }
 
-  // 如果是ID，先检查是否是当前登录用户
+  // 如果是ID，直接获取该用户的作品数据
   const userId = userOrId?.toString?.();
-  const currentUser = getCurrentUser();
+  if (!userId) {
+    console.warn('[getArtworksByUser] No userId provided');
+    return [];
+  }
 
-  // 如果请求的是当前登录用户的ID，直接返回当前用户的作品数据
-  if (
-    currentUser &&
-    (userId === currentUser.id || userId === currentUser.id.toString())
-  ) {
-    if (!currentUser.portfolio) {
-      return getDefaultArtworks();
+  // 尝试从 Supabase 获取用户档案和作品
+  try {
+    const profileResult = await getProfile(userId);
+    if (profileResult.success && profileResult.data) {
+      // 如果有档案，尝试获取作品数据
+      // 这里应该调用作品服务，暂时返回空数组
+      console.log(
+        `[getArtworksByUser] Found profile for user: ${userId}, but portfolio service not implemented yet`
+      );
+      return [];
     }
-    // 将用户的 portfolio 数据转换为作品格式
-    return currentUser.portfolio.map((item, index) => ({
-      id: item.id,
-      title: item.title,
-      image: item.thumb,
-      category: item.category,
-    }));
+  } catch (error) {
+    console.log(
+      `[getArtworksByUser] Error getting profile for user: ${userId}:`,
+      error
+    );
   }
 
   // 数字ID到字符串ID的映射
@@ -571,4 +581,32 @@ export const getFollowButtonStyle = isFollowing => {
   return isFollowing
     ? `${baseStyle} bg-gray-200 text-gray-700 hover:bg-gray-300`
     : `${baseStyle} bg-blue-500 text-white hover:bg-blue-600`;
+};
+
+/**
+ * 创建默认艺术家档案
+ * @param {string} userId - 用户ID
+ * @returns {Object} 默认档案数据
+ */
+const createDefaultProfile = userId => {
+  return {
+    id: userId,
+    fullName: 'Artist',
+    title: 'Artist',
+    school: '',
+    pronouns: '',
+    majors: [],
+    minors: [],
+    skills: [],
+    bio: '',
+    socialLinks: {
+      instagram: '',
+      portfolio: '',
+      discord: '',
+      otherLinks: [],
+    },
+    avatar: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
 };

@@ -38,6 +38,30 @@ const RegisterForm = ({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // 强制清除任何可能的默认值
+  React.useEffect(() => {
+    // 延迟执行，确保DOM已渲染
+    const timer = setTimeout(() => {
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const confirmPasswordInput = document.getElementById('confirmPassword');
+
+      if (emailInput && emailInput.value !== '') {
+        emailInput.value = '';
+      }
+
+      if (passwordInput && passwordInput.value !== '') {
+        passwordInput.value = '';
+      }
+
+      if (confirmPasswordInput && confirmPasswordInput.value !== '') {
+        confirmPasswordInput.value = '';
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <form onSubmit={onSubmit} className='space-y-6'>
       {/* Email Field */}
@@ -58,6 +82,7 @@ const RegisterForm = ({
               value={formData.email}
               onChange={onInputChange}
               placeholder='your.name@university.edu'
+              autoComplete='off'
               className={`block w-full px-3 py-3 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm ${
                 errors.email ? 'border-red-300' : 'border-gray-300'
               }`}
@@ -99,6 +124,7 @@ const RegisterForm = ({
             onChange={onInputChange}
             placeholder='Enter 6-digit code'
             maxLength='6'
+            autoComplete='off'
             className={`block w-full px-3 py-3 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm ${
               errors.verificationCode ? 'border-red-300' : 'border-gray-300'
             }`}
@@ -129,6 +155,7 @@ const RegisterForm = ({
             value={formData.password}
             onChange={onInputChange}
             placeholder='Enter your password'
+            autoComplete='off'
             className={`block w-full pr-10 px-3 py-3 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm ${
               errors.password ? 'border-red-300' : 'border-gray-300'
             }`}
@@ -200,7 +227,8 @@ const RegisterForm = ({
             value={formData.confirmPassword}
             onChange={onInputChange}
             placeholder='Confirm your password'
-            className={`block w-full pr-10 px-3 py-3 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm ${
+            autoComplete='off'
+            className={`block w-full pr-10 px-3 py-3 border rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:border-tag-blue focus:ring-2 focus:ring-tag-blue sm:text-sm ${
               errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
             }`}
           />

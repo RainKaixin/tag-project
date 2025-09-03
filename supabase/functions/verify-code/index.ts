@@ -1,8 +1,8 @@
 import { serve } from '@std/http';
 import { createClient } from '@supabase/supabase-js';
 
-const PROJECT_URL = Deno.env.get('PROJECT_URL')!;
-const SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY')!;
+const PROJECT_URL = Deno.env.get('SUPABASE_URL')!;
+const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 // 开发阶段先用 *；上线请改成你的前端域名（例如 https://tag.rainwang.art）
 const CORS_ORIGIN = '*';
@@ -83,6 +83,10 @@ serve(async req => {
     const supabase = createClient(PROJECT_URL, SERVICE_ROLE_KEY);
     const code_hash = await sha256Hex(codeRaw);
 
+    console.log(
+      `[verify-code] Processing: email=${email}, code_hash=${code_hash}`
+    );
+
     // 1) 查有效验证码（未使用、未过期、匹配 email+hash）
     const { data: row, error: findErr } = await supabase
       .from('verification_codes')
@@ -93,8 +97,15 @@ serve(async req => {
       .gte('expires_at', new Date().toISOString())
       .maybeSingle();
 
-    if (findErr) throw findErr;
+    if (findErr) {
+      console.error(`[verify-code] Database query error:`, findErr);
+      throw findErr;
+    }
+
     if (!row) {
+      console.log(
+        `[verify-code] No valid verification code found for email=${email}`
+      );
       return new Response(
         JSON.stringify({
           ok: false,
@@ -107,7 +118,11 @@ serve(async req => {
       );
     }
 
+    console.log(`[verify-code] Found valid code, row.id=${row.id}`);
+
     // 2) 创建并确认用户（如果用户已存在，返回 409，前端提示直接去登录）
+    console.log(`[verify-code] Creating user for email=${email}`);
+
     const { error: createErr } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -115,6 +130,7 @@ serve(async req => {
     });
 
     if (createErr) {
+      console.error(`[verify-code] User creation error:`, createErr);
       // Supabase 返回的已存在错误 code 可能是 "user_already_exists" 或类似信息
       const msg = String(createErr.message ?? createErr);
       const conflict = /exist/i.test(msg);
@@ -132,6 +148,8 @@ serve(async req => {
         }
       );
     }
+
+    console.log(`[verify-code] User created successfully for email=${email}`);
 
     // 3) 标记验证码已使用
     const { error: updErr } = await supabase

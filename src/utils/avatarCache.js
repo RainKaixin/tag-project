@@ -1,13 +1,36 @@
 // 头像缓存工具
-const AVATAR_CACHE_KEY = 'tag.avatarCache';
+import { isMock } from './envCheck.js';
+
+// 获取用户命名空间前缀
+const getUserNamespace = userId => {
+  // 如果没有 userId，返回 null（不再使用默认用户）
+  if (!userId) {
+    return null;
+  }
+  return `u.${userId}`;
+};
+
+const getAvatarCacheKey = userId => {
+  const namespace = getUserNamespace(userId);
+  return `${namespace}.avatarCache`;
+};
+
+const getAvatarStorageKey = userId => {
+  const namespace = getUserNamespace(userId);
+  return `${namespace}.avatar`;
+};
+
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24小时
 
 // 获取缓存的头像
 export const getCachedAvatar = userId => {
   try {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === 'undefined' || !userId) return null;
 
-    const cache = JSON.parse(localStorage.getItem(AVATAR_CACHE_KEY) || '{}');
+    const cacheKey = getAvatarCacheKey(userId);
+    if (!cacheKey) return null; // 如果无法生成缓存键，返回 null
+
+    const cache = JSON.parse(localStorage.getItem(cacheKey) || '{}');
     const cached = cache[userId];
 
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
@@ -24,15 +47,18 @@ export const getCachedAvatar = userId => {
 // 缓存头像
 export const cacheAvatar = (userId, url) => {
   try {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !userId) return;
 
-    const cache = JSON.parse(localStorage.getItem(AVATAR_CACHE_KEY) || '{}');
+    const cacheKey = getAvatarCacheKey(userId);
+    if (!cacheKey) return; // 如果无法生成缓存键，直接返回
+
+    const cache = JSON.parse(localStorage.getItem(cacheKey) || '{}');
     cache[userId] = {
       url,
       timestamp: Date.now(),
     };
 
-    localStorage.setItem(AVATAR_CACHE_KEY, JSON.stringify(cache));
+    localStorage.setItem(cacheKey, JSON.stringify(cache));
   } catch (error) {
     console.warn('Error caching avatar:', error);
   }
@@ -45,22 +71,21 @@ export const clearAvatarCache = (userId = null) => {
 
     if (userId) {
       // 清理头像缓存
-      const cache = JSON.parse(localStorage.getItem(AVATAR_CACHE_KEY) || '{}');
+      const cacheKey = getAvatarCacheKey(userId);
+      const cache = JSON.parse(localStorage.getItem(cacheKey) || '{}');
       delete cache[userId];
-      localStorage.setItem(AVATAR_CACHE_KEY, JSON.stringify(cache));
+      localStorage.setItem(cacheKey, JSON.stringify(cache));
 
       // 清理头像存储数据
-      localStorage.removeItem(`tag.avatars.${userId}`);
+      const avatarStorageKey = getAvatarStorageKey(userId);
+      localStorage.removeItem(avatarStorageKey);
 
       console.log(`[clearAvatarCache] Cleared avatar data for user: ${userId}`);
     } else {
       // 清理所有头像相关数据
-      localStorage.removeItem(AVATAR_CACHE_KEY);
-
-      // 清理所有 tag.avatars.* 数据
       const keys = Object.keys(localStorage);
       keys.forEach(key => {
-        if (key.startsWith('tag.avatars.')) {
+        if (key.includes('.avatarCache') || key.includes('.avatar')) {
           localStorage.removeItem(key);
         }
       });

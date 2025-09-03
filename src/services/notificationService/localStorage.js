@@ -1,10 +1,25 @@
 // notificationService/localStorage.js - LocalStorage 适配器
 
+import { isMock } from '../../utils/envCheck.js';
+
 /**
  * LocalStorage 通知数据适配器
  * 在本地存储中管理通知数据
  */
 export const localStorageAdapter = {
+  /**
+   * 获取存储键名 - 按用户命名空间隔离
+   * @param {string} userId - 用户ID
+   * @returns {string} 存储键名
+   */
+  getStorageKey: userId => {
+    // 如果没有 userId，返回 null（不再使用默认用户）
+    if (!userId) {
+      return null;
+    }
+    return `u.${userId}.notifications`;
+  },
+
   /**
    * 创建通知
    * @param {Object} notification - 通知数据
@@ -12,7 +27,7 @@ export const localStorageAdapter = {
    */
   createNotification: async notification => {
     try {
-      const key = `notifications_${notification.receiverId}`;
+      const key = localStorageAdapter.getStorageKey(notification.receiverId);
       const existingNotifications = JSON.parse(
         localStorage.getItem(key) || '[]'
       );
@@ -53,7 +68,7 @@ export const localStorageAdapter = {
    */
   getUserNotifications: async userId => {
     try {
-      const key = `notifications_${userId}`;
+      const key = localStorageAdapter.getStorageKey(userId);
       const notifications = JSON.parse(localStorage.getItem(key) || '[]');
 
       console.log(
@@ -78,8 +93,8 @@ export const localStorageAdapter = {
     try {
       // 遍历所有用户的通知，找到对应的通知并标记为已读
       const keys = Object.keys(localStorage).filter(key =>
-        key.startsWith('notifications_')
-      );
+        key.startsWith('u.')
+      ); // 只遍历以 'u.' 开头的键
 
       for (const key of keys) {
         const notifications = JSON.parse(localStorage.getItem(key) || '[]');
@@ -92,7 +107,7 @@ export const localStorageAdapter = {
           localStorage.setItem(key, JSON.stringify(notifications));
 
           // 触发未读通知变化事件
-          const userId = key.replace('notifications_', '');
+          const userId = key.replace('u.', '');
           window.dispatchEvent(
             new CustomEvent('notif:unreadChanged', {
               detail: { userId },
@@ -126,7 +141,7 @@ export const localStorageAdapter = {
    */
   markAllAsRead: async userId => {
     try {
-      const key = `notifications_${userId}`;
+      const key = localStorageAdapter.getStorageKey(userId);
       const notifications = JSON.parse(localStorage.getItem(key) || '[]');
 
       // 标记所有通知为已读
@@ -166,8 +181,8 @@ export const localStorageAdapter = {
     try {
       // 遍历所有用户的通知，找到对应的通知并删除
       const keys = Object.keys(localStorage).filter(key =>
-        key.startsWith('notifications_')
-      );
+        key.startsWith('u.')
+      ); // 只遍历以 'u.' 开头的键
 
       for (const key of keys) {
         const notifications = JSON.parse(localStorage.getItem(key) || '[]');
@@ -180,7 +195,7 @@ export const localStorageAdapter = {
           localStorage.setItem(key, JSON.stringify(notifications));
 
           // 触发未读通知变化事件
-          const userId = key.replace('notifications_', '');
+          const userId = key.replace('u.', '');
           window.dispatchEvent(
             new CustomEvent('notif:unreadChanged', {
               detail: { userId },

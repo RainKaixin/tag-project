@@ -1,8 +1,8 @@
 import { serve } from '@std/http';
 import { createClient } from '@supabase/supabase-js';
 
-const PROJECT_URL = Deno.env.get('PROJECT_URL')!;
-const SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY')!;
+const PROJECT_URL = Deno.env.get('SUPABASE_URL')!;
+const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 // 开发阶段先用 *；上线请改成你的前端域名（例如 https://tag.rainwang.art）
 const CORS_ORIGIN = '*';
