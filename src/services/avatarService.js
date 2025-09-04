@@ -6,6 +6,35 @@ import avatarStorage from '../utils/avatarStorage';
 import { getCurrentUserId } from '../utils/currentUser';
 
 /**
+ * 验证头像URL是否有效
+ * @param {string} url - 头像URL
+ * @returns {boolean} 是否有效
+ */
+const isValidAvatarUrl = url => {
+  if (!url || typeof url !== 'string') {
+    return false;
+  }
+
+  // 检查是否是完整的URL
+  if (url.startsWith('http')) {
+    // 检查URL是否完整（至少包含域名和协议）
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.length > 0 && urlObj.protocol.startsWith('http');
+    } catch {
+      return false;
+    }
+  }
+
+  // 检查Data URL格式
+  if (url.startsWith('data:image/')) {
+    return url.length > 100; // Data URL应该足够长
+  }
+
+  return false;
+};
+
+/**
  * 統一的頭像數據獲取函數
  * 優先級：localStorage → IndexedDB → profile → mockUser
  * @param {string} userId - 用戶ID
@@ -27,17 +56,30 @@ export const getUnifiedAvatar = async userId => {
         try {
           const parsedData = JSON.parse(avatarData);
           if (parsedData && parsedData.avatarUrl) {
-            console.log(
-              `[avatarService] Found avatar in localStorage for ${userId}:`,
-              parsedData.avatarUrl?.substring(0, 30)
-            );
-            return parsedData.avatarUrl;
+            // 验证URL有效性
+            const avatarUrl = parsedData.avatarUrl;
+            if (isValidAvatarUrl(avatarUrl)) {
+              console.log(
+                `[avatarService] Found valid avatar in localStorage for ${userId}:`,
+                avatarUrl?.substring(0, 30)
+              );
+              return avatarUrl;
+            } else {
+              console.warn(
+                `[avatarService] Found invalid avatar URL in localStorage for ${userId}:`,
+                avatarUrl?.substring(0, 30)
+              );
+              // 清除损坏的缓存
+              window.localStorage.removeItem(`tag.avatars.${userId}`);
+            }
           }
         } catch (parseError) {
           console.warn(
             `[avatarService] Failed to parse localStorage avatar data for ${userId}:`,
             parseError
           );
+          // 清除损坏的缓存
+          window.localStorage.removeItem(`tag.avatars.${userId}`);
         }
       }
     }
@@ -52,8 +94,23 @@ export const getUnifiedAvatar = async userId => {
       return avatarUrl;
     }
 
-    // 3. 從 profile 數據獲取（如果需要）
-    // 這裡可以添加從 profile 服務獲取的邏輯
+    // 3. 從 profile 數據獲取（Supabase profile）
+    try {
+      const { getProfile } = await import('./supabase/userProfileService.js');
+      const profileResult = await getProfile(userId);
+      if (profileResult?.success && profileResult?.data?.avatar) {
+        console.log(
+          `[avatarService] Found avatar in Supabase profile for ${userId}:`,
+          profileResult.data.avatar?.substring(0, 30)
+        );
+        return profileResult.data.avatar;
+      }
+    } catch (profileError) {
+      console.warn(
+        `[avatarService] Failed to get profile for ${userId}:`,
+        profileError
+      );
+    }
 
     // 4. 回退到默認頭像（使用統一的默認頭像）
     console.log(
@@ -87,7 +144,14 @@ export const updateUnifiedAvatar = async (userId, avatarUrl) => {
     clearAvatarCache(userId);
 
     // 2. 存儲到 IndexedDB
-    await avatarStorage.storeAvatar(userId, avatarUrl);
+    const storageResult = await avatarStorage.storeAvatar(userId, avatarUrl);
+
+    // 如果存储被跳过（比如HTTP URL下载失败），我们仍然继续流程
+    if (storageResult.skipped) {
+      console.log(
+        '[avatarService] Avatar storage skipped, but continuing with update flow'
+      );
+    }
 
     // 3. 存儲到 localStorage（確保右上角頭像能立即更新）
     if (typeof window !== 'undefined') {
@@ -140,7 +204,7 @@ export const getCurrentUserAvatar = async () => {
  * @returns {Promise<boolean>} 是否成功
  */
 export const updateCurrentUserAvatar = async avatarUrl => {
-  const userId = getCurrentUserId();
+  const userId = await getCurrentUserId();
   return await updateUnifiedAvatar(userId, avatarUrl);
 };
 

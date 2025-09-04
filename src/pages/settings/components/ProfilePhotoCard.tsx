@@ -4,6 +4,7 @@ import AvatarCropModal from '../../../components/avatar-crop/AvatarCropModal_ref
 import { getAvatarUrlWithCacheBust } from '../../../services';
 import { updateCurrentUserAvatar } from '../../../services/avatarService';
 import { clearAvatarCache } from '../../../utils/avatarCache';
+import { getCurrentUserId } from '../../../utils/currentUser';
 import styles from '../EditProfile.module.css';
 import type { ProfilePhotoCardProps } from '../types';
 
@@ -30,15 +31,21 @@ const ProfilePhotoCard: React.FC<ProfilePhotoCardProps> = ({
   useEffect(() => {
     if (!localAvatar && typeof window !== 'undefined') {
       try {
-        const avatarData = window.localStorage.getItem('tag.avatars.alice');
-        if (avatarData) {
-          const parsedData = JSON.parse(avatarData);
-          if (parsedData && parsedData.avatarUrl) {
-            console.log(
-              '[ProfilePhotoCard] Initialized from localStorage:',
-              parsedData.avatarUrl?.substring(0, 30)
-            );
-            setLocalAvatar(parsedData.avatarUrl);
+        // 从当前用户ID获取头像
+        const currentUserId = getCurrentUserId();
+        if (currentUserId) {
+          const avatarData = window.localStorage.getItem(
+            `tag.avatars.${currentUserId}`
+          );
+          if (avatarData) {
+            const parsedData = JSON.parse(avatarData);
+            if (parsedData && parsedData.avatarUrl) {
+              console.log(
+                '[ProfilePhotoCard] Initialized from localStorage:',
+                parsedData.avatarUrl?.substring(0, 30)
+              );
+              setLocalAvatar(parsedData.avatarUrl);
+            }
           }
         }
       } catch (error) {
@@ -54,9 +61,40 @@ const ProfilePhotoCard: React.FC<ProfilePhotoCardProps> = ({
   const DEFAULT_AVATAR =
     'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiByeD0iNjQiIGZpbGw9IiNGM0Y0RjYiLz4KPHN2ZyB4PSIzMiIgeT0iMjQiIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjOEM5Q0E2Ij4KPHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPgo8L3N2Zz4KPC9zdmc+';
 
-  const avatarUrl = localAvatar
-    ? getAvatarUrlWithCacheBust(localAvatar, avatarUpdatedAt)
-    : null;
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  // 异步获取头像URL
+  useEffect(() => {
+    const fetchAvatarUrl = async () => {
+      if (localAvatar) {
+        // 如果是本地头像（data URL），直接使用
+        if (localAvatar.startsWith('data:image/')) {
+          setAvatarUrl(localAvatar);
+        } else {
+          // 如果是HTTP URL，尝试获取带缓存破坏的版本
+          try {
+            const currentUserId = await getCurrentUserId();
+            if (currentUserId) {
+              const url = await getAvatarUrlWithCacheBust(currentUserId);
+              setAvatarUrl(url || localAvatar);
+            } else {
+              setAvatarUrl(localAvatar);
+            }
+          } catch (error) {
+            console.error(
+              '[ProfilePhotoCard] Failed to get avatar URL:',
+              error
+            );
+            setAvatarUrl(localAvatar); // 回退到本地头像
+          }
+        }
+      } else {
+        setAvatarUrl(null);
+      }
+    };
+
+    fetchAvatarUrl();
+  }, [localAvatar]);
 
   // 调试日志 - 已注释以避免控制台刷屏
   // console.log('[ProfilePhotoCard] Input avatar:', avatar?.substring(0, 30));
@@ -80,8 +118,12 @@ const ProfilePhotoCard: React.FC<ProfilePhotoCardProps> = ({
       console.log('[ProfilePhotoCard] Avatar URL type:', typeof newAvatarUrl);
       console.log('[ProfilePhotoCard] Full avatar URL:', newAvatarUrl);
 
-      // 驗證新的頭像 URL 格式
-      if (!newAvatarUrl || !newAvatarUrl.startsWith('data:image/')) {
+      // 驗證新的頭像 URL 格式 (accept both data URLs and HTTP URLs)
+      if (
+        !newAvatarUrl ||
+        (!newAvatarUrl.startsWith('data:image/') &&
+          !newAvatarUrl.startsWith('http'))
+      ) {
         console.error(
           '[ProfilePhotoCard] Invalid avatar URL format:',
           newAvatarUrl

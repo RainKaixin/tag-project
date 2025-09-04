@@ -2,7 +2,7 @@
 
 import { localStorageAdapter } from './localStorage.js';
 import { mockUsersAdapter } from './mockUsers.js';
-import { supabaseAdapter } from './supabase.js';
+import supabaseAdapter from './supabase.js';
 
 /**
  * 作品服务接口
@@ -16,33 +16,34 @@ export const workService = {
    */
   getUserWorks: async userId => {
     try {
-      // 优先级1: LocalStorage (MockAPI)
-      const localStorageWorks = await localStorageAdapter.getUserWorks(userId);
-      if (
-        localStorageWorks &&
-        localStorageWorks.data &&
-        localStorageWorks.data.length > 0
-      ) {
-        console.log(
-          `[workService] Using LocalStorage works for user ${userId}`
-        );
-        return localStorageWorks;
+      // 检查是否为Mock模式
+      const { isMock } = await import('../../utils/envCheck.js');
+      const isMockMode = isMock();
+
+      if (!isMockMode) {
+        // 非Mock模式：强制使用Supabase
+        try {
+          const supabaseWorks = await supabaseAdapter.getUserWorks(userId);
+          console.log(
+            `[workService] Using Supabase works for user ${userId} (${
+              supabaseWorks?.data?.length || 0
+            } works)`
+          );
+          return supabaseWorks;
+        } catch (supabaseError) {
+          console.error(
+            `[workService] Supabase failed for user ${userId}:`,
+            supabaseError
+          );
+          throw supabaseError; // 不再静默降级，直接抛出错误
+        }
       }
 
-      // 优先级2: Supabase (预留)
-      const supabaseWorks = await supabaseAdapter.getUserWorks(userId);
-      if (
-        supabaseWorks &&
-        supabaseWorks.data &&
-        supabaseWorks.data.length > 0
-      ) {
-        console.log(`[workService] Using Supabase works for user ${userId}`);
-        return supabaseWorks;
-      }
-
-      // 优先级3: MockUsers (fallback)
-      console.log(`[workService] Using MockUsers fallback for user ${userId}`);
-      return await mockUsersAdapter.getUserWorks(userId);
+      // Mock模式：使用LocalStorage
+      console.log(
+        `[workService] Mock mode: Using LocalStorage works for user ${userId}`
+      );
+      return await localStorageAdapter.getUserWorks(userId);
     } catch (error) {
       console.error(
         `[workService] Error getting works for user ${userId}:`,
@@ -60,26 +61,33 @@ export const workService = {
    */
   getWorkById: async (workId, userId = null) => {
     try {
-      // 优先级1: LocalStorage (MockAPI)
-      const localStorageWork = await localStorageAdapter.getWorkById(
-        workId,
-        userId
+      // 检查是否为Mock模式
+      const { isMock } = await import('../../utils/envCheck.js');
+      const isMockMode = isMock();
+
+      if (!isMockMode) {
+        // 非Mock模式：强制使用Supabase
+        try {
+          const supabaseWork = await supabaseAdapter.getWorkById(
+            workId,
+            userId
+          );
+          console.log(`[workService] Using Supabase work data for ${workId}`);
+          return supabaseWork;
+        } catch (supabaseError) {
+          console.error(
+            `[workService] Supabase failed for work ${workId}:`,
+            supabaseError
+          );
+          throw supabaseError; // 不再静默降级，直接抛出错误
+        }
+      }
+
+      // Mock模式：使用LocalStorage
+      console.log(
+        `[workService] Mock mode: Using LocalStorage work data for ${workId}`
       );
-      if (localStorageWork && localStorageWork.data) {
-        console.log(`[workService] Using LocalStorage work data for ${workId}`);
-        return localStorageWork;
-      }
-
-      // 优先级2: Supabase (预留)
-      const supabaseWork = await supabaseAdapter.getWorkById(workId, userId);
-      if (supabaseWork && supabaseWork.data) {
-        console.log(`[workService] Using Supabase work data for ${workId}`);
-        return supabaseWork;
-      }
-
-      // 优先级3: MockUsers (fallback)
-      console.log(`[workService] Using MockUsers fallback for work ${workId}`);
-      return await mockUsersAdapter.getWorkById(workId, userId);
+      return await localStorageAdapter.getWorkById(workId, userId);
     } catch (error) {
       console.error(`[workService] Error getting work ${workId}:`, error);
       return await mockUsersAdapter.getWorkById(workId, userId);
@@ -180,31 +188,32 @@ export const workService = {
    */
   getAllPublicWorks: async () => {
     try {
-      // 优先级1: LocalStorage (MockAPI)
-      const localStorageWorks = await localStorageAdapter.getAllPublicWorks();
-      if (
-        localStorageWorks &&
-        localStorageWorks.data &&
-        localStorageWorks.data.length > 0
-      ) {
-        console.log(`[workService] Using LocalStorage public works`);
-        return localStorageWorks;
+      // 检查是否为Mock模式
+      const { isMock } = await import('../../utils/envCheck.js');
+      const isMockMode = isMock();
+
+      if (!isMockMode) {
+        // 非Mock模式：强制使用Supabase
+        try {
+          const supabaseWorks = await supabaseAdapter.getAllPublicWorks();
+          console.log(
+            `[workService] Using Supabase public works (${
+              supabaseWorks?.data?.length || 0
+            } works)`
+          );
+          return supabaseWorks;
+        } catch (supabaseError) {
+          console.error(
+            `[workService] Supabase failed for public works:`,
+            supabaseError
+          );
+          throw supabaseError; // 不再静默降级，直接抛出错误
+        }
       }
 
-      // 优先级2: Supabase (预留)
-      const supabaseWorks = await supabaseAdapter.getAllPublicWorks();
-      if (
-        supabaseWorks &&
-        supabaseWorks.data &&
-        supabaseWorks.data.length > 0
-      ) {
-        console.log(`[workService] Using Supabase public works`);
-        return supabaseWorks;
-      }
-
-      // 优先级3: MockUsers (fallback)
-      console.log(`[workService] Using MockUsers fallback for public works`);
-      return await mockUsersAdapter.getAllPublicWorks();
+      // Mock模式：使用LocalStorage
+      console.log(`[workService] Mock mode: Using LocalStorage public works`);
+      return await localStorageAdapter.getAllPublicWorks();
     } catch (error) {
       console.error(`[workService] Error getting all public works:`, error);
       return await mockUsersAdapter.getAllPublicWorks();

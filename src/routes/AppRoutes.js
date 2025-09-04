@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
+import AboutPage from '../components/AboutPage';
 import ArtistProfile from '../components/artist-profile/ArtistProfile_refactored';
 import BannerSection from '../components/BannerSection';
 import CollaborationDetailPage from '../components/CollaborationDetailPage';
@@ -69,6 +70,9 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+
+      {/* About页面 - 不需要保护 */}
+      <Route path='/about' element={<AboutPage />} />
 
       {/* 个人页面 - 需要保护 */}
       <Route

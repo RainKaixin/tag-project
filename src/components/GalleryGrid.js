@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 
-import { getAllPublicPortfolios } from '../services/supabase/portfolio';
+import {
+  getAllPublicPortfolios,
+  getPortfolioImageUrl,
+} from '../services/supabase/portfolio';
 import { useNavigation } from '../utils/navigation';
 
 const GalleryGrid = ({ currentUser }) => {
@@ -21,35 +24,70 @@ const GalleryGrid = ({ currentUser }) => {
 
       if (result.success) {
         // 转换数据格式以匹配现有的 gallery 格式
-        const formattedArtworks = result.data
-          .filter(item => item && item.id) // 过滤掉无效项目
-          .map(item => {
-            const image =
-              item.thumbnailPath ||
-              (item.imagePaths && item.imagePaths[0]) ||
-              '/assets/placeholder.svg';
+        const formattedArtworks = await Promise.all(
+          result.data
+            .filter(item => item && item.id) // 过滤掉无效项目
+            .map(async item => {
+              const imagePath =
+                item.thumbnailPath ||
+                (item.imagePaths && item.imagePaths[0]) ||
+                null;
 
-            console.log(`[GalleryGrid] Item ${item.id}:`, {
-              title: item.title,
-              thumbnailPath: item.thumbnailPath,
-              imagePaths: item.imagePaths,
-              finalImage:
-                typeof image === 'string'
-                  ? image.substring(0, 50) + '...'
-                  : 'Invalid image type',
-            });
+              // 转换图片路径为公开URL
+              let image = '/assets/placeholder.svg';
+              if (imagePath) {
+                try {
+                  console.log(
+                    `[GalleryGrid] Converting image path: ${imagePath}`
+                  );
+                  const imageResult = await getPortfolioImageUrl(imagePath);
+                  console.log(
+                    `[GalleryGrid] Image conversion result:`,
+                    imageResult
+                  );
+                  if (
+                    imageResult &&
+                    imageResult.success &&
+                    imageResult.data &&
+                    imageResult.data.url
+                  ) {
+                    image = imageResult.data.url;
+                    console.log(
+                      `[GalleryGrid] Successfully converted to: ${image}`
+                    );
+                  } else {
+                    console.warn(
+                      `[GalleryGrid] Invalid image result:`,
+                      imageResult
+                    );
+                  }
+                } catch (error) {
+                  console.warn(
+                    `[GalleryGrid] Failed to convert image path ${imagePath}:`,
+                    error
+                  );
+                }
+              }
 
-            return {
-              id: item.id || 'unknown',
-              title: item.title || 'Untitled',
-              artist: item.profiles?.full_name || 'Unknown Artist',
-              image: image,
-              category: item.category || 'design',
-              tags: item.tags || [],
-              description: item.description || '',
-              createdAt: item.createdAt || new Date().toISOString(),
-            };
-          });
+              console.log(`[GalleryGrid] Item ${item.id}:`, {
+                title: item.title,
+                thumbnailPath: item.thumbnailPath,
+                imagePaths: item.imagePaths,
+                finalImage: image,
+              });
+
+              return {
+                id: item.id || 'unknown',
+                title: item.title || 'Untitled',
+                artist: item.profiles?.full_name || 'Unknown Artist',
+                image: image,
+                category: item.category || 'design',
+                tags: item.tags || [],
+                description: item.description || '',
+                createdAt: item.createdAt || new Date().toISOString(),
+              };
+            })
+        );
 
         setArtworks(formattedArtworks);
       } else {

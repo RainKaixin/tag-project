@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 import { uploadAvatar } from '../services';
-import { getCurrentUserId } from '../utils/currentUser';
+import { getCurrentUserIdAsync } from '../utils/currentUser';
 
 // 文件验证
 const validateImageFile = file => {
@@ -131,7 +131,12 @@ export const useAvatarUpload = () => {
       );
 
       // 调用上传服务
-      const userId = getCurrentUserId();
+      const userId = await getCurrentUserIdAsync();
+
+      if (!userId) {
+        throw new Error('User not authenticated. Please log in again.');
+      }
+
       setUploadProgress(80);
 
       const result = await uploadAvatar(dataURL, userId);

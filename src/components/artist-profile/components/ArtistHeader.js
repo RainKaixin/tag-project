@@ -1,7 +1,8 @@
 // artist-header v1: 艺术家档案头部组件
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
+import { getUnifiedAvatar } from '../../../services/avatarService';
 import { getFollowButtonStyle } from '../utils/artistHelpers';
 
 /**
@@ -38,6 +39,30 @@ const ArtistHeader = ({
   from = 'gallery',
   className = '',
 }) => {
+  // 头像状态管理
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [avatarLoading, setAvatarLoading] = useState(true);
+
+  // 获取统一头像
+  useEffect(() => {
+    const loadAvatar = async () => {
+      if (!artist?.id) return;
+
+      try {
+        setAvatarLoading(true);
+        const url = await getUnifiedAvatar(artist.id);
+        setAvatarUrl(url);
+      } catch (error) {
+        console.error('[ArtistHeader] Failed to load avatar:', error);
+        // 回退到artist.avatar
+        setAvatarUrl(artist.avatar);
+      } finally {
+        setAvatarLoading(false);
+      }
+    };
+
+    loadAvatar();
+  }, [artist?.id, artist?.avatar]);
   // 根据来源确定返回按钮文本
   const getBackButtonText = () => {
     switch (from) {
@@ -87,11 +112,27 @@ const ArtistHeader = ({
           <div className='flex flex-col lg:flex-row lg:items-start'>
             {/* Left - Artist Info */}
             <div className='flex items-center mb-6 lg:mb-0'>
-              <img
-                src={artist.avatar}
-                alt={artist.name}
-                className='w-20 h-20 rounded-full mr-6'
-              />
+              {avatarLoading ? (
+                <div className='w-20 h-20 rounded-full mr-6 bg-gray-200 animate-pulse' />
+              ) : avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={artist.name}
+                  className='w-20 h-20 rounded-full mr-6 object-cover'
+                  onError={() => {
+                    console.warn(
+                      '[ArtistHeader] Avatar image failed to load, using fallback'
+                    );
+                    setAvatarUrl(artist.avatar);
+                  }}
+                />
+              ) : (
+                <div className='w-20 h-20 rounded-full mr-6 bg-gray-200 flex items-center justify-center'>
+                  <span className='text-gray-500 text-2xl font-bold'>
+                    {artist.name?.charAt(0)?.toUpperCase() || '?'}
+                  </span>
+                </div>
+              )}
               <div>
                 <h1 className='text-2xl font-bold text-gray-900 mb-1'>
                   {artist.name}

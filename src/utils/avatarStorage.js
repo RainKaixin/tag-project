@@ -43,6 +43,25 @@ class AvatarStorage {
         // Data URL 转换为 Blob
         const response = await fetch(data);
         blob = await response.blob();
+      } else if (typeof data === 'string' && data.startsWith('http')) {
+        // HTTP URL 转换为 Blob
+        try {
+          const response = await fetch(data);
+          if (!response.ok) {
+            throw new Error(
+              `Failed to fetch image: ${response.status} ${response.statusText}`
+            );
+          }
+          blob = await response.blob();
+        } catch (fetchError) {
+          console.warn(
+            `[AvatarStorage] Failed to fetch HTTP URL, skipping storage:`,
+            fetchError
+          );
+          // 对于HTTP URL，如果下载失败，我们跳过存储而不是抛出错误
+          // 这样可以避免阻止头像更新流程
+          return { success: true, userId, skipped: true };
+        }
       } else {
         throw new Error('Unsupported avatar data format');
       }

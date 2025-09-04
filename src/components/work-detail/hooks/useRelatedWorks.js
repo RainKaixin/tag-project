@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import { workService } from '../../../services';
+import { getPortfolioImageUrl } from '../../../services/supabase/portfolio';
 
 /**
  * 相关作品管理Hook
@@ -49,14 +50,58 @@ const useRelatedWorks = (artistId, currentWorkId, maxWorks = 4) => {
           Math.min(maxWorks, filteredWorks.length)
         );
 
-        // 转换数据格式以匹配组件需求
-        const formattedWorks = selectedWorks.map(work => ({
-          id: work.id,
-          title: work.title || 'Untitled',
-          image:
-            work.thumbnailPath || (work.imagePaths && work.imagePaths[0]) || '',
-          category: work.category || 'Design',
-        }));
+        // 转换数据格式以匹配组件需求，并转换图片URL
+        const formattedWorks = await Promise.all(
+          selectedWorks.map(async work => {
+            const imagePath =
+              work.thumbnailPath ||
+              (work.imagePaths && work.imagePaths[0]) ||
+              null;
+
+            // 转换图片路径为公开URL
+            let image = '';
+            if (imagePath) {
+              try {
+                console.log(
+                  `[RelatedWorks] Converting image path: ${imagePath}`
+                );
+                const imageResult = await getPortfolioImageUrl(imagePath);
+                console.log(
+                  `[RelatedWorks] Image conversion result:`,
+                  imageResult
+                );
+                if (
+                  imageResult &&
+                  imageResult.success &&
+                  imageResult.data &&
+                  imageResult.data.url
+                ) {
+                  image = imageResult.data.url;
+                  console.log(
+                    `[RelatedWorks] Successfully converted to: ${image}`
+                  );
+                } else {
+                  console.warn(
+                    `[RelatedWorks] Invalid image result:`,
+                    imageResult
+                  );
+                }
+              } catch (error) {
+                console.warn(
+                  `[RelatedWorks] Failed to convert image path ${imagePath}:`,
+                  error
+                );
+              }
+            }
+
+            return {
+              id: work.id,
+              title: work.title || 'Untitled',
+              image: image,
+              category: work.category || 'Design',
+            };
+          })
+        );
 
         setRelatedWorks(formattedWorks);
         console.log(

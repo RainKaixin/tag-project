@@ -56,38 +56,29 @@ export const getPortfolioImageUrl = async filePath => {
   }
 
   try {
-    // 首先尝试从 IndexedDB 获取（用于兼容性）
-    const url = await imageStorage.getImageUrl(filePath);
+    // 直接从 Supabase Storage 获取公开URL
+    console.log(
+      `[Portfolio] Getting public URL from Supabase Storage: ${filePath}`
+    );
 
-    if (url) {
-      console.log(
-        `[Portfolio] Found image in IndexedDB: ${filePath}, url: ${url.substring(
-          0,
-          32
-        )}...`
-      );
+    const { data } = supabase.storage.from('portfolio').getPublicUrl(filePath);
+
+    if (data && data.publicUrl) {
+      console.log(`[Portfolio] Successfully got public URL: ${filePath}`);
 
       return {
         success: true,
         data: {
-          url: url,
+          url: data.publicUrl,
           path: filePath,
         },
       };
     }
 
-    // 如果 IndexedDB 中没有，尝试从 Supabase Storage 获取
-    console.log(
-      `[Portfolio] Image not found in IndexedDB, trying Supabase Storage: ${filePath}`
-    );
-
-    // 这里应该调用 Supabase Storage 的 getPublicUrl 方法
-    // 但由于我们使用的是 IndexedDB 存储，暂时返回 IndexedDB 的结果
-    console.log(`[Portfolio] Image not found for: ${filePath}`);
-
+    console.log(`[Portfolio] Image not found in Supabase Storage: ${filePath}`);
     return {
       success: false,
-      error: 'Image not found',
+      error: 'Image not found in Supabase Storage',
     };
   } catch (error) {
     console.error('[Portfolio] Error getting image URL:', error);
@@ -521,57 +512,54 @@ export const deletePortfolioItem = async (itemId, userId = null) => {
   }
 };
 
-// 上传文件并转换为 Data URL，存储到 IndexedDB
+// 上传文件到 Supabase Storage
 export const uploadPortfolioImage = async (file, userId) => {
-  // Mock API: 将文件转换为 Data URL 并存储到 IndexedDB
   console.log(
-    `[Portfolio] Mock API: Uploading image ${file.name} for user ${userId}`
+    `[Portfolio] Supabase: Uploading image ${file.name} for user ${userId}`
   );
 
   try {
-    // 生成文件路径（作为 key）- 統一格式
+    // 生成文件路径（作为 key）- 統一格式，不带桶前缀
     const fileExt = file.name.split('.').pop().toLowerCase();
     const fileName = `${Date.now()}-${Math.random()
       .toString(36)
       .substring(2)}.${fileExt}`;
-    const filePath = `portfolio/${userId}/${fileName}`;
+    const filePath = `${userId}/${fileName}`;
 
-    // 将文件转换为 Data URL
-    const dataUrl = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(file);
-    });
+    console.log(`[Portfolio] Supabase: Uploading to path: ${filePath}`);
 
-    // 驗證Data URL格式
-    if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/')) {
-      throw new Error('Invalid Data URL format generated');
+    // 上传文件到 Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('portfolio')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+      });
+
+    if (error) {
+      console.error('[Portfolio] Supabase: Upload failed:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
     }
 
-    console.log(
-      `[Portfolio] Mock API: 存儲時 - path: ${filePath}, dataUrl: ${dataUrl.substring(
-        0,
-        32
-      )}...`
-    );
+    console.log(`[Portfolio] Supabase: Successfully uploaded ${filePath}`);
 
-    // 将 Data URL 存储到 IndexedDB
-    await imageStorage.storeImage(filePath, dataUrl);
-
-    console.log(
-      `[Portfolio] Mock API: Stored Data URL to IndexedDB for ${filePath}`
-    );
+    // 获取公开URL用于立即显示
+    const { data: urlData } = supabase.storage
+      .from('portfolio')
+      .getPublicUrl(filePath);
 
     return {
       success: true,
       data: {
         path: filePath, // 返回文件路径作为 key
-        url: dataUrl, // 返回 Data URL（用于立即显示）
+        url: urlData.publicUrl, // 返回公开URL（用于立即显示）
       },
     };
   } catch (error) {
-    console.error('[Portfolio] Mock API: Error uploading image:', error);
+    console.error('[Portfolio] Supabase: Error uploading image:', error);
     return {
       success: false,
       error: error.message,
@@ -579,21 +567,30 @@ export const uploadPortfolioImage = async (file, userId) => {
   }
 };
 
-// 删除文件从 IndexedDB
+// 删除文件从 Supabase Storage
 export const deletePortfolioImage = async filePath => {
-  // Mock API: 从 IndexedDB 删除图片数据
-  console.log(`[Portfolio] Mock API: Deleting image ${filePath}`);
+  console.log(`[Portfolio] Supabase: Deleting image ${filePath}`);
 
   try {
-    const result = await imageStorage.deleteImage(filePath);
+    const { error } = await supabase.storage
+      .from('portfolio')
+      .remove([filePath]);
 
-    if (result.success) {
-      console.log(`[Portfolio] Mock API: Deleted image ${filePath}`);
+    if (error) {
+      console.error('[Portfolio] Supabase: Delete failed:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
     }
 
-    return result;
+    console.log(`[Portfolio] Supabase: Successfully deleted image ${filePath}`);
+    return {
+      success: true,
+      data: { path: filePath },
+    };
   } catch (error) {
-    console.error('[Portfolio] Mock API: Error deleting image:', error);
+    console.error('[Portfolio] Supabase: Error deleting image:', error);
     return {
       success: false,
       error: error.message,

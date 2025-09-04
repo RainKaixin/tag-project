@@ -50,7 +50,7 @@ export {
 export {
   uploadAvatar,
   getAvatarUrlWithCacheBust,
-} from './mock/avatarService.mock.js';
+} from './supabase/avatarService.js';
 
 // 导出 mock 服务（重命名避免冲突）
 export * as mockArtworkService from './mock/artworkService.js';

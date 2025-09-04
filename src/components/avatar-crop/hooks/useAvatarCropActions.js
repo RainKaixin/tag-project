@@ -81,8 +81,12 @@ export const useAvatarCropActions = (
 
       console.log('[AvatarCropModal] Crop result:', result);
 
-      // Validate avatarUrl format
-      if (!result.avatarUrl || !result.avatarUrl.startsWith('data:image/')) {
+      // Validate avatarUrl format (accept both data URLs and HTTP URLs)
+      if (
+        !result.avatarUrl ||
+        (!result.avatarUrl.startsWith('data:image/') &&
+          !result.avatarUrl.startsWith('http'))
+      ) {
         console.error(
           '[AvatarCropModal] Invalid avatarUrl format:',
           result.avatarUrl

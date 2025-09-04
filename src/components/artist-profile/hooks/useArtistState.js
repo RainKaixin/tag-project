@@ -5,7 +5,10 @@ import { useParams, useLocation } from 'react-router-dom';
 
 import { useAppContext } from '../../../context/AppContext';
 import { useAuth } from '../../../context/AuthContext';
-import { getPublicPortfolio } from '../../../services/supabase/portfolio';
+import {
+  getPublicPortfolio,
+  getPortfolioImageUrl,
+} from '../../../services/supabase/portfolio';
 import {
   getArtistById,
   getCollaborationsData,
@@ -203,18 +206,60 @@ const useArtistState = () => {
           const portfolioResult = await getPublicPortfolio(targetUserId);
 
           if (portfolioResult.success) {
-            // 转换作品数据格式以匹配现有的 portfolio 格式
-            const portfolioArtworks = portfolioResult.data.map(item => ({
-              id: item.id,
-              title: item.title,
-              image:
-                item.thumbnailPath ||
-                (item.imagePaths && item.imagePaths[0]) ||
-                '',
-              category: item.category,
-              tags: item.tags,
-              description: item.description,
-            }));
+            // 转换作品数据格式以匹配现有的 portfolio 格式，并转换图片URL
+            const portfolioArtworks = await Promise.all(
+              portfolioResult.data.map(async item => {
+                const imagePath =
+                  item.thumbnailPath ||
+                  (item.imagePaths && item.imagePaths[0]) ||
+                  null;
+
+                // 转换图片路径为公开URL
+                let image = '/assets/placeholder.svg';
+                if (imagePath) {
+                  try {
+                    console.log(
+                      `[useArtistState] Converting image path: ${imagePath}`
+                    );
+                    const imageResult = await getPortfolioImageUrl(imagePath);
+                    console.log(
+                      `[useArtistState] Image conversion result:`,
+                      imageResult
+                    );
+                    if (
+                      imageResult &&
+                      imageResult.success &&
+                      imageResult.data &&
+                      imageResult.data.url
+                    ) {
+                      image = imageResult.data.url;
+                      console.log(
+                        `[useArtistState] Successfully converted to: ${image}`
+                      );
+                    } else {
+                      console.warn(
+                        `[useArtistState] Invalid image result:`,
+                        imageResult
+                      );
+                    }
+                  } catch (error) {
+                    console.warn(
+                      `[useArtistState] Failed to convert image path ${imagePath}:`,
+                      error
+                    );
+                  }
+                }
+
+                return {
+                  id: item.id,
+                  title: item.title,
+                  image: image,
+                  category: item.category,
+                  tags: item.tags,
+                  description: item.description,
+                };
+              })
+            );
             setViewedArtworks(portfolioArtworks);
           } else {
             setViewedArtworks([]);

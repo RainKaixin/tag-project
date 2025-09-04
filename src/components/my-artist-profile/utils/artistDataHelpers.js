@@ -1,6 +1,8 @@
 // artist-data-helpers v1: 艺术家数据工具函数
 // 从 MyArtistProfile.js 中提取的数据处理逻辑
 
+import { getPortfolioImageUrl } from '../../../services/supabase/portfolio';
+
 /**
  * 根据当前用户获取艺术家数据
  * @param {Object} currentUser - 当前用户对象
@@ -54,6 +56,73 @@ export const getArtworksByUser = currentUser => {
     image: item.thumb,
     category: item.category,
   }));
+};
+
+/**
+ * 根据当前用户获取作品数据（异步版本，支持图片URL转换）
+ * @param {Object} currentUser - 当前用户对象
+ * @returns {Promise<Array>} 作品数组
+ */
+export const getArtworksByUserAsync = async currentUser => {
+  if (!currentUser) {
+    return getDefaultArtworks();
+  }
+
+  // 将用户的 portfolio 数据转换为作品格式，并转换图片URL
+  const artworks = await Promise.all(
+    currentUser.portfolio.map(async (item, index) => {
+      const imagePath =
+        item.thumb ||
+        item.thumbnailPath ||
+        (item.imagePaths && item.imagePaths[0]) ||
+        null;
+
+      // 转换图片路径为公开URL
+      let image = '/assets/placeholder.svg';
+      if (imagePath) {
+        try {
+          console.log(
+            `[getArtworksByUserAsync] Converting image path: ${imagePath}`
+          );
+          const imageResult = await getPortfolioImageUrl(imagePath);
+          console.log(
+            `[getArtworksByUserAsync] Image conversion result:`,
+            imageResult
+          );
+          if (
+            imageResult &&
+            imageResult.success &&
+            imageResult.data &&
+            imageResult.data.url
+          ) {
+            image = imageResult.data.url;
+            console.log(
+              `[getArtworksByUserAsync] Successfully converted to: ${image}`
+            );
+          } else {
+            console.warn(
+              `[getArtworksByUserAsync] Invalid image result:`,
+              imageResult
+            );
+          }
+        } catch (error) {
+          console.warn(
+            `[getArtworksByUserAsync] Failed to convert image path ${imagePath}:`,
+            error
+          );
+        }
+      }
+
+      return {
+        id: item.id,
+        title: item.title,
+        image: image,
+        category: item.category,
+      };
+    })
+  );
+
+  return artworks;
 };
 
 /**

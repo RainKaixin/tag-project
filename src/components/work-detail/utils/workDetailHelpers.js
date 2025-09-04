@@ -2,6 +2,7 @@
 
 import { workService } from '../../../services/index.js';
 import { getProfile } from '../../../services/mock/userProfileService.js';
+import { getPortfolioImageUrl } from '../../../services/supabase/portfolio.js';
 import { getArtistById } from '../../artist-profile/utils/artistHelpers.js';
 
 /**
@@ -81,11 +82,15 @@ export const getWorkDataById = async workId => {
       likes: 124, // 暂时使用默认值，后续可以从API获取
       views: 1247, // 暂时使用默认值，后续可以从API获取
       tags: work.tags || [],
+      // 转换图片路径为公开URL
       mainImage:
-        work.thumbnailPath || (work.imagePaths && work.imagePaths[0]) || '',
+        work.mainImageUrl ||
+        work.thumbnailPath ||
+        (work.imagePaths && work.imagePaths[0]) ||
+        '',
       // 添加所有图片数组，用于多图片展示
       // 注意：这里传递的是文件路径，WorkImageGallery 会调用 getPortfolioImageUrl 转换
-      allImages: work.imagePaths || [],
+      allImages: work.allImages || work.imagePaths || [],
       author: {
         id: authorId || 'unknown',
         name:
@@ -322,9 +327,14 @@ export const getImageUrlsToPreload = (workData, comments) => {
     ...(comments?.map(comment => comment.avatar) || []),
   ];
 
-  // 只保留有效的Data URL，移除對字符串的假設
+  // 接受HTTP URL、Data URL和Blob URL
   const validUrls = urls.filter(url => {
-    return typeof url === 'string' && url.startsWith('data:image/');
+    return (
+      typeof url === 'string' &&
+      (url.startsWith('data:image/') ||
+        url.startsWith('http') ||
+        url.startsWith('blob:'))
+    );
   });
 
   console.log(`[WorkDetail] Preloading ${validUrls.length} images`);

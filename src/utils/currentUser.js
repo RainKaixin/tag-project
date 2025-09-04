@@ -31,7 +31,7 @@ async function remove() {
   }
 }
 
-export const getCurrentUserId = () => {
+export const getCurrentUserId = async () => {
   // 同步版本，用于兼容现有代码
   try {
     if (typeof window === 'undefined') return null;
@@ -64,7 +64,66 @@ export const getCurrentUserId = () => {
       }
     }
 
-    // 如果仍然没有值，返回 null（不再设置默认值）
+    // 如果仍然没有值，尝试从Supabase auth session获取
+    if (!stored && typeof window !== 'undefined') {
+      try {
+        // 检查是否有全局的supabase实例
+        if (window.supabase) {
+          try {
+            // 尝试从当前session获取用户ID
+            const {
+              data: { session },
+            } = window.supabase.auth.getSession();
+            if (session?.user?.id) {
+              console.log(
+                '[currentUser] Got user ID from global Supabase session:',
+                session.user.id
+              );
+              stored = session.user.id;
+              // 保存到localStorage
+              window.localStorage.setItem(KEY, stored);
+            }
+          } catch (error) {
+            console.warn(
+              '[currentUser] Failed to get Supabase session:',
+              error
+            );
+          }
+        }
+
+        // 如果没有全局实例，尝试从导入的supabase客户端获取
+        if (!stored) {
+          try {
+            // 动态导入supabase客户端
+            const { supabase } = await import('../services/supabase/client.js');
+            const {
+              data: { session },
+            } = await supabase.auth.getSession();
+            if (session?.user?.id) {
+              console.log(
+                '[currentUser] Got user ID from imported Supabase client:',
+                session.user.id
+              );
+              stored = session.user.id;
+              // 保存到localStorage
+              window.localStorage.setItem(KEY, stored);
+            }
+          } catch (error) {
+            console.warn(
+              '[currentUser] Failed to get Supabase session from imported client:',
+              error
+            );
+          }
+        }
+      } catch (error) {
+        console.warn(
+          '[currentUser] Failed to get global Supabase session:',
+          error
+        );
+      }
+    }
+
+    // 如果仍然没有值，返回 null
     if (!stored) {
       console.log('[currentUser] No user ID found, returning null');
     }
@@ -81,8 +140,8 @@ export const getCurrentArtistId = session => {
   return session?.user?.id ?? null;
 };
 
-export const getCurrentUser = () => {
-  const userId = getCurrentUserId();
+export const getCurrentUser = async () => {
+  const userId = await getCurrentUserId();
 
   // 如果 userId 为空，返回 null（不再返回默认用户）
   if (!userId) {
@@ -148,8 +207,8 @@ export const clearCurrentUserId = () => {
   remove();
 };
 
-export const getCurrentUserAvatar = () => {
-  const user = getCurrentUser();
+export const getCurrentUserAvatar = async () => {
+  const user = await getCurrentUser();
   return user?.avatar || null; // 不再使用默认头像，返回 null
 };
 
@@ -159,4 +218,38 @@ export const getCurrentUserAvatar = () => {
  */
 const getDefaultAvatarUrl = () => {
   return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiByeD0iNjQiIGZpbGw9IiNGM0Y0RjYiLz4KPHN2ZyB4PSIzMiIgeT0iMjQiIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjOEM5Q0E2Ij4KPHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPgo8L3N2Zz4KPC9zdmc+';
+};
+
+// 异步获取当前用户ID，优先从Supabase auth session获取
+export const getCurrentUserIdAsync = async () => {
+  try {
+    // 优先从 Supabase auth session 获取
+    if (typeof window !== 'undefined') {
+      try {
+        // 动态导入supabase客户端
+        const { supabase } = await import('../services/supabase/client.js');
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (session?.user?.id) {
+          console.log(
+            '[currentUser] Got user ID from Supabase session:',
+            session.user.id
+          );
+          // 同时保存到localStorage作为缓存
+          await setCurrentUserId(session.user.id);
+          return session.user.id;
+        }
+      } catch (error) {
+        console.warn('[currentUser] Failed to get Supabase session:', error);
+      }
+    }
+
+    // 回退到同步版本
+    return getCurrentUserId();
+  } catch (error) {
+    console.warn('Failed to get current user ID async:', error);
+    return null;
+  }
 };

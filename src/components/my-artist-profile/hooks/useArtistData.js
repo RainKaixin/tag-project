@@ -8,6 +8,7 @@ import { getCurrentUser } from '../../../utils/currentUser.js';
 import {
   getArtistData,
   getArtworksByUser,
+  getArtworksByUserAsync,
   getCollaborationsData,
 } from '../utils/artistDataHelpers';
 
@@ -91,8 +92,8 @@ const useArtistData = () => {
         const artistData = getArtistData(userWithProfile);
         setArtist(artistData);
 
-        // 获取作品数据
-        const artworksData = getArtworksByUser(currentUser);
+        // 获取作品数据（异步版本，支持图片URL转换）
+        const artworksData = await getArtworksByUserAsync(currentUser);
         setArtworks(artworksData);
 
         // 获取合作项目数据
