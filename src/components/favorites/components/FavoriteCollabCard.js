@@ -25,22 +25,22 @@ const FavoriteCollabCard = ({ favorite, isOwnProfile = false, onRemove }) => {
       try {
         console.log(
           '[FavoriteCollabCard] Loading data for itemId:',
-          favorite.itemId
+          favorite.item_id
         );
 
         // 获取协作数据
-        const collabData = getCollaborationDataById(favorite.itemId);
+        const collabData = getCollaborationDataById(favorite.item_id);
         setCollaboration(collabData);
 
         if (collabData) {
           // 获取图片URL
-          const imgUrl = await getCollaborationImageUrl(favorite.itemId);
+          const imgUrl = await getCollaborationImageUrl(favorite.item_id);
           setImageUrl(imgUrl);
           console.log('[FavoriteCollabCard] Loaded image URL:', imgUrl);
         } else {
           console.warn(
             '[FavoriteCollabCard] No collaboration data found for itemId:',
-            favorite.itemId
+            favorite.item_id
           );
         }
       } catch (error) {
@@ -54,7 +54,7 @@ const FavoriteCollabCard = ({ favorite, isOwnProfile = false, onRemove }) => {
     };
 
     loadCollaborationData();
-  }, [favorite.itemId]);
+  }, [favorite.item_id]);
 
   const handleRemoveClick = e => {
     e.stopPropagation();
@@ -64,7 +64,7 @@ const FavoriteCollabCard = ({ favorite, isOwnProfile = false, onRemove }) => {
   const handleCardClick = () => {
     // 跳转到协作详情页，传递完整的协作数据
     if (collaboration) {
-      navigate(`/tagme/collaboration/${favorite.itemId}`, {
+      navigate(`/tagme/collaboration/${favorite.item_id}`, {
         state: { project: collaboration },
       });
     } else {
@@ -72,7 +72,7 @@ const FavoriteCollabCard = ({ favorite, isOwnProfile = false, onRemove }) => {
       console.warn(
         '[FavoriteCollabCard] No collaboration data available for navigation'
       );
-      navigate(`/tagme/collaboration/${favorite.itemId}`);
+      navigate(`/tagme/collaboration/${favorite.item_id}`);
     }
   };
 

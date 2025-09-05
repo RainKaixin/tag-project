@@ -4,6 +4,7 @@
 export { userService } from './userService/index.js';
 export { workService } from './workService/index.js';
 export { artistService } from './artistService/index.js';
+export { likeService } from './likeService/index.js';
 
 // 导出现有的 portfolio 服务（保持向后兼容）
 export * from './supabase/portfolio.js';

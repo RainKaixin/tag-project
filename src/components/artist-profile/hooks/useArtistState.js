@@ -38,7 +38,7 @@ const useArtistState = () => {
   const [loading, setLoading] = useState(true);
 
   const [isFollowing, setIsFollowing] = useState(false);
-  const [followersCount, setFollowersCount] = useState(156);
+  const [followersCount, setFollowersCount] = useState(0);
   const [expandedCardId, setExpandedCardId] = useState(null);
 
   // 获取来源信息

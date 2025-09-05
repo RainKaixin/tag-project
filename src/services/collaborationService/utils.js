@@ -101,7 +101,7 @@ const storeDataUrlToIndexedDB = async (blobUrl, collaborationId) => {
  */
 export const formatFormDataForAPI = async formData => {
   const currentUserId = getCurrentUserId();
-  const currentUser = getCurrentUser(); // 使用 getCurrentUser() 而不是 MOCK_USERS
+  const currentUser = await getCurrentUser(); // 使用 getCurrentUser() 而不是 MOCK_USERS
 
   // 生成臨時 ID 用於存儲圖片
   const tempId = `temp_${Date.now()}`;

@@ -156,10 +156,9 @@ export const isFollowing = async (followerId, followingId) => {
       .select('id')
       .eq('follower_id', followerId)
       .eq('following_id', followingId)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
-      // PGRST116 = 没有找到记录
+    if (error) {
       return { success: false, error: error.message };
     }
 
@@ -176,16 +175,7 @@ export const getFollowers = async (userId, options = {}) => {
 
     const { data, error } = await supabase
       .from('follows')
-      .select(
-        `
-        follower:users!follows_follower_id_fkey(
-          id,
-          name,
-          avatar_url,
-          role
-        )
-      `
-      )
+      .select('follower_id')
       .eq('following_id', userId)
       .order('created_at', { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
@@ -194,7 +184,10 @@ export const getFollowers = async (userId, options = {}) => {
       return { success: false, error: error.message };
     }
 
-    return { success: true, data: data.map(item => item.follower) };
+    return {
+      success: true,
+      data: data.map(item => ({ id: item.follower_id })),
+    };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -207,16 +200,7 @@ export const getFollowing = async (userId, options = {}) => {
 
     const { data, error } = await supabase
       .from('follows')
-      .select(
-        `
-        following:users!follows_following_id_fkey(
-          id,
-          name,
-          avatar_url,
-          role
-        )
-      `
-      )
+      .select('following_id')
       .eq('follower_id', userId)
       .order('created_at', { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
@@ -225,7 +209,10 @@ export const getFollowing = async (userId, options = {}) => {
       return { success: false, error: error.message };
     }
 
-    return { success: true, data: data.map(item => item.following) };
+    return {
+      success: true,
+      data: data.map(item => ({ id: item.following_id })),
+    };
   } catch (error) {
     return { success: false, error: error.message };
   }

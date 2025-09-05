@@ -1,6 +1,6 @@
 // use-work-detail-actions v1: 作品详情页操作管理Hook
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { useAuth } from '../../../context/AuthContext';
 import {
@@ -10,6 +10,7 @@ import {
 } from '../../../services';
 import { useNavigation } from '../../../utils/navigation';
 import { getArtistById } from '../../artist-profile/utils/artistHelpers';
+import { LoginModal } from '../../ui/LoginModal';
 
 /**
  * 作品详情页操作管理Hook
@@ -20,6 +21,8 @@ import { getArtistById } from '../../artist-profile/utils/artistHelpers';
 const useWorkDetailActions = ({ state, setters }) => {
   const { goBack, navigateToArtist, navigateToWork } = useNavigation();
   const { user: currentUser } = useAuth();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [pendingSaveAction, setPendingSaveAction] = useState(null);
 
   // 处理返回按钮点击
   const handleBackClick = useCallback(() => {
@@ -34,7 +37,7 @@ const useWorkDetailActions = ({ state, setters }) => {
   // 处理收藏按钮点击
   const handleSaveClick = useCallback(
     async (itemType, itemId, shouldFavorite) => {
-      console.log('[WorkDetail] Save toggle payload:', {
+      console.log('[Favorites] Save toggle payload:', {
         itemType,
         itemId,
         shouldFavorite,
@@ -46,20 +49,59 @@ const useWorkDetailActions = ({ state, setters }) => {
           itemId,
           shouldFavorite
         );
-        console.log('[WorkDetail] Save toggle result:', result);
+        console.log('[Favorites] Save toggle result:', result);
 
-        // 更新本地状态
-        setters.toggleSave();
+        // 檢查是否需要認證
+        if (result.needAuth) {
+          console.log(
+            '[Favorites] Authentication required, showing login modal'
+          );
+          // 保存待執行的操作
+          setPendingSaveAction({ itemType, itemId, shouldFavorite });
+          // 顯示登錄 Modal
+          setIsLoginModalOpen(true);
+          return;
+        }
+
+        if (result.success) {
+          // 更新本地状态
+          setters.toggleSave();
+          console.log('[Favorites] Save toggle successful');
+        } else {
+          console.error('[Favorites] Save toggle failed:', result.error);
+          // 可以在这里添加Toast错误提示
+        }
 
         // 触发全局收藏状态刷新（如果有全局状态管理）
         // 这里可以添加事件触发或其他状态更新机制
       } catch (error) {
-        console.error('Failed to toggle favorite:', error);
+        console.error('[Favorites] Failed to toggle favorite:', error);
         // 可以在这里添加Toast错误提示
       }
     },
     [setters]
   );
+
+  // 處理登錄成功後的重試
+  const handleLoginSuccess = useCallback(async () => {
+    if (pendingSaveAction) {
+      console.log('[Favorites] Retrying save action after login');
+      // 重試保存操作
+      await handleSaveClick(
+        pendingSaveAction.itemType,
+        pendingSaveAction.itemId,
+        pendingSaveAction.shouldFavorite
+      );
+      // 清除待執行的操作
+      setPendingSaveAction(null);
+    }
+  }, [pendingSaveAction, handleSaveClick]);
+
+  // 處理登錄 Modal 關閉
+  const handleLoginModalClose = useCallback(() => {
+    setIsLoginModalOpen(false);
+    setPendingSaveAction(null);
+  }, []);
 
   // 处理评论提交
   const handleCommentSubmit = useCallback(async () => {
@@ -358,6 +400,18 @@ const useWorkDetailActions = ({ state, setters }) => {
     handleStartReply,
     handleSubmitReply,
     handleSetReplyDraft,
+
+    // 登錄 Modal 相關
+    isLoginModalOpen,
+    handleLoginModalClose,
+    handleLoginSuccess,
+    LoginModalComponent: () => (
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={handleLoginModalClose}
+        onLoginSuccess={handleLoginSuccess}
+      />
+    ),
   };
 };
 

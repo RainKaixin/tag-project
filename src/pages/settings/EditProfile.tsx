@@ -112,16 +112,41 @@ const EditProfile = () => {
       console.log('[EditProfile] Portfolio load result:', result);
 
       if (result.success) {
-        // 转换作品数据格式以匹配 PortfolioItem 类型
-        const portfolioData = result.data.map(item => ({
-          id: item.id,
-          title: item.title,
-          description: item.description || '', // 添加 description 字段
-          image:
-            item.thumbnailPath || (item.imagePaths && item.imagePaths[0]) || '',
-          isPublic: item.isPublic, // Mock API 使用 isPublic，不是 is_public
-          tags: item.tags || [], // 添加 tags 字段用于软件信息
-        }));
+        // 转换作品数据格式以匹配 PortfolioItem 类型，并处理图片URL
+        const portfolioData = await Promise.all(
+          result.data.map(async item => {
+            let imageUrl = '';
+            const imagePath =
+              item.thumbnailPath || (item.imagePaths && item.imagePaths[0]);
+
+            if (imagePath) {
+              try {
+                const { getPortfolioImageUrl } = await import(
+                  '../../services/supabase/portfolio'
+                );
+                const imageResult = await getPortfolioImageUrl(imagePath);
+                if (imageResult.success && imageResult.data) {
+                  imageUrl = imageResult.data.url;
+                }
+              } catch (error) {
+                console.warn(
+                  '[EditProfile] Failed to get image URL for:',
+                  imagePath,
+                  error
+                );
+              }
+            }
+
+            return {
+              id: item.id,
+              title: item.title,
+              description: item.description || '', // 添加 description 字段
+              image: imageUrl || '/assets/placeholder.svg',
+              isPublic: item.isPublic, // Mock API 使用 isPublic，不是 is_public
+              tags: item.tags || [], // 添加 tags 字段用于软件信息
+            };
+          })
+        );
         console.log('[EditProfile] Setting portfolio items:', portfolioData);
         setPortfolioItems(portfolioData);
       } else {

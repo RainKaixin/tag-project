@@ -161,6 +161,16 @@ const CollaborationsSection = ({
   const loadDrafts = async () => {
     try {
       setLoading(true);
+
+      // 檢查是否為本人主頁，只有本人才能查看草稿
+      if (!currentUserId || !viewedUserId || currentUserId !== viewedUserId) {
+        console.log(
+          '[CollaborationsSection] Not owner page, skipping drafts load'
+        );
+        setDraftPosts([]);
+        return;
+      }
+
       const result = await draftService.getDrafts({ type: 'collaboration' });
       if (result.success) {
         // 轉換草稿數據格式以匹配卡片組件
@@ -192,7 +202,7 @@ const CollaborationsSection = ({
   // 初始載入草稿
   useEffect(() => {
     loadDrafts();
-  }, []);
+  }, [currentUserId, viewedUserId]);
 
   // 監聽草稿保存事件，自動刷新列表
   useEffect(() => {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-import { getFollowingList } from '../../../services/mock/followService';
+import { getFollowing } from '../../../services/supabase/users';
 
 /**
  * Following 计数管理 Hook
@@ -19,13 +19,13 @@ const useFollowingCount = userId => {
 
     try {
       setIsLoading(true);
-      const result = await getFollowingList(userId);
+      const result = await getFollowing(userId);
 
       if (result.success) {
-        setFollowingCount(result.data.followingCount);
+        setFollowingCount(result.data.length);
         console.log(
           '[FollowingCount] Refreshed following count:',
-          result.data.followingCount
+          result.data.length
         );
       } else {
         console.error(
@@ -46,7 +46,7 @@ const useFollowingCount = userId => {
   // 监听 follow:changed 事件
   useEffect(() => {
     const handleFollowChanged = event => {
-      const { followerId, operation } = event.detail;
+      const { followerId } = event.detail;
 
       // 如果是当前用户的操作，刷新 Following 计数
       if (followerId === userId) {

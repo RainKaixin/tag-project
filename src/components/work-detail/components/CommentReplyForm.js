@@ -1,6 +1,6 @@
 // comment-reply-form v1: 评论回复输入组件
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { getCurrentUserAvatar } from '../../../utils/currentUser';
 
@@ -23,6 +23,26 @@ const CommentReplyForm = ({
   onCancel,
   className = '',
 }) => {
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [isLoadingAvatar, setIsLoadingAvatar] = useState(true);
+
+  useEffect(() => {
+    const loadAvatar = async () => {
+      try {
+        setIsLoadingAvatar(true);
+        const avatar = await getCurrentUserAvatar();
+        setAvatarUrl(avatar);
+      } catch (error) {
+        console.warn('[CommentReplyForm] Failed to load avatar:', error);
+        setAvatarUrl(null);
+      } finally {
+        setIsLoadingAvatar(false);
+      }
+    };
+
+    loadAvatar();
+  }, []);
+
   const handleKeyDown = e => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -34,7 +54,7 @@ const CommentReplyForm = ({
     <div className={`mt-2 pl-10 ${className}`}>
       <div className='flex items-start space-x-3'>
         <img
-          src={getCurrentUserAvatar()}
+          src={avatarUrl || '/default-avatar.png'}
           alt='Your avatar'
           className='w-8 h-8 rounded-full flex-shrink-0'
         />

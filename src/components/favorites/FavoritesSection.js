@@ -31,7 +31,7 @@ const FavoritesSection = ({ isOwnProfile = false, viewedUserId = null }) => {
 
   // 渲染收藏项
   const renderFavoriteItem = item => {
-    if (item.itemType === 'work') {
+    if (item.item_type === 'work') {
       return (
         <FavoriteWorkCard
           key={item.id}
@@ -45,7 +45,7 @@ const FavoritesSection = ({ isOwnProfile = false, viewedUserId = null }) => {
           }}
         />
       );
-    } else if (item.itemType === 'collaboration') {
+    } else if (item.item_type === 'collaboration') {
       return (
         <FavoriteCollabCard
           key={item.id}

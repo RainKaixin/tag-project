@@ -332,12 +332,12 @@ export const recordArtworkView = async (artworkId, options = {}) => {
       return { success: false, error: error.message };
     }
 
-    // 返回结果
-    if (data && data.length > 0) {
-      const result = data[0];
+    // 返回结果 - 處理數組或單個對象
+    if (data) {
+      const result = Array.isArray(data) ? data[0] : data;
       return {
         success: result.success,
-        viewCount: result.view_count,
+        viewCount: result.view_count || result.count,
         error: result.error_message,
       };
     }
@@ -361,7 +361,10 @@ export const getArtworkViewCount = async artworkId => {
       return { success: false, error: error.message };
     }
 
-    return { success: true, viewCount: data || 0 };
+    // 處理數據結構：data可能是數字或對象
+    const viewCount =
+      typeof data === 'object' && data !== null ? data.count : data;
+    return { success: true, viewCount: viewCount || 0 };
   } catch (error) {
     console.error('Error getting artwork view count:', error);
     return { success: false, error: error.message };

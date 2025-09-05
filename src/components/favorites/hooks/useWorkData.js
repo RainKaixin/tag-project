@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 
-import { getAllPublicPortfolios } from '../../../services/supabase/portfolio';
+import {
+  getAllPublicPortfolios,
+  getPortfolioImageUrl,
+} from '../../../services/supabase/portfolio';
 
 /**
  * 获取作品数据的Hook
@@ -23,21 +26,50 @@ export const useWorkData = () => {
         if (result.success) {
           // 将作品数据转换为以ID为键的对象
           const worksById = {};
-          result.data.forEach(item => {
+
+          // 并行处理所有图片URL转换
+          const imagePromises = result.data.map(async item => {
             if (item && item.id) {
-              worksById[item.id] = {
+              let imageUrl = '';
+
+              // 优先使用缩略图，如果没有则使用第一张图片
+              const imagePath =
+                item.thumbnailPath || (item.imagePaths && item.imagePaths[0]);
+
+              if (imagePath) {
+                try {
+                  const imageResult = await getPortfolioImageUrl(imagePath);
+                  if (imageResult.success) {
+                    imageUrl = imageResult.data;
+                  }
+                } catch (error) {
+                  console.warn(
+                    '[useWorkData] Failed to get image URL for:',
+                    imagePath,
+                    error
+                  );
+                }
+              }
+
+              return {
                 id: item.id,
                 title: item.title || 'Untitled',
                 artist: item.profiles?.full_name || 'Unknown Artist',
-                image:
-                  item.thumbnailPath ||
-                  (item.imagePaths && item.imagePaths[0]) ||
-                  '',
+                image: imageUrl,
                 category: item.category || 'design',
                 tags: item.tags || [],
                 description: item.description || '',
                 createdAt: item.createdAt || new Date().toISOString(),
               };
+            }
+            return null;
+          });
+
+          const processedItems = await Promise.all(imagePromises);
+
+          processedItems.forEach(item => {
+            if (item) {
+              worksById[item.id] = item;
             }
           });
 

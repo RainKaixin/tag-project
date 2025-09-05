@@ -141,17 +141,46 @@ export const getCurrentArtistId = session => {
 };
 
 export const getCurrentUser = async () => {
-  const userId = await getCurrentUserId();
+  // 优先级1: 从 AuthContext 获取用户（同步）
+  if (typeof window !== 'undefined' && window.__authContextUser) {
+    console.log('[getCurrentUser] Using AuthContext user');
+    return window.__authContextUser;
+  }
 
-  // 如果 userId 为空，返回 null（不再返回默认用户）
+  // 优先级2: 从 Supabase 获取当前用户
+  try {
+    const { supabase } = await import('../services/supabase/client.js');
+    const {
+      data: { user: supabaseUser },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error) {
+      console.warn('[getCurrentUser] Supabase auth error:', error.message);
+    } else if (supabaseUser) {
+      console.log('[getCurrentUser] Using Supabase user');
+      return {
+        id: supabaseUser.id,
+        email: supabaseUser.email,
+        name:
+          supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0],
+        avatar: supabaseUser.user_metadata?.avatar_url,
+        role: 'artist',
+        isVerified: supabaseUser.email_confirmed_at ? true : false,
+      };
+    }
+  } catch (error) {
+    console.warn('[getCurrentUser] Failed to get Supabase user:', error);
+  }
+
+  // 优先级3: 回退到 localStorage（兼容性）
+  const userId = await getCurrentUserId();
   if (!userId) {
     console.log('[getCurrentUser] No userId found, returning null');
     return null;
   }
 
   const user = getUserInfo(userId);
-
-  // 如果 user 为空，返回 null（不再返回默认用户）
   if (!user) {
     console.log(
       `[getCurrentUser] No user info found for userId: ${userId}, returning null`
@@ -208,8 +237,30 @@ export const clearCurrentUserId = () => {
 };
 
 export const getCurrentUserAvatar = async () => {
-  const user = await getCurrentUser();
-  return user?.avatar || null; // 不再使用默认头像，返回 null
+  try {
+    // 優先使用統一的頭像服務
+    const { getUnifiedAvatar } = await import('../services/avatarService.js');
+    const userId = await getCurrentUserId();
+
+    if (userId) {
+      const avatarUrl = await getUnifiedAvatar(userId);
+      if (avatarUrl) {
+        console.log(
+          `[getCurrentUserAvatar] Got avatar from unified service: ${userId}`
+        );
+        return avatarUrl;
+      }
+    }
+
+    // 回退到原有邏輯
+    const user = await getCurrentUser();
+    return user?.avatar || null;
+  } catch (error) {
+    console.warn('[getCurrentUserAvatar] Error getting unified avatar:', error);
+    // 回退到原有邏輯
+    const user = await getCurrentUser();
+    return user?.avatar || null;
+  }
 };
 
 /**

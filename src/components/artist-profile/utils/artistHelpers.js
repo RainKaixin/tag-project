@@ -2,6 +2,10 @@
 
 import { getUnifiedAvatar } from '../../../services/avatarService.js';
 import { getProfile } from '../../../services/supabase/userProfileService.js';
+import {
+  getFollowers,
+  getFollowing,
+} from '../../../services/supabase/users.js';
 import { getCachedAvatar } from '../../../utils/avatarCache.js';
 import avatarStorage from '../../../utils/avatarStorage.js';
 import { MOCK_USERS } from '../../../utils/mockUsers.js';
@@ -48,7 +52,11 @@ export const invalidate = keys => {
  * @param {Object} mockUser - MOCK_USERS 中的默认数据（可选）
  * @returns {Object} UI 友好的艺术家数据
  */
-export const selectArtistView = (profile, mockUser = null) => {
+export const selectArtistView = (
+  profile,
+  mockUser = null,
+  followStats = null
+) => {
   // 防御性编程：确保 profile 存在
   if (!profile) {
     console.warn('[selectArtistView] No profile provided');
@@ -92,8 +100,8 @@ export const selectArtistView = (profile, mockUser = null) => {
 
     // 统计数据 - 使用实时数据
     stats: {
-      following: 0, // 将在组件中通过useFollowCount更新
-      followers: 0, // 将在组件中通过useFollowCount更新
+      following: followStats?.following || 0,
+      followers: followStats?.followers || 0,
       collaborations: 12,
     },
 
@@ -205,8 +213,35 @@ export const getArtistById = async userId => {
         }
       : null;
 
+    // 获取关注统计数据
+    const followStats = { following: 0, followers: 0 };
+    try {
+      const [followersResult, followingResult] = await Promise.all([
+        getFollowers(userId),
+        getFollowing(userId),
+      ]);
+
+      if (followersResult.success) {
+        followStats.followers = followersResult.data.length;
+      }
+      if (followingResult.success) {
+        followStats.following = followingResult.data.length;
+      }
+
+      console.log(`[getArtistById] Follow stats for ${userId}:`, followStats);
+    } catch (error) {
+      console.warn(
+        `[getArtistById] Failed to get follow stats for ${userId}:`,
+        error
+      );
+    }
+
     // 使用选择器转换数据
-    const artistView = selectArtistView(profileWithAvatar, mockUser);
+    const artistView = selectArtistView(
+      profileWithAvatar,
+      mockUser,
+      followStats
+    );
 
     if (!artistView) {
       console.warn(
@@ -263,7 +298,7 @@ export const getArtistData = async userOrId => {
       ],
       stats: {
         following: 28,
-        followers: 156,
+        followers: 0,
         collaborations: 12,
       },
       socialLinks: {

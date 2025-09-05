@@ -36,3 +36,5 @@ COMMENT ON COLUMN verification_codes.expires_at IS '验证码过期时间';
 COMMENT ON COLUMN verification_codes.used IS '验证码是否已使用';
 COMMENT ON COLUMN verification_codes.used_at IS '验证码使用时间';
 
+
+

@@ -4,14 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 
 import { useAuth } from '../../../context/AuthContext';
 import { notificationService } from '../../../services';
-import {
-  toggleFollow as mockToggleFollow,
-  checkFollowStatus as mockCheckStatus,
-  getFollowersCount as mockGetFollowersCount,
-  getFollowingList as mockGetFollowingList,
-  debugFollowStats as mockDebugStats,
-} from '../../../services/mock/followService';
 import { getProfile } from '../../../services/mock/userProfileService';
+import {
+  followUser,
+  unfollowUser,
+  isFollowing as checkIsFollowing,
+  getFollowers,
+} from '../../../services/supabase/users';
 
 /**
  * 关注管理Hook
@@ -19,12 +18,12 @@ import { getProfile } from '../../../services/mock/userProfileService';
  * @param {number} initialFollowersCount - 初始关注者数量
  * @returns {Object} 关注状态和操作函数
  */
-const useFollowCount = (artistId, initialFollowersCount = 0) => {
+const useFollowCount = artistId => {
   const { user: currentUser } = useAuth();
 
   // 关注状态
-  const [followersCount, setFollowersCount] = useState(initialFollowersCount);
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [followersCount, setFollowersCount] = useState(0); // 默认为 0，不使用硬编码
+  const [isFollowingState, setIsFollowingState] = useState(null);
   const [isToggling, setIsToggling] = useState(false);
 
   // 获取当前用户信息
@@ -42,6 +41,14 @@ const useFollowCount = (artistId, initialFollowersCount = 0) => {
       return;
     }
 
+    // 如果状态还未加载完成，等待加载
+    if (isFollowingState === null) {
+      console.log(
+        '[FollowCount] Follow status not loaded yet, skipping toggle'
+      );
+      return;
+    }
+
     try {
       setIsToggling(true);
 
@@ -49,25 +56,53 @@ const useFollowCount = (artistId, initialFollowersCount = 0) => {
         '[FollowCount] Toggling follow for artist:',
         artistId,
         'User:',
-        currentUser.id
+        currentUser.id,
+        'Current state:',
+        isFollowingState
       );
 
-      const result = await mockToggleFollow(currentUser.id, artistId);
+      // 使用已加载的状态，避免重复查询
+      const currentlyFollowing = isFollowingState;
+      let result;
+
+      if (currentlyFollowing) {
+        // 当前已关注，执行取消关注
+        result = await unfollowUser(currentUser.id, artistId);
+      } else {
+        // 当前未关注，执行关注
+        result = await followUser(currentUser.id, artistId);
+      }
 
       if (result.success) {
+        const newFollowingState = !currentlyFollowing;
+
         // 更新本地状态
-        setFollowersCount(result.data.followersCount);
-        setIsFollowing(result.data.isFollowing);
+        setIsFollowingState(newFollowingState);
+
+        // 获取最新的关注者数量
+        const followersResult = await getFollowers(artistId);
+        if (followersResult.success) {
+          setFollowersCount(followersResult.data.length);
+        }
 
         console.log(
           '[FollowCount] Follow toggled successfully:',
-          result.data.isFollowing ? 'Following' : 'Unfollowing',
-          'Followers count:',
-          result.data.followersCount
+          newFollowingState ? 'Following' : 'Unfollowing'
         );
 
+        // 触发 follow:changed 事件，通知其他组件更新
+        const followChangedEvent = new CustomEvent('follow:changed', {
+          detail: {
+            followerId: currentUser.id,
+            artistId: artistId,
+            isFollowing: newFollowingState,
+            operation: newFollowingState ? 'follow' : 'unfollow',
+          },
+        });
+        window.dispatchEvent(followChangedEvent);
+
         // 如果开始关注，创建关注通知
-        if (result.data.isFollowing) {
+        if (newFollowingState) {
           try {
             // 获取当前用户的资料信息，使用自定义名字
             const profileResult = await getProfile(currentUser.id);
@@ -96,13 +131,13 @@ const useFollowCount = (artistId, initialFollowersCount = 0) => {
             detail: {
               followerId: currentUser.id,
               artistId,
-              isFollowing: result.data.isFollowing,
+              isFollowing: newFollowingState,
+              followersCount: followersResult.success
+                ? followersResult.data.length
+                : followersCount,
             },
           })
         );
-
-        // 调试：打印详细的关注统计
-        mockDebugStats(artistId);
       } else {
         console.error('[FollowCount] Failed to toggle follow:', result.error);
       }
@@ -118,6 +153,7 @@ const useFollowCount = (artistId, initialFollowersCount = 0) => {
     currentUser?.name,
     currentUser?.username,
     isToggling,
+    isFollowingState,
   ]);
 
   // 刷新关注状态
@@ -125,23 +161,34 @@ const useFollowCount = (artistId, initialFollowersCount = 0) => {
     if (!artistId || !isLoggedIn) return;
 
     try {
-      const result = await mockCheckStatus(currentUser.id, artistId);
-
-      if (result.success) {
-        setFollowersCount(result.data.followersCount);
-        setIsFollowing(result.data.isFollowing);
-        console.log(
-          '[FollowCount] Refreshed follow status:',
-          result.data.isFollowing ? 'Following' : 'Not following',
-          'Followers count:',
-          result.data.followersCount
-        );
-      } else {
+      // 检查关注状态
+      const followResult = await checkIsFollowing(currentUser.id, artistId);
+      if (!followResult.success) {
         console.error(
-          '[FollowCount] Failed to refresh follow status:',
-          result.error
+          '[FollowCount] Failed to check follow status:',
+          followResult.error
         );
+        return;
       }
+
+      // 获取关注者数量
+      const followersResult = await getFollowers(artistId);
+      if (!followersResult.success) {
+        console.error(
+          '[FollowCount] Failed to get followers count:',
+          followersResult.error
+        );
+        return;
+      }
+
+      setFollowersCount(followersResult.data.length);
+      setIsFollowingState(followResult.isFollowing);
+      console.log(
+        '[FollowCount] Refreshed follow status:',
+        followResult.isFollowing ? 'Following' : 'Not following',
+        'Followers count:',
+        followersResult.data.length
+      );
     } catch (error) {
       console.error('[FollowCount] Error refreshing follow status:', error);
     }
@@ -152,13 +199,13 @@ const useFollowCount = (artistId, initialFollowersCount = 0) => {
     if (!artistId) return;
 
     try {
-      const result = await mockGetFollowersCount(artistId);
+      const result = await getFollowers(artistId);
 
       if (result.success) {
-        setFollowersCount(result.data.followersCount);
+        setFollowersCount(result.data.length);
         console.log(
           '[FollowCount] Refreshed followers count:',
-          result.data.followersCount
+          result.data.length
         );
       } else {
         console.error(
@@ -184,7 +231,7 @@ const useFollowCount = (artistId, initialFollowersCount = 0) => {
       if (changedArtistId === artistId) {
         // 如果是当前用户的操作，更新关注状态
         if (followerId === currentUser?.id) {
-          setIsFollowing(newIsFollowing);
+          setIsFollowingState(newIsFollowing);
         }
 
         // 刷新关注者数量
@@ -208,13 +255,14 @@ const useFollowCount = (artistId, initialFollowersCount = 0) => {
 
   // 当artistId或用户变化时重置状态
   useEffect(() => {
-    setIsFollowing(false);
+    setIsFollowingState(null);
     setIsToggling(false);
+    setFollowersCount(0);
   }, [artistId, currentUser?.id]);
 
   return {
     followersCount,
-    isFollowing,
+    isFollowing: isFollowingState,
     isToggling,
     toggleFollow,
     refreshFollowStatus,

@@ -1,5 +1,7 @@
 // comment-input v1: 评论输入组件
 
+import { useState, useEffect } from 'react';
+
 import { getCurrentUserAvatar } from '../../../utils/currentUser';
 
 /**
@@ -19,10 +21,30 @@ const CommentInput = ({
   onCancelReply,
   className = '',
 }) => {
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [isLoadingAvatar, setIsLoadingAvatar] = useState(true);
+
+  useEffect(() => {
+    const loadAvatar = async () => {
+      try {
+        setIsLoadingAvatar(true);
+        const avatar = await getCurrentUserAvatar();
+        setAvatarUrl(avatar);
+      } catch (error) {
+        console.warn('[CommentInput] Failed to load avatar:', error);
+        setAvatarUrl(null);
+      } finally {
+        setIsLoadingAvatar(false);
+      }
+    };
+
+    loadAvatar();
+  }, []);
+
   return (
     <div className={`flex items-start space-x-3 mb-6 ${className}`}>
       <img
-        src={getCurrentUserAvatar()}
+        src={avatarUrl || '/default-avatar.png'}
         alt='Your avatar'
         className='w-10 h-10 rounded-full'
       />

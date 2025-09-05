@@ -47,10 +47,12 @@ const useViewCount = (artworkId, initialViewCount = 0) => {
         : await mockGetViewCount(artworkId);
 
       if (result.success) {
-        setViewCount(result.viewCount);
+        // 處理不同的數據結構：Supabase返回result.count，Mock返回result.viewCount
+        const viewCount = result.count || result.viewCount || 0;
+        setViewCount(viewCount);
         console.log(
           '[ViewCount] Refreshed view count:',
-          result.viewCount,
+          viewCount,
           `(Mode: ${isSupabaseConnected ? 'Supabase' : 'Mock'})`
         );
       } else {

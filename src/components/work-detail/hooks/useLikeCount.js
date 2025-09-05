@@ -4,12 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 import { useAuth } from '../../../context/AuthContext';
 import { notificationService } from '../../../services';
-import {
-  toggleArtworkLike as mockToggleLike,
-  checkUserLikeStatus as mockCheckStatus,
-  getArtworkLikeCount as mockGetLikeCount,
-  debugLikeStats as mockDebugStats,
-} from '../../../services/mock/likeService';
+import { likeService } from '../../../services/likeService/index.js';
 import { getProfile } from '../../../services/mock/userProfileService';
 
 /**
@@ -46,7 +41,10 @@ const useLikeCount = (artworkId, initialLikeCount = 0, workData = null) => {
         currentUser.id
       );
 
-      const result = await mockToggleLike(artworkId, currentUser.id);
+      const result = await likeService.toggleArtworkLike(
+        artworkId,
+        currentUser.id
+      );
 
       if (result.success) {
         // 更新本地状态
@@ -86,8 +84,10 @@ const useLikeCount = (artworkId, initialLikeCount = 0, workData = null) => {
           }
         }
 
-        // 调试：打印详细的喜欢统计
-        mockDebugStats(artworkId);
+        // 調試：打印詳細的點讚統計
+        console.log(
+          `[LikeCount] Debug: Artwork ${artworkId} total likes: ${result.data.likes}`
+        );
       } else {
         console.error('[LikeCount] Failed to toggle like:', result.error);
       }
@@ -112,7 +112,10 @@ const useLikeCount = (artworkId, initialLikeCount = 0, workData = null) => {
     if (!artworkId || !isLoggedIn) return;
 
     try {
-      const result = await mockCheckStatus(artworkId, currentUser.id);
+      const result = await likeService.checkUserLikeStatus(
+        artworkId,
+        currentUser.id
+      );
 
       if (result.success) {
         setLikeCount(result.data.likes);
@@ -145,7 +148,7 @@ const useLikeCount = (artworkId, initialLikeCount = 0, workData = null) => {
     if (!artworkId) return;
 
     try {
-      const result = await mockGetLikeCount(artworkId);
+      const result = await likeService.getArtworkLikeCount(artworkId);
 
       if (result.success) {
         setLikeCount(result.data.likes);

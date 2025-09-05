@@ -15,7 +15,7 @@ const FavoriteWorkCard = ({ favorite, isOwnProfile = false, onRemove }) => {
   const { getWorkById, loading: worksLoading } = useWorkData();
 
   // 获取作品数据
-  const workData = getWorkById(favorite.itemId);
+  const workData = getWorkById(favorite.item_id);
 
   // 处理图片加载错误
   const handleImageError = e => {
@@ -32,9 +32,11 @@ const FavoriteWorkCard = ({ favorite, isOwnProfile = false, onRemove }) => {
   return (
     <div className='relative aspect-[4/3] bg-tag-blue rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden'>
       {/* 作品图片链接 */}
-      <Link to={`/work/${favorite.itemId}`} className='block w-full h-full'>
+      <Link to={`/work/${favorite.item_id}`} className='block w-full h-full'>
         <img
-          src={workData?.image || '/assets/placeholder.svg'}
+          src={
+            workData?.image?.url || workData?.image || '/assets/placeholder.svg'
+          }
           alt={workData?.title || 'Work'}
           className='w-full h-full object-cover'
           onError={handleImageError}

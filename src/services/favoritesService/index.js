@@ -4,7 +4,7 @@ import { getCurrentUser } from '../../utils/currentUser';
 
 // 导入适配器实现
 import { ITEM_TYPES, isValidItemType } from './constants';
-import localStorageAdapter from './localStorage';
+import supabaseAdapter from './supabase';
 
 /**
  * 收藏服务适配器接口
@@ -12,7 +12,8 @@ import localStorageAdapter from './localStorage';
  */
 class FavoritesService {
   constructor() {
-    this.adapter = localStorageAdapter;
+    // 使用 Supabase 适配器
+    this.adapter = supabaseAdapter;
   }
 
   /**
@@ -25,7 +26,7 @@ class FavoritesService {
    * @returns {Promise<Object>} 收藏列表和分页信息
    */
   async getFavorites(params = {}) {
-    const currentUser = getCurrentUser();
+    const currentUser = await getCurrentUser();
     const userId = params.userId || currentUser?.id;
 
     if (!userId) {
@@ -47,22 +48,40 @@ class FavoritesService {
    * @returns {Promise<Object>} 收藏结果
    */
   async addFavorite(itemType, itemId) {
-    const currentUser = getCurrentUser();
+    console.log('[Favorites] addFavorite called:', { itemType, itemId });
+
+    const currentUser = await getCurrentUser();
+    console.log(
+      '[Favorites] Current user:',
+      currentUser ? 'authenticated' : 'not authenticated'
+    );
 
     if (!currentUser?.id) {
-      throw new Error('User not authenticated');
+      console.log('[Favorites] User not authenticated, returning needAuth');
+      return {
+        success: false,
+        needAuth: true,
+        error: 'User not authenticated',
+      };
     }
 
     if (!itemType || !itemId) {
-      throw new Error('Item type and ID are required');
+      console.log('[Favorites] Missing required parameters');
+      return {
+        success: false,
+        error: 'Item type and ID are required',
+      };
     }
 
     if (!isValidItemType(itemType)) {
-      throw new Error(
-        `Invalid item type. Must be "${ITEM_TYPES.WORK}" or "${ITEM_TYPES.COLLABORATION}"`
-      );
+      console.log('[Favorites] Invalid item type:', itemType);
+      return {
+        success: false,
+        error: `Invalid item type. Must be "${ITEM_TYPES.WORK}" or "${ITEM_TYPES.COLLABORATION}"`,
+      };
     }
 
+    console.log('[Favorites] Calling adapter.addFavorite');
     return this.adapter.addFavorite({
       userId: currentUser.id,
       itemType,
@@ -77,16 +96,32 @@ class FavoritesService {
    * @returns {Promise<Object>} 取消收藏结果
    */
   async removeFavorite(itemType, itemId) {
-    const currentUser = getCurrentUser();
+    console.log('[Favorites] removeFavorite called:', { itemType, itemId });
+
+    const currentUser = await getCurrentUser();
+    console.log(
+      '[Favorites] Current user:',
+      currentUser ? 'authenticated' : 'not authenticated'
+    );
 
     if (!currentUser?.id) {
-      throw new Error('User not authenticated');
+      console.log('[Favorites] User not authenticated, returning needAuth');
+      return {
+        success: false,
+        needAuth: true,
+        error: 'User not authenticated',
+      };
     }
 
     if (!itemType || !itemId) {
-      throw new Error('Item type and ID are required');
+      console.log('[Favorites] Missing required parameters');
+      return {
+        success: false,
+        error: 'Item type and ID are required',
+      };
     }
 
+    console.log('[Favorites] Calling adapter.removeFavorite');
     return this.adapter.removeFavorite({
       userId: currentUser.id,
       itemType,
@@ -100,7 +135,7 @@ class FavoritesService {
    * @returns {Promise<Object>} 移除结果
    */
   async removeFavoriteById(favoriteId) {
-    const currentUser = getCurrentUser();
+    const currentUser = await getCurrentUser();
 
     if (!currentUser?.id) {
       throw new Error('User not authenticated');
@@ -125,8 +160,8 @@ class FavoritesService {
 
     return this.adapter.removeFavorite({
       userId: currentUser.id,
-      itemType: favorite.itemType,
-      itemId: favorite.itemId,
+      itemType: favorite.item_type,
+      itemId: favorite.item_id,
     });
   }
 
@@ -138,6 +173,12 @@ class FavoritesService {
    * @returns {Promise<Object>} 操作结果
    */
   async toggleFavorite(itemType, itemId, shouldFavorite) {
+    console.log('[Favorites] toggleFavorite called:', {
+      itemType,
+      itemId,
+      shouldFavorite,
+    });
+
     if (shouldFavorite) {
       return this.addFavorite(itemType, itemId);
     } else {
@@ -152,7 +193,7 @@ class FavoritesService {
    * @returns {Promise<Object>} 收藏状态信息
    */
   async checkFavoriteStatus(itemType, itemId) {
-    const currentUser = getCurrentUser();
+    const currentUser = await getCurrentUser();
 
     if (!currentUser?.id) {
       return {
@@ -195,12 +236,12 @@ class FavoritesService {
    * @returns {Promise<Object>} 批量收藏状态
    */
   async batchCheckFavoriteStatus(items) {
-    const currentUser = getCurrentUser();
+    const currentUser = await getCurrentUser();
 
     if (!currentUser?.id) {
       // 用户未登录，返回所有项目都未收藏
       return items.reduce((acc, item) => {
-        acc[`${item.itemType}_${item.itemId}`] = false;
+        acc[`${item.item_type}_${item.item_id}`] = false;
         return acc;
       }, {});
     }

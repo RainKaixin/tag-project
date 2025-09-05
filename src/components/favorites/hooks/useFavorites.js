@@ -67,7 +67,7 @@ export const useFavorites = (viewedUserId = null) => {
           console.log(
             '[useFavorites] 收藏类型统计:',
             newFavorites.reduce((acc, fav) => {
-              acc[fav.itemType] = (acc[fav.itemType] || 0) + 1;
+              acc[fav.item_type] = (acc[fav.item_type] || 0) + 1;
               return acc;
             }, {})
           );

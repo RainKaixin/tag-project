@@ -1,5 +1,7 @@
 import React, { useState, useCallback } from 'react';
 
+import { useAuth } from '../../context/AuthContext';
+
 import styles from './SaveButton.module.css';
 
 /**
@@ -26,15 +28,20 @@ export function SaveButton(props) {
     size = 'md',
   } = props;
 
+  const { user: currentUser } = useAuth();
   const [isOptimistic, setIsOptimistic] = useState(false);
   const [optimisticState, setOptimisticState] = useState(null);
+
+  // 檢查認證狀態
+  const isAuthenticated = !!currentUser;
+  const isDisabled = disabled || !isAuthenticated;
 
   // 当前显示的状态（乐观更新优先）
   const currentState = isOptimistic ? optimisticState : isFavorited;
 
   // 处理点击事件
   const handleClick = useCallback(async () => {
-    if (disabled) return;
+    if (isDisabled) return;
 
     // 乐观更新：立即切换状态
     setIsOptimistic(true);
@@ -51,9 +58,9 @@ export function SaveButton(props) {
       // 失败：回滚到原始状态
       setIsOptimistic(false);
       setOptimisticState(null);
-      console.error('Save toggle failed:', error);
+      console.error('[Favorites] Save toggle failed:', error);
     }
-  }, [disabled, currentState, onToggle, itemType, itemId]);
+  }, [isDisabled, currentState, onToggle, itemType, itemId]);
 
   // 处理键盘事件
   const handleKeyDown = useCallback(
@@ -77,7 +84,7 @@ export function SaveButton(props) {
           : styles.favoritedCollab
         : styles.unfavorited
     }
-    ${disabled ? styles.disabled : ''}
+    ${isDisabled ? styles.disabled : ''}
     ${className}
   `.trim();
 
@@ -87,16 +94,24 @@ export function SaveButton(props) {
     ${currentState ? styles.filled : styles.outlined}
   `.trim();
 
+  // 生成 tooltip 文本
+  const getTooltipText = () => {
+    if (!isAuthenticated) {
+      return 'Please log in to save favorites';
+    }
+    return currentState ? 'Remove from favorites' : 'Add to favorites';
+  };
+
   return (
     <button
       type='button'
       className={buttonClass}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      disabled={disabled}
+      disabled={isDisabled}
       aria-pressed={currentState}
-      aria-label={currentState ? 'Remove from favorites' : 'Add to favorites'}
-      title={currentState ? 'Remove from favorites' : 'Add to favorites'}
+      aria-label={getTooltipText()}
+      title={getTooltipText()}
     >
       {/* 收藏图标 */}
       <svg

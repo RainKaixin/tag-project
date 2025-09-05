@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
 
         if (success && supabaseUser) {
           // 使用 Supabase 用户数据
-          setUser({
+          const userData = {
             id: supabaseUser.id,
             email: supabaseUser.email,
             name:
@@ -42,7 +42,12 @@ export const AuthProvider = ({ children }) => {
             avatar: supabaseUser.user_metadata?.avatar_url,
             role: 'artist',
             isVerified: supabaseUser.email_confirmed_at ? true : false,
-          });
+          };
+          setUser(userData);
+          // 設置全局用戶狀態供 getCurrentUser 使用
+          if (typeof window !== 'undefined') {
+            window.__authContextUser = userData;
+          }
           setStatus('SIGNED_IN');
         } else {
           // 没有用户，设置为 null
@@ -80,7 +85,7 @@ export const AuthProvider = ({ children }) => {
       if (event === 'SIGNED_IN' && session?.user) {
         // 用户登录
         const supabaseUser = session.user;
-        setUser({
+        const userData = {
           id: supabaseUser.id,
           email: supabaseUser.email,
           name:
@@ -89,11 +94,20 @@ export const AuthProvider = ({ children }) => {
           avatar: supabaseUser.user_metadata?.avatar_url,
           role: 'artist',
           isVerified: supabaseUser.email_confirmed_at ? true : false,
-        });
+        };
+        setUser(userData);
+        // 設置全局用戶狀態供 getCurrentUser 使用
+        if (typeof window !== 'undefined') {
+          window.__authContextUser = userData;
+        }
         setStatus('SIGNED_IN');
       } else if (event === 'SIGNED_OUT') {
         // 用户登出
         setUser(null);
+        // 清除全局用戶狀態
+        if (typeof window !== 'undefined') {
+          window.__authContextUser = null;
+        }
         setStatus('SIGNED_OUT');
         // 清除本地存储
         localStorage.removeItem('tag_user');
@@ -147,6 +161,10 @@ export const AuthProvider = ({ children }) => {
       if (result.success) {
         // 登出成功，用户状态会通过 onAuthStateChange 自动更新
         setUser(null);
+        // 清除全局用戶狀態
+        if (typeof window !== 'undefined') {
+          window.__authContextUser = null;
+        }
         // 清除本地存储
         localStorage.removeItem('tag_user');
         sessionStorage.removeItem('tag_user');
