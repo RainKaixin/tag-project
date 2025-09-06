@@ -1,5 +1,8 @@
 // 彻底清理所有数据脚本
 // 用于功能测试阶段，清除所有浏览器缓存和本地存储
+// 集成智能清理策略，优先清理非关键数据
+
+import smartDataCleaner from '../../src/utils/smartDataCleaner.js';
 
 console.log('🧹 开始清理所有浏览器数据...');
 
@@ -102,10 +105,60 @@ async function clearCache() {
   }
 }
 
+// 智能清理函数 - 使用智能清理策略
+async function smartCleanup() {
+  console.log('🧠 开始智能数据清理...');
+
+  try {
+    // 获取清理前的统计
+    const beforeStats = await smartDataCleaner.getCleanupStats();
+    console.log(
+      `📊 清理前: ${beforeStats.totalKeys} items, ${(
+        beforeStats.totalSize / 1024
+      ).toFixed(1)}KB`
+    );
+
+    // 执行智能清理
+    const result = await smartDataCleaner.manualCleanup([
+      'avatarCache',
+      'tempImages',
+      'oldCollaborations',
+      'draftData',
+      'portfolioCache',
+      'notificationCache',
+      'generalCache',
+    ]);
+
+    if (result.success) {
+      console.log(
+        `✅ 智能清理完成: ${result.cleanedCount} items, ${(
+          result.freedSpace / 1024
+        ).toFixed(1)}KB freed`
+      );
+    } else {
+      console.error('❌ 智能清理失败:', result.error);
+    }
+
+    // 获取清理后的统计
+    const afterStats = await smartDataCleaner.getCleanupStats();
+    console.log(
+      `📊 清理后: ${afterStats.totalKeys} items, ${(
+        afterStats.totalSize / 1024
+      ).toFixed(1)}KB`
+    );
+  } catch (error) {
+    console.error('❌ 智能清理出错:', error);
+  }
+}
+
 // 主清理函数
 async function clearAllData() {
   console.log('🚀 开始全面数据清理...');
 
+  // 首先尝试智能清理
+  await smartCleanup();
+
+  // 然后执行传统清理
   clearLocalStorage();
   clearSessionStorage();
   clearCookies();

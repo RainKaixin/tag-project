@@ -64,6 +64,52 @@ const ArtistProfile = () => {
   const [followersModalOpen, setFollowersModalOpen] = React.useState(false);
   const [followingModalOpen, setFollowingModalOpen] = React.useState(false);
 
+  // 監聽關注狀態變更事件，實時更新計數
+  React.useEffect(() => {
+    const handleFollowChanged = event => {
+      const { followerId, followingId, isFollowing, operation, type } =
+        event.detail;
+
+      console.log('[ArtistProfile] Received follow:changed event:', {
+        followerId,
+        followingId,
+        isFollowing,
+        operation,
+        type,
+      });
+
+      // 如果當前用戶是操作者，需要更新 Following 計數
+      if (followerId === user?.id) {
+        console.log(
+          '[ArtistProfile] Current user performed follow operation, refreshing following count'
+        );
+        // 觸發 Following 計數刷新
+        if (followingCountState.refresh) {
+          followingCountState.refresh();
+        }
+      }
+
+      // 如果當前用戶是被關注者，需要更新 Followers 計數
+      if (followingId === artistState.artist?.id) {
+        console.log(
+          '[ArtistProfile] Current artist was followed/unfollowed, refreshing followers count'
+        );
+        // 觸發 Followers 計數刷新
+        if (followCountState.refresh) {
+          followCountState.refresh();
+        }
+      }
+    };
+
+    // 添加事件監聽器
+    window.addEventListener('follow:changed', handleFollowChanged);
+
+    // 清理事件監聽器
+    return () => {
+      window.removeEventListener('follow:changed', handleFollowChanged);
+    };
+  }, [user?.id, artistState.artist?.id, followingCountState, followCountState]);
+
   // 等待认证状态就绪
   if (authLoading) {
     return <LoadingSpinner />;

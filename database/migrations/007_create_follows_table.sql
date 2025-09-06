@@ -36,3 +36,4 @@ CREATE INDEX IF NOT EXISTS idx_follows_created_at ON follows(created_at);
 
 -- 创建复合索引用于快速查询
 CREATE INDEX IF NOT EXISTS idx_follows_follower_following ON follows(follower_id, following_id);
+

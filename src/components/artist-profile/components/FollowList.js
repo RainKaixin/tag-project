@@ -33,29 +33,68 @@ const FollowList = ({ type, targetId, onClose, currentUserId = 'alice' }) => {
         setLoading(true);
         setError(null);
 
-        const { getFollowersList, getFollowingListPaginated } = await import(
-          '../../../services/mock/followService'
-        );
+        const { getFollowers, getFollowing, getUserProfile, isFollowing } =
+          await import('../../../services/supabase/users');
 
         const options = {
+          page: reset ? 1 : Math.floor((cursor || 0) / 20) + 1,
           limit: 20,
-          cursor: reset ? null : cursor,
-          q: searchQuery,
-          currentUserId: currentUserId,
         };
 
         let result;
         if (type === 'followers') {
-          result = await getFollowersList(targetId, options);
+          result = await getFollowers(targetId, options);
         } else {
-          result = await getFollowingListPaginated(targetId, options);
+          result = await getFollowing(targetId, options);
         }
 
         if (result.success) {
-          const newItems = result.data.items;
-          setItems(prev => (reset ? newItems : [...prev, ...newItems]));
-          setHasMore(result.data.hasMore);
-          setCursor(result.data.cursor);
+          // 获取用户详细信息
+          const userIds = result.data.map(item => item.id);
+          const userDetails = await Promise.all(
+            userIds.map(async userId => {
+              const userResult = await getUserProfile(userId);
+              if (userResult.success) {
+                // 检查当前用户是否关注了这个用户
+                let isFollowedByMe = false;
+                if (currentUserId && currentUserId !== userId) {
+                  const followResult = await isFollowing(currentUserId, userId);
+                  if (followResult.success) {
+                    isFollowedByMe = followResult.isFollowing;
+                  }
+                }
+
+                return {
+                  id: userResult.data.id,
+                  displayName:
+                    userResult.data.name ||
+                    userResult.data.username ||
+                    'Unknown User',
+                  avatar:
+                    userResult.data.avatar_url || '/assets/placeholder.svg',
+                  isFollowedByMe: isFollowedByMe,
+                };
+              }
+              return null;
+            })
+          );
+
+          const validUsers = userDetails.filter(user => user !== null);
+
+          // 应用搜索过滤
+          const filteredUsers = searchQuery.trim()
+            ? validUsers.filter(user =>
+                user.displayName
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase())
+              )
+            : validUsers;
+
+          setItems(prev =>
+            reset ? filteredUsers : [...prev, ...filteredUsers]
+          );
+          setHasMore(result.data.length === 20); // 如果返回的数据等于limit，说明可能还有更多
+          setCursor(reset ? 20 : (cursor || 0) + 20);
         } else {
           setError(result.error);
         }
@@ -65,7 +104,7 @@ const FollowList = ({ type, targetId, onClose, currentUserId = 'alice' }) => {
         setLoading(false);
       }
     },
-    [type, targetId, cursor, searchQuery]
+    [type, targetId, cursor, searchQuery, currentUserId]
   );
 
   // 搜索防抖
@@ -119,8 +158,8 @@ const FollowList = ({ type, targetId, onClose, currentUserId = 'alice' }) => {
     try {
       setFollowLoading(prev => ({ ...prev, [targetUserId]: true }));
 
-      const { follow, unfollow } = await import(
-        '../../../services/mock/followService'
+      const { followUser, unfollowUser } = await import(
+        '../../../services/supabase/users'
       );
 
       // 使用传入的当前用户ID
@@ -129,10 +168,10 @@ const FollowList = ({ type, targetId, onClose, currentUserId = 'alice' }) => {
       let result;
       if (currentFollowState) {
         // 当前已关注，执行取消关注
-        result = await unfollow(targetUserId, actualCurrentUserId);
+        result = await unfollowUser(actualCurrentUserId, targetUserId);
       } else {
         // 当前未关注，执行关注
-        result = await follow(targetUserId, actualCurrentUserId);
+        result = await followUser(actualCurrentUserId, targetUserId);
       }
 
       if (result.success) {
@@ -149,6 +188,25 @@ const FollowList = ({ type, targetId, onClose, currentUserId = 'alice' }) => {
             )
           );
         }
+
+        // 觸發關注狀態變更事件，通知其他組件更新
+        window.dispatchEvent(
+          new CustomEvent('follow:changed', {
+            detail: {
+              followerId: actualCurrentUserId,
+              followingId: targetUserId,
+              isFollowing: !currentFollowState,
+              operation: currentFollowState ? 'unfollow' : 'follow',
+              type: type, // 'followers' 或 'following'
+            },
+          })
+        );
+
+        console.log(
+          `[FollowList] Triggered follow:changed event - ${
+            currentFollowState ? 'unfollow' : 'follow'
+          } ${targetUserId}`
+        );
       } else {
         // 失败回滚
         console.error('Follow toggle failed:', result.error);

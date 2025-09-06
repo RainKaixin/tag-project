@@ -8,6 +8,7 @@ import { Splash } from './components/ui/Splash';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { AuthProvider } from './context/AuthContext';
 import AppRoutes from './routes/AppRoutes';
+import smartDataCleaner from './utils/smartDataCleaner';
 
 // 应用内容组件
 function AppContent() {
@@ -18,6 +19,13 @@ function AppContent() {
     // 恢复页面滚动
     document.body.style.overflow = 'unset';
     document.documentElement.style.overflow = 'unset';
+  }, []);
+
+  // 初始化智能数据清理器
+  useEffect(() => {
+    smartDataCleaner.init().catch(error => {
+      console.warn('[App] Smart data cleaner initialization failed:', error);
+    });
   }, []);
 
   // 如果应用未初始化，显示Splash

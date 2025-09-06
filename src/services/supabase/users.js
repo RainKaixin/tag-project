@@ -8,16 +8,10 @@ import { supabase } from './client.js';
 // 获取用户资料
 export const getUserProfile = async userId => {
   try {
+    // 从 profiles 表获取用户信息
     const { data, error } = await supabase
-      .from('users')
-      .select(
-        `
-        *,
-        followers:follows!follows_following_id_fkey(count),
-        following:follows!follows_follower_id_fkey(count),
-        artworks:artworks(count)
-      `
-      )
+      .from('profiles')
+      .select('*')
       .eq('id', userId)
       .single();
 
@@ -25,7 +19,38 @@ export const getUserProfile = async userId => {
       return { success: false, error: error.message };
     }
 
-    return { success: true, data };
+    if (!data) {
+      return { success: false, error: 'User not found' };
+    }
+
+    // 获取关注统计
+    const [followersResult, followingResult] = await Promise.all([
+      supabase
+        .from('follows')
+        .select('id', { count: 'exact' })
+        .eq('following_id', userId),
+      supabase
+        .from('follows')
+        .select('id', { count: 'exact' })
+        .eq('follower_id', userId),
+    ]);
+
+    const followersCount = followersResult.count || 0;
+    const followingCount = followingResult.count || 0;
+
+    // 构造用户资料对象
+    const userProfile = {
+      id: data.id,
+      name: data.full_name || 'Unknown User',
+      username: data.full_name || 'unknown',
+      avatar_url: data.avatar_url || null,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      followers_count: followersCount,
+      following_count: followingCount,
+    };
+
+    return { success: true, data: userProfile };
   } catch (error) {
     return { success: false, error: error.message };
   }

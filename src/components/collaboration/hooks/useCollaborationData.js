@@ -548,7 +548,7 @@ export const useCollaborationData = () => {
   }, []);
 
   // 保存协作数据到localStorage
-  const saveCollaborationData = useCallback(projectData => {
+  const saveCollaborationData = useCallback(async projectData => {
     try {
       console.log('[saveCollaborationData] Saving project data:', projectData);
 
@@ -687,12 +687,45 @@ export const useCollaborationData = () => {
       } catch (quotaError) {
         if (quotaError.name === 'QuotaExceededError') {
           console.error(
-            '[saveCollaborationData] localStorage quota exceeded, attempting cleanup...'
+            '[saveCollaborationData] localStorage quota exceeded, attempting smart cleanup...'
           );
 
-          // 尝试清理一些空间
+          // 使用智能清理器清理空间
           try {
-            // 删除一些旧的或大的数据
+            const { default: smartDataCleaner } = await import(
+              '../../utils/smartDataCleaner.js'
+            );
+
+            // 执行智能清理
+            const cleanupResult = await smartDataCleaner.manualCleanup([
+              'avatarCache',
+              'tempImages',
+              'oldCollaborations',
+              'draftData',
+            ]);
+
+            if (cleanupResult.success) {
+              console.log(
+                `[saveCollaborationData] Smart cleanup freed ${(
+                  cleanupResult.freedSpace / 1024
+                ).toFixed(1)}KB`
+              );
+
+              // 再次尝试保存
+              localStorage.setItem('mock_collaborations', dataToSave);
+              console.log(
+                '[saveCollaborationData] Successfully saved after smart cleanup'
+              );
+            } else {
+              throw new Error('Smart cleanup failed: ' + cleanupResult.error);
+            }
+          } catch (cleanupError) {
+            console.error(
+              '[saveCollaborationData] Smart cleanup failed, falling back to manual cleanup:',
+              cleanupError
+            );
+
+            // 回退到手动清理
             const keysToRemove = [
               'tag.avatars',
               'tag.images',
@@ -711,16 +744,7 @@ export const useCollaborationData = () => {
             // 再次尝试保存
             localStorage.setItem('mock_collaborations', dataToSave);
             console.log(
-              '[saveCollaborationData] Successfully saved after cleanup'
-            );
-          } catch (cleanupError) {
-            console.error(
-              '[saveCollaborationData] Failed to save even after cleanup:',
-              cleanupError
-            );
-            // 至少保存applicationStorage数据，这是最重要的
-            console.log(
-              '[saveCollaborationData] Application status data is still preserved in applicationStorage'
+              '[saveCollaborationData] Successfully saved after manual cleanup'
             );
           }
         } else {

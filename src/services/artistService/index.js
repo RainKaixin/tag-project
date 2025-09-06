@@ -19,130 +19,34 @@ export const artistService = {
     try {
       console.log('[artistService] Getting all registered artists');
 
-      // 从用户档案服务获取所有注册用户
-      const { getProfile } = await import('../mock/userProfileService.js');
-      const { storage } = await import('../storage/index.js');
+      // 使用 Supabase 适配器获取艺术家列表
+      const result = await supabaseAdapter.getPublicArtists();
 
-      // 获取所有存储键
-      const keys = await storage.keys();
+      if (result.success) {
+        console.log(
+          `[artistService] Found ${result.data.length} registered artists`
+        );
+        return result;
+      } else {
+        console.error('[artistService] Supabase adapter failed:', result.error);
 
-      // 筛选出用户档案相关的键
-      const profileKeys = keys.filter(
-        key => key && key.startsWith('tag.userProfile.')
-      );
+        // 如果 Supabase 失败，回退到 localStorage 适配器
+        console.log('[artistService] Falling back to localStorage adapter');
+        const fallbackResult = await localStorageAdapter.getPublicArtists();
 
-      const artists = [];
-
-      // 遍历所有用户档案
-      for (const key of profileKeys) {
-        try {
-          const userId = key.replace('tag.userProfile.', '');
-
-          // 获取用户档案数据
-          const profileResult = await getProfile(userId);
-          if (!profileResult.success || !profileResult.data) {
-            console.warn(`[artistService] Failed to get profile for ${userId}`);
-            continue;
-          }
-
-          const profile = profileResult.data;
-
-          // 跳过没有姓名的用户（未完成注册）
-          if (!profile.fullName || !profile.fullName.trim()) {
-            console.log(
-              `[artistService] Skipping user ${userId} - no fullName`
-            );
-            continue;
-          }
-
-          // 获取用户的作品数据
-          const portfolioKey = `portfolio_${userId}`;
-          const portfolioData = await storage.getItem(portfolioKey);
-          let worksCount = 0;
-
-          if (portfolioData) {
-            try {
-              const portfolio = JSON.parse(portfolioData);
-              if (Array.isArray(portfolio)) {
-                // 只计算公开的作品
-                worksCount = portfolio.filter(
-                  item => item.isPublic !== false
-                ).length;
-              }
-            } catch (parseError) {
-              console.warn(
-                `[artistService] Failed to parse portfolio for ${userId}:`,
-                parseError
-              );
-            }
-          }
-
-          // 获取关注统计数据
-          const { getFollowersCount, getFollowingList } = await import(
-            '../mock/followService.js'
+        if (fallbackResult.success) {
+          console.log(
+            `[artistService] Fallback found ${fallbackResult.data.length} artists`
           );
-
-          let followersCount = 0;
-          let followingCount = 0;
-
-          try {
-            const followersResult = await getFollowersCount(userId);
-            if (followersResult.success) {
-              followersCount = followersResult.data.followersCount;
-            }
-
-            const followingResult = await getFollowingList(userId);
-            if (followingResult.success) {
-              followingCount = followingResult.data.followingCount;
-            }
-          } catch (followError) {
-            console.warn(
-              `[artistService] Failed to get follow stats for ${userId}:`,
-              followError
-            );
-          }
-
-          // 构建艺术家数据
-          const artist = {
-            id: userId,
-            name: profile.fullName,
-            title: profile.title || 'Artist',
-            school: profile.school || '',
-            majors: profile.majors || [],
-            minors: profile.minors || [],
-            avatar: profile.avatar || null,
-            worksCount: worksCount,
-            followers: followersCount,
-            following: followingCount,
-            createdAt: profile.updatedAt || new Date().toISOString(),
-            updatedAt: profile.updatedAt || new Date().toISOString(),
-          };
-
-          artists.push(artist);
-        } catch (error) {
-          console.warn(
-            `[artistService] Error processing user profile ${key}:`,
-            error
-          );
+          return fallbackResult;
+        } else {
+          // 如果 localStorage 也失败，回退到 mockUsers
+          console.log('[artistService] Falling back to mockUsers adapter');
+          return await mockUsersAdapter.getPublicArtists();
         }
       }
-
-      // 按注册时间排序（最新的在前）
-      artists.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-      console.log(`[artistService] Found ${artists.length} registered artists`);
-
-      return {
-        success: true,
-        data: artists,
-      };
     } catch (error) {
       console.error('[artistService] Error getting public artists:', error);
-
-      // 如果出错，返回错误信息（不再回退到MockUsers）
-      console.error(
-        '[artistService] Error getting public artists, not falling back to MockUsers'
-      );
       return {
         success: false,
         error: error.message,

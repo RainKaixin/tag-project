@@ -34,3 +34,4 @@ CREATE INDEX IF NOT EXISTS idx_artwork_likes_created_at ON artwork_likes(created
 -- 创建复合索引用于快速查询特定用户对特定作品的点赞状态
 CREATE INDEX IF NOT EXISTS idx_artwork_likes_artwork_user ON artwork_likes(artwork_id, user_id);
 
+

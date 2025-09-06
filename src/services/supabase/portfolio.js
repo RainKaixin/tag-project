@@ -267,11 +267,10 @@ export const getAllPublicPortfolios = async () => {
   );
 
   try {
-    // 从 Supabase 数据库读取所有公开作品
+    // 从 Supabase 数据库读取所有公开作品（使用包含艺术家信息的视图）
     const { data, error } = await supabase
-      .from('portfolio')
+      .from('portfolio_with_artist')
       .select('*')
-      .eq('is_public', true)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -300,9 +299,9 @@ export const getAllPublicPortfolios = async () => {
       updatedAt: item.updated_at,
       profiles: {
         id: item.user_id,
-        full_name: 'Unknown Artist', // 暂时使用默认值，后续可以从 profiles 表获取
-        avatar_url: '',
-        role: 'Design',
+        full_name: item.artist_name || 'Unknown Artist',
+        avatar_url: item.artist_avatar || '',
+        role: item.artist_role || 'Artist',
       },
     }));
 
