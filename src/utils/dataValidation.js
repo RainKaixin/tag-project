@@ -138,7 +138,7 @@ export const getDefaultWorkData = () => ({
   id: 'default',
   title: 'Untitled Work',
   description: 'No description available',
-  category: 'Design',
+  category: '',
   date: new Date().toLocaleDateString(),
   likes: 0,
   views: 0,
@@ -155,7 +155,7 @@ export const getDefaultWorkData = () => ({
 export const getDefaultArtistData = () => ({
   id: 'unknown',
   name: 'Unknown Artist',
-  role: 'Design',
+  role: '',
   avatar: '',
   works: 0,
   followers: '0',

@@ -70,7 +70,6 @@ const PortfolioGrid = ({
                   <h4 className='text-white font-medium text-sm'>
                     {artwork.title}
                   </h4>
-                  <p className='text-gray-200 text-xs'>{artwork.category}</p>
                 </div>
               </div>
             </div>

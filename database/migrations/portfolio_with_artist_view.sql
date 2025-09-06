@@ -339,3 +339,4 @@ comment on view public.portfolio_with_artist is '包含艺术家信息的公开�
 create index if not exists idx_portfolio_with_artist_created_at on public.portfolio(created_at);
 create index if not exists idx_portfolio_with_artist_user_id on public.portfolio(user_id);
 create index if not exists idx_portfolio_with_artist_is_public on public.portfolio(is_public);
+

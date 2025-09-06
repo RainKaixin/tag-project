@@ -98,7 +98,7 @@ const useRelatedWorks = (artistId, currentWorkId, maxWorks = 4) => {
               id: work.id,
               title: work.title || 'Untitled',
               image: image,
-              category: work.category || 'Design',
+              category: work.category || '',
             };
           })
         );

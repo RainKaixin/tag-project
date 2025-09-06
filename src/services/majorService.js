@@ -2,7 +2,7 @@
 
 import { getArtistById } from '../components/artist-profile/utils/artistHelpers';
 
-import { getPublicPortfolio } from './supabase/portfolio';
+import { getPublicPortfolio, getPortfolioImageUrl } from './supabase/portfolio';
 
 /**
  * 根据专业筛选获取作品
@@ -28,7 +28,11 @@ export const getArtworksByMajor = async (options = {}) => {
 
     // 获取所有艺术家的作品
     const allWorks = [];
-    const artistIds = ['alice', 'bryan', 'alex']; // 当前测试用户
+    // 使用真實的用戶 ID 而不是 Mock 用戶名
+    const artistIds = [
+      '9da7c012-2b80-4597-b138-4f5c0c7fdcd1', // R
+      '512411b2-adac-4dec-8fe5-63fb405f756b', // A
+    ];
 
     // 获取每个艺术家的作品
     for (const artistId of artistIds) {
@@ -78,12 +82,14 @@ export const getArtworksByMajor = async (options = {}) => {
       });
     }
 
-    // 根据软件筛选作品（如果作品有软件标签）
+    // 根据软件筛选作品（查询作品的 software 字段，不是 tags 字段）
     if (software.length > 0) {
       filteredWorks = filteredWorks.filter(work => {
-        const workTags = work.tags || [];
+        const workSoftware = work.software || [];
         return software.every(sw =>
-          workTags.some(tag => tag.toLowerCase().includes(sw.toLowerCase()))
+          workSoftware.some(soft =>
+            soft.toLowerCase().includes(sw.toLowerCase())
+          )
         );
       });
     }
@@ -112,19 +118,34 @@ export const getArtworksByMajor = async (options = {}) => {
     const paginatedWorks = filteredWorks.slice(startIndex, endIndex);
 
     // 转换作品格式以匹配聚合页面的期望格式
-    const formattedWorks = paginatedWorks.map(work => ({
-      id: work.id,
-      title: work.title,
-      image:
-        work.thumbnailPath ||
-        (work.imagePaths && work.imagePaths[0]) ||
-        '/assets/placeholder.svg',
-      author: work.author,
-      category: work.category,
-      tags: work.tags || [],
-      description: work.description,
-      createdAt: work.createdAt,
-    }));
+    const formattedWorks = await Promise.all(
+      paginatedWorks.map(async work => {
+        // 生成完整的圖片 URL
+        let imageUrl = '/assets/placeholder.svg';
+        if (work.thumbnailPath) {
+          const imageResult = await getPortfolioImageUrl(work.thumbnailPath);
+          if (imageResult.success) {
+            imageUrl = imageResult.data.url;
+          }
+        } else if (work.imagePaths && work.imagePaths[0]) {
+          const imageResult = await getPortfolioImageUrl(work.imagePaths[0]);
+          if (imageResult.success) {
+            imageUrl = imageResult.data.url;
+          }
+        }
+
+        return {
+          id: work.id,
+          title: work.title,
+          image: imageUrl,
+          author: work.author,
+          category: work.category,
+          tags: work.tags || [],
+          description: work.description,
+          createdAt: work.createdAt,
+        };
+      })
+    );
 
     const hasMore = endIndex < filteredWorks.length;
     const nextCursor = hasMore

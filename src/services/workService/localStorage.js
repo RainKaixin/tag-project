@@ -63,7 +63,7 @@ export const localStorageAdapter = {
               author: {
                 id: work.profiles?.id || work.userId || 'unknown',
                 name: work.profiles?.full_name || 'Unknown Artist',
-                role: work.profiles?.role || work.category || 'Design',
+                role: work.profiles?.role || work.category || '',
                 avatar: work.profiles?.avatar_url || '',
               },
             };
@@ -83,7 +83,7 @@ export const localStorageAdapter = {
               author: {
                 id: userId,
                 name: getUserInfo(userId)?.name || 'Unknown Artist',
-                role: work.category || 'Design',
+                role: work.category || '',
                 avatar: getUserInfo(userId)?.avatar || null, // 移除默认头像
               },
             };
@@ -192,7 +192,7 @@ export const localStorageAdapter = {
           author: {
             id: work.profiles?.id || work.userId || 'unknown',
             name: work.profiles?.full_name || 'Unknown Artist',
-            role: work.category || 'Design',
+            role: work.category || '',
             avatar: work.profiles?.avatar_url || '',
           },
         }));

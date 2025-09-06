@@ -71,7 +71,7 @@ export const getWorkDataById = async workId => {
       id: work.id,
       title: work.title || 'Untitled',
       description: work.description || '',
-      category: work.category || 'Design',
+      category: work.category || '',
       date: work.createdAt
         ? new Date(work.createdAt).toLocaleDateString('en-US', {
             month: 'short',
@@ -82,6 +82,7 @@ export const getWorkDataById = async workId => {
       likes: 124, // 暂时使用默认值，后续可以从API获取
       views: 1247, // 暂时使用默认值，后续可以从API获取
       tags: work.tags || [],
+      software: work.software || [],
       // 转换图片路径为公开URL
       mainImage:
         work.mainImageUrl ||
@@ -98,8 +99,7 @@ export const getWorkDataById = async workId => {
           work.author?.name ||
           work.profiles?.full_name ||
           'Unknown Artist',
-        role:
-          authorInfo?.title || work.author?.role || work.category || 'Design',
+        role: authorInfo?.title || work.author?.role || work.category || '',
         avatar:
           authorInfo?.avatar ||
           work.author?.avatar ||

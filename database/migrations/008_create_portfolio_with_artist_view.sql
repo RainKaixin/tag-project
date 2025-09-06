@@ -29,3 +29,4 @@ COMMENT ON VIEW portfolio_with_artist IS '包含艺术家信息的公开作品�
 CREATE INDEX IF NOT EXISTS idx_portfolio_with_artist_created_at ON portfolio(created_at);
 CREATE INDEX IF NOT EXISTS idx_portfolio_with_artist_user_id ON portfolio(user_id);
 CREATE INDEX IF NOT EXISTS idx_portfolio_with_artist_is_public ON portfolio(is_public);
+

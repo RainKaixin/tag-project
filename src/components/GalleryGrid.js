@@ -81,7 +81,7 @@ const GalleryGrid = ({ currentUser }) => {
                 title: item.title || 'Untitled',
                 artist: item.profiles?.full_name || 'Unknown Artist',
                 image: image,
-                category: item.category || 'design',
+                category: item.category || '',
                 tags: item.tags || [],
                 description: item.description || '',
                 createdAt: item.createdAt || new Date().toISOString(),

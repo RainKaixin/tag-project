@@ -171,7 +171,7 @@ export const getDefaultArtworks = () => {
       title: 'Teal Design',
       image:
         'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=400&fit=crop',
-      category: 'Design',
+      category: '',
     },
     {
       id: 7,

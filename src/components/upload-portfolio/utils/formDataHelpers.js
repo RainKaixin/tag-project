@@ -78,9 +78,9 @@ export const formatFormDataForSubmission = (
 ) => ({
   userId: userId, // 添加用戶ID
   title: formData.title.trim(),
-  category: 'design', // 默認分類
   description: formData.description.trim(),
-  tags: [...formData.tags, ...formData.software], // tags 現在是數組，直接使用
+  tags: formData.tags || [], // 自定義標籤，保持原有格式
+  software: formData.software || [], // 軟件標籤，分別存儲
   imagePaths: uploadedFiles.map(file => file.path), // 存儲文件路徑作為 key
   thumbnailPath: uploadedFiles[0]?.path || '', // 存儲文件路徑作為 key
   // 確保imageKey與IndexedDB的key一致

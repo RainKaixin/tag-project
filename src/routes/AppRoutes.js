@@ -221,7 +221,37 @@ const AppRoutes = () => {
         }
       />
 
-      {/* 专业聚合页面 - 需要保护 */}
+      {/* 统一聚合页面 - 需要保护 */}
+      <Route
+        path='/aggregation'
+        element={
+          <ProtectedRoute>
+            <TagAggregationPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* SEO友好的专业聚合路由 - 需要保护 */}
+      <Route
+        path='/major/:major'
+        element={
+          <ProtectedRoute>
+            <TagAggregationPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* SEO友好的软件聚合路由 - 需要保护 */}
+      <Route
+        path='/software/:software'
+        element={
+          <ProtectedRoute>
+            <TagAggregationPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* 专业聚合页面 - 需要保护 (保留兼容性) */}
       <Route
         path='/major-aggregation'
         element={
