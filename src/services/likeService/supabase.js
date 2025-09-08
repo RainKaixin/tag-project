@@ -16,12 +16,14 @@ export const supabaseAdapter = {
   toggleArtworkLike: async (artworkId, userId) => {
     try {
       // 先檢查是否已點讚
-      const { data: existingLike, error: checkError } = await supabase
+      const { data: existingLikes, error: checkError } = await supabase
         .from('artwork_likes')
         .select('id')
         .eq('artwork_id', artworkId)
         .eq('user_id', userId)
-        .single();
+        .limit(1);
+
+      const existingLike = existingLikes?.[0] || null;
 
       // 如果表不存在，回退到LocalStorage
       if (checkError && checkError.code === 'PGRST205') {
@@ -32,7 +34,7 @@ export const supabaseAdapter = {
         return await localStorageAdapter.toggleArtworkLike(artworkId, userId);
       }
 
-      if (checkError && checkError.code !== 'PGRST116') {
+      if (checkError) {
         console.error(
           '[SupabaseLike] Error checking existing like:',
           checkError
@@ -62,20 +64,31 @@ export const supabaseAdapter = {
         );
       } else {
         // 未點讚，添加點讚
-        const { error: insertError } = await supabase
+        console.log('[DEBUG] Using INSERT method instead of upsert for like');
+        const { data, error: insertError } = await supabase
           .from('artwork_likes')
           .insert({
-            artwork_id: artworkId,
             user_id: userId,
+            artwork_id: artworkId,
           });
 
         if (insertError) {
-          console.error('[SupabaseLike] Error inserting like:', insertError);
-          return { success: false, error: insertError.message };
+          // 检查是否是重复键错误（已经点赞了）
+          if (insertError.code === '23505') {
+            console.log(
+              `[SupabaseLike] User ${userId} already liked artwork ${artworkId}`
+            );
+            isLiked = true;
+          } else {
+            console.error('[SupabaseLike] Error inserting like:', insertError);
+            return { success: false, error: insertError.message };
+          }
+        } else {
+          isLiked = true;
+          console.log(
+            `[SupabaseLike] User ${userId} liked artwork ${artworkId}`
+          );
         }
-
-        isLiked = true;
-        console.log(`[SupabaseLike] User ${userId} liked artwork ${artworkId}`);
       }
 
       // 獲取總點讚數
@@ -117,12 +130,14 @@ export const supabaseAdapter = {
   checkUserLikeStatus: async (artworkId, userId) => {
     try {
       // 檢查是否已點讚
-      const { data, error } = await supabase
+      const { data: likes, error } = await supabase
         .from('artwork_likes')
         .select('id')
         .eq('artwork_id', artworkId)
         .eq('user_id', userId)
-        .single();
+        .limit(1);
+
+      const isLiked = likes && likes.length > 0;
 
       // 如果表不存在，回退到LocalStorage
       if (error && error.code === 'PGRST205') {
@@ -133,12 +148,10 @@ export const supabaseAdapter = {
         return await localStorageAdapter.checkUserLikeStatus(artworkId, userId);
       }
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('[SupabaseLike] Error checking like status:', error);
         return { success: false, error: error.message };
       }
-
-      const isLiked = !!data;
 
       // 獲取總點讚數
       const { count, error: countError } = await supabase

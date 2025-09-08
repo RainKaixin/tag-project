@@ -19,7 +19,7 @@ export const mockUsersAdapter = {
    */
   getCurrentUser: async () => {
     try {
-      const userId = getCurrentUserId();
+      const userId = await getCurrentUserId();
       if (!userId) {
         console.warn('[mockUsersAdapter] No current user ID found');
         return null;

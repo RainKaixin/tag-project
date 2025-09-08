@@ -340,3 +340,5 @@ create index if not exists idx_portfolio_with_artist_created_at on public.portfo
 create index if not exists idx_portfolio_with_artist_user_id on public.portfolio(user_id);
 create index if not exists idx_portfolio_with_artist_is_public on public.portfolio(is_public);
 
+
+

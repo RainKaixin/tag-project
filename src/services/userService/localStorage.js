@@ -16,7 +16,7 @@ export const localStorageAdapter = {
    */
   getCurrentUser: async () => {
     try {
-      const userId = getCurrentUserId();
+      const userId = await getCurrentUserId();
       if (!userId) {
         console.warn('[localStorageAdapter] No current user ID found');
         return null;

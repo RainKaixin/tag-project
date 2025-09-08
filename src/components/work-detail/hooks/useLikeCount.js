@@ -58,8 +58,15 @@ const useLikeCount = (artworkId, initialLikeCount = 0, workData = null) => {
           result.data.likes
         );
 
-        // 如果开始点赞，创建点赞通知
-        if (result.data.liked && workData) {
+        // 暫時禁用通知創建，等待數據庫約束問題修復
+        // TODO: 修復 notifications_unique_follow 約束問題後重新啟用
+        /*
+        // 如果开始点赞，创建点赞通知（只有当点赞者不是作品作者时）
+        if (
+          result.data.liked &&
+          workData &&
+          currentUser.id !== (workData.author?.id || workData.authorId)
+        ) {
           try {
             // 获取当前用户的资料信息，使用自定义名字
             const profileResult = await getProfile(currentUser.id);
@@ -83,6 +90,7 @@ const useLikeCount = (artworkId, initialLikeCount = 0, workData = null) => {
             );
           }
         }
+        */
 
         // 調試：打印詳細的點讚統計
         console.log(

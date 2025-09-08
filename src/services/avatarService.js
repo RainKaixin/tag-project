@@ -194,7 +194,7 @@ export const updateUnifiedAvatar = async (userId, avatarUrl) => {
  * @returns {Promise<string|null>} 頭像URL或null
  */
 export const getCurrentUserAvatar = async () => {
-  const userId = getCurrentUserId();
+  const userId = await getCurrentUserId();
   return await getUnifiedAvatar(userId);
 };
 

@@ -1,3 +1,5 @@
+import { notificationService } from '../notificationService/index.js';
+
 import { supabase } from './client.js';
 
 /**
@@ -135,18 +137,25 @@ export const getUserCollaborations = async (userId, options = {}) => {
 // 关注用户
 export const followUser = async (followerId, followingId) => {
   try {
-    const { data, error } = await supabase
-      .from('follows')
-      .insert({
-        follower_id: followerId,
-        following_id: followingId,
-      })
-      .select()
-      .single();
+    const { data, error } = await supabase.from('follows').insert({
+      follower_id: followerId,
+      following_id: followingId,
+    });
 
     if (error) {
-      return { success: false, error: error.message };
+      // 检查是否是重复键错误（已经关注了）
+      if (error.code === '23505') {
+        console.log(`User ${followerId} already follows ${followingId}`);
+        return { success: false, error: 'Already following this user' };
+      } else {
+        return { success: false, error: error.message };
+      }
     }
+
+    // 通知由数据库触发器自动创建，不需要前端手动创建
+    console.log(
+      '[SupabaseUsers] Follow successful - notification will be created by database trigger'
+    );
 
     return { success: true, data };
   } catch (error) {

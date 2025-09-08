@@ -101,28 +101,11 @@ const useFollowCount = artistId => {
         });
         window.dispatchEvent(followChangedEvent);
 
-        // 如果开始关注，创建关注通知
+        // 如果开始关注，通知将由数据库触发器自动创建
         if (newFollowingState) {
-          try {
-            // 获取当前用户的资料信息，使用自定义名字
-            const profileResult = await getProfile(currentUser.id);
-            const userDisplayName =
-              profileResult.success && profileResult.data.fullName
-                ? profileResult.data.fullName
-                : currentUser.name || currentUser.username || 'Unknown User';
-
-            await notificationService.createFollowNotification(
-              currentUser.id,
-              userDisplayName,
-              artistId
-            );
-            console.log('[FollowCount] Created follow notification');
-          } catch (error) {
-            console.error(
-              '[FollowCount] Failed to create follow notification:',
-              error
-            );
-          }
+          console.log(
+            '[FollowCount] Follow successful - notification will be created by database trigger'
+          );
         }
 
         // 触发关注状态变化事件，通知其他组件更新

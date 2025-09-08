@@ -100,7 +100,7 @@ const storeDataUrlToIndexedDB = async (blobUrl, collaborationId) => {
  * @returns {Object} 格式化後的數據
  */
 export const formatFormDataForAPI = async formData => {
-  const currentUserId = getCurrentUserId();
+  const currentUserId = await getCurrentUserId();
   const currentUser = await getCurrentUser(); // 使用 getCurrentUser() 而不是 MOCK_USERS
 
   // 生成臨時 ID 用於存儲圖片

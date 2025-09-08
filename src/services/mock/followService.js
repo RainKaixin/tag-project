@@ -2,6 +2,7 @@
 
 import { getArtistById } from '../../components/artist-profile/utils/artistHelpers.js';
 import { MOCK_USERS, getUserInfo } from '../../utils/mockUsers.js';
+import { notificationService } from '../notificationService/index.js';
 
 const STORAGE_KEY = 'tag_artist_follows';
 
@@ -589,6 +590,31 @@ export const follow = async (targetUserId, currentUserId = 'alice') => {
   const result = await toggleFollow(currentUserId, targetUserId);
 
   if (result.success) {
+    // 创建关注通知（只有当关注者不是被关注者时）
+    if (currentUserId !== targetUserId) {
+      try {
+        // 获取关注者的真实姓名
+        const followerInfo = await getArtistById(currentUserId);
+        const followerName =
+          followerInfo?.name ||
+          MOCK_USERS[currentUserId]?.name ||
+          'Unknown User';
+
+        await notificationService.createFollowNotification(
+          currentUserId,
+          followerName,
+          targetUserId
+        );
+        console.log('[FollowService] Created follow notification');
+      } catch (error) {
+        console.error(
+          '[FollowService] Failed to create follow notification:',
+          error
+        );
+        // 通知创建失败不影响关注功能
+      }
+    }
+
     // 触发事件通知其他组件
     window.dispatchEvent(
       new CustomEvent('follow:changed', {

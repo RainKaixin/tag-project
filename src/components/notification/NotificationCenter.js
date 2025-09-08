@@ -1,21 +1,34 @@
 import React from 'react';
 
-// Import hooks
-
-// Import components
 import NotificationHeader from './components/NotificationHeader';
 import NotificationList from './components/NotificationList';
 import useNotificationActions from './hooks/useNotificationActions';
+import useNotificationData from './hooks/useNotificationData';
 import useNotificationState from './hooks/useNotificationState';
 
 const NotificationCenter = () => {
-  // Use custom hooks
   const { state, setters } = useNotificationState();
+  const {
+    notifications,
+    isLoading,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    fetchNotifications,
+  } = useNotificationData();
+
   const actions = useNotificationActions({ state, setters });
 
-  // 加载更多处理函数
+  // 更新 state 当通知加载完成
+  React.useEffect(() => {
+    setters.setItems(notifications);
+    setters.setFilteredNotifications(notifications);
+    setters.setIsLoading(isLoading);
+  }, [notifications, isLoading]);
+
   const handleLoadMore = () => {
     // 实现加载更多逻辑
+    fetchNotifications();
   };
 
   return (
@@ -23,20 +36,19 @@ const NotificationCenter = () => {
       <NotificationHeader
         activeTab={state.activeTab}
         timeFilter={state.timeFilter}
-        items={state.items}
+        items={notifications}
         onTabChange={setters.setActiveTab}
         onTimeFilterChange={setters.setTimeFilter}
-        onMarkAllAsRead={actions.handleMarkAllAsRead}
+        onMarkAllAsRead={markAllAsRead}
       />
-
       <NotificationList
-        isLoading={state.isLoading}
-        filteredNotifications={state.filteredNotifications}
+        isLoading={isLoading}
+        filteredNotifications={notifications}
         hasMore={state.hasMore}
         onNotificationClick={actions.handleNotificationClick}
         onReviewRequest={actions.handleReviewRequest}
         onCollaborationRequest={actions.handleCollaborationRequest}
-        onMarkAsRead={actions.handleMarkAsRead}
+        onMarkAsRead={markAsRead}
         onLoadMore={handleLoadMore}
       />
     </div>

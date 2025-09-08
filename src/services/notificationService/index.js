@@ -1,5 +1,7 @@
 // notificationService/index.js - 通知服务主接口
 
+import { isMock } from '../../utils/envCheck.js';
+
 import { localStorageAdapter } from './localStorage.js';
 import { supabaseAdapter } from './supabase.js';
 
@@ -18,7 +20,7 @@ export const notificationService = {
   createFollowNotification: async (followerId, followerName, followedId) => {
     try {
       const notification = {
-        id: `follow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: crypto.randomUUID(),
         type: 'follow',
         senderId: followerId,
         senderName: followerName,
@@ -35,24 +37,39 @@ export const notificationService = {
         },
       };
 
-      // 优先保存到 LocalStorage
-      const result = await localStorageAdapter.createNotification(notification);
-      if (result.success) {
-        console.log(
-          `[notificationService] Created follow notification in LocalStorage`
+      if (isMock()) {
+        // Mock模式 - 使用LocalStorage
+        const result = await localStorageAdapter.createNotification(
+          notification
         );
-        return result;
-      }
+        if (result.success) {
+          console.log(
+            `[notificationService] Created follow notification in LocalStorage`
+          );
+          return result;
+        }
+      } else {
+        // 生产模式 - 使用Supabase (但主要依赖数据库触发器)
+        const supabaseResult = await supabaseAdapter.createNotification(
+          notification
+        );
+        if (supabaseResult.success) {
+          console.log(
+            `[notificationService] Created follow notification in Supabase`
+          );
+          return supabaseResult;
+        }
 
-      // 如果 LocalStorage 失败，尝试 Supabase
-      const supabaseResult = await supabaseAdapter.createNotification(
-        notification
-      );
-      if (supabaseResult.success) {
-        console.log(
-          `[notificationService] Created follow notification in Supabase`
+        // Supabase失败后，fallback到LocalStorage
+        const result = await localStorageAdapter.createNotification(
+          notification
         );
-        return supabaseResult;
+        if (result.success) {
+          console.log(
+            `[notificationService] Created follow notification in LocalStorage (fallback)`
+          );
+          return result;
+        }
       }
 
       console.warn(
@@ -86,7 +103,7 @@ export const notificationService = {
   ) => {
     try {
       const notification = {
-        id: `like_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: crypto.randomUUID(),
         type: 'like',
         senderId: likerId,
         senderName: likerName,
@@ -105,24 +122,39 @@ export const notificationService = {
         },
       };
 
-      // 优先保存到 LocalStorage
-      const result = await localStorageAdapter.createNotification(notification);
-      if (result.success) {
-        console.log(
-          `[notificationService] Created like notification in LocalStorage`
+      if (isMock()) {
+        // Mock模式 - 使用LocalStorage
+        const result = await localStorageAdapter.createNotification(
+          notification
         );
-        return result;
-      }
+        if (result.success) {
+          console.log(
+            `[notificationService] Created like notification in LocalStorage`
+          );
+          return result;
+        }
+      } else {
+        // 生产模式 - 使用Supabase (但主要依赖数据库触发器)
+        const supabaseResult = await supabaseAdapter.createNotification(
+          notification
+        );
+        if (supabaseResult.success) {
+          console.log(
+            `[notificationService] Created like notification in Supabase`
+          );
+          return supabaseResult;
+        }
 
-      // 如果 LocalStorage 失败，尝试 Supabase
-      const supabaseResult = await supabaseAdapter.createNotification(
-        notification
-      );
-      if (supabaseResult.success) {
-        console.log(
-          `[notificationService] Created like notification in Supabase`
+        // Supabase失败后，fallback到LocalStorage
+        const result = await localStorageAdapter.createNotification(
+          notification
         );
-        return supabaseResult;
+        if (result.success) {
+          console.log(
+            `[notificationService] Created like notification in LocalStorage (fallback)`
+          );
+          return result;
+        }
       }
 
       console.warn(`[notificationService] Failed to create like notification`);
@@ -156,7 +188,7 @@ export const notificationService = {
   ) => {
     try {
       const notification = {
-        id: `comment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: crypto.randomUUID(),
         type: 'comment',
         senderId: commenterId,
         senderName: commenterName,
@@ -176,24 +208,39 @@ export const notificationService = {
         },
       };
 
-      // 优先保存到 LocalStorage
-      const result = await localStorageAdapter.createNotification(notification);
-      if (result.success) {
-        console.log(
-          `[notificationService] Created comment notification in LocalStorage`
+      if (isMock()) {
+        // Mock模式 - 使用LocalStorage
+        const result = await localStorageAdapter.createNotification(
+          notification
         );
-        return result;
-      }
+        if (result.success) {
+          console.log(
+            `[notificationService] Created comment notification in LocalStorage`
+          );
+          return result;
+        }
+      } else {
+        // 生产模式 - 使用Supabase (但主要依赖数据库触发器)
+        const supabaseResult = await supabaseAdapter.createNotification(
+          notification
+        );
+        if (supabaseResult.success) {
+          console.log(
+            `[notificationService] Created comment notification in Supabase`
+          );
+          return supabaseResult;
+        }
 
-      // 如果 LocalStorage 失败，尝试 Supabase
-      const supabaseResult = await supabaseAdapter.createNotification(
-        notification
-      );
-      if (supabaseResult.success) {
-        console.log(
-          `[notificationService] Created comment notification in Supabase`
+        // Supabase失败后，fallback到LocalStorage
+        const result = await localStorageAdapter.createNotification(
+          notification
         );
-        return supabaseResult;
+        if (result.success) {
+          console.log(
+            `[notificationService] Created comment notification in LocalStorage (fallback)`
+          );
+          return result;
+        }
       }
 
       console.warn(
@@ -216,25 +263,40 @@ export const notificationService = {
    */
   getUserNotifications: async userId => {
     try {
-      // 优先级1: LocalStorage
-      const localStorageNotifications =
-        await localStorageAdapter.getUserNotifications(userId);
-      if (localStorageNotifications && localStorageNotifications.success) {
-        console.log(
-          `[notificationService] Using LocalStorage notifications for user ${userId}`
-        );
-        return localStorageNotifications;
-      }
+      // 根据环境变量决定使用哪种存储方式
+      if (isMock()) {
+        // Mock模式 - 使用LocalStorage
+        const localStorageNotifications =
+          await localStorageAdapter.getUserNotifications(userId);
+        if (localStorageNotifications && localStorageNotifications.success) {
+          console.log(
+            `[notificationService] Using LocalStorage notifications for user ${userId}`
+          );
+          return localStorageNotifications;
+        }
+      } else {
+        // 生产模式 - 使用Supabase
+        const supabaseNotifications =
+          await supabaseAdapter.getUserNotifications(userId);
+        if (supabaseNotifications && supabaseNotifications.success) {
+          console.log(
+            `[notificationService] Using Supabase notifications for user ${userId}`
+          );
+          return supabaseNotifications;
+        }
 
-      // 优先级2: Supabase
-      const supabaseNotifications = await supabaseAdapter.getUserNotifications(
-        userId
-      );
-      if (supabaseNotifications && supabaseNotifications.success) {
-        console.log(
-          `[notificationService] Using Supabase notifications for user ${userId}`
+        // Supabase失败后，fallback到LocalStorage
+        console.warn(
+          `[notificationService] Supabase failed, falling back to LocalStorage`
         );
-        return supabaseNotifications;
+        const localStorageNotifications =
+          await localStorageAdapter.getUserNotifications(userId);
+        if (localStorageNotifications && localStorageNotifications.success) {
+          console.log(
+            `[notificationService] Using LocalStorage notifications (fallback) for user ${userId}`
+          );
+          return localStorageNotifications;
+        }
       }
 
       console.log(
@@ -296,24 +358,39 @@ export const notificationService = {
         },
       };
 
-      // 优先保存到 LocalStorage
-      const result = await localStorageAdapter.createNotification(notification);
-      if (result.success) {
-        console.log(
-          `[notificationService] Created collaboration application notification in LocalStorage`
+      if (isMock()) {
+        // Mock模式 - 使用LocalStorage
+        const result = await localStorageAdapter.createNotification(
+          notification
         );
-        return result;
-      }
+        if (result.success) {
+          console.log(
+            `[notificationService] Created collaboration application notification in LocalStorage`
+          );
+          return result;
+        }
+      } else {
+        // 生产模式 - 使用Supabase
+        const supabaseResult = await supabaseAdapter.createNotification(
+          notification
+        );
+        if (supabaseResult.success) {
+          console.log(
+            `[notificationService] Created collaboration application notification in Supabase`
+          );
+          return supabaseResult;
+        }
 
-      // 如果 LocalStorage 失败，尝试 Supabase
-      const supabaseResult = await supabaseAdapter.createNotification(
-        notification
-      );
-      if (supabaseResult.success) {
-        console.log(
-          `[notificationService] Created collaboration application notification in Supabase`
+        // Supabase失败后，fallback到LocalStorage
+        const result = await localStorageAdapter.createNotification(
+          notification
         );
-        return supabaseResult;
+        if (result.success) {
+          console.log(
+            `[notificationService] Created collaboration application notification in LocalStorage (fallback)`
+          );
+          return result;
+        }
       }
 
       console.warn(
@@ -339,22 +416,33 @@ export const notificationService = {
    */
   markAsRead: async notificationId => {
     try {
-      // 优先更新 LocalStorage
-      const result = await localStorageAdapter.markAsRead(notificationId);
-      if (result.success) {
-        console.log(
-          `[notificationService] Marked notification ${notificationId} as read in LocalStorage`
-        );
-        return result;
-      }
+      if (isMock()) {
+        // Mock模式 - 使用LocalStorage
+        const result = await localStorageAdapter.markAsRead(notificationId);
+        if (result.success) {
+          console.log(
+            `[notificationService] Marked notification ${notificationId} as read in LocalStorage`
+          );
+          return result;
+        }
+      } else {
+        // 生产模式 - 使用Supabase
+        const supabaseResult = await supabaseAdapter.markAsRead(notificationId);
+        if (supabaseResult.success) {
+          console.log(
+            `[notificationService] Marked notification ${notificationId} as read in Supabase`
+          );
+          return supabaseResult;
+        }
 
-      // 如果 LocalStorage 失败，尝试 Supabase
-      const supabaseResult = await supabaseAdapter.markAsRead(notificationId);
-      if (supabaseResult.success) {
-        console.log(
-          `[notificationService] Marked notification ${notificationId} as read in Supabase`
-        );
-        return supabaseResult;
+        // Supabase失败后，fallback到LocalStorage
+        const result = await localStorageAdapter.markAsRead(notificationId);
+        if (result.success) {
+          console.log(
+            `[notificationService] Marked notification ${notificationId} as read in LocalStorage (fallback)`
+          );
+          return result;
+        }
       }
 
       console.warn(
@@ -377,22 +465,33 @@ export const notificationService = {
    */
   markAllAsRead: async userId => {
     try {
-      // 优先更新 LocalStorage
-      const result = await localStorageAdapter.markAllAsRead(userId);
-      if (result.success) {
-        console.log(
-          `[notificationService] Marked all notifications as read in LocalStorage for user ${userId}`
-        );
-        return result;
-      }
+      if (isMock()) {
+        // Mock模式 - 使用LocalStorage
+        const result = await localStorageAdapter.markAllAsRead(userId);
+        if (result.success) {
+          console.log(
+            `[notificationService] Marked all notifications as read in LocalStorage for user ${userId}`
+          );
+          return result;
+        }
+      } else {
+        // 生产模式 - 使用Supabase
+        const supabaseResult = await supabaseAdapter.markAllAsRead(userId);
+        if (supabaseResult.success) {
+          console.log(
+            `[notificationService] Marked all notifications as read in Supabase for user ${userId}`
+          );
+          return supabaseResult;
+        }
 
-      // 如果 LocalStorage 失败，尝试 Supabase
-      const supabaseResult = await supabaseAdapter.markAllAsRead(userId);
-      if (supabaseResult.success) {
-        console.log(
-          `[notificationService] Marked all notifications as read in Supabase for user ${userId}`
-        );
-        return supabaseResult;
+        // Supabase失败后，fallback到LocalStorage
+        const result = await localStorageAdapter.markAllAsRead(userId);
+        if (result.success) {
+          console.log(
+            `[notificationService] Marked all notifications as read in LocalStorage (fallback) for user ${userId}`
+          );
+          return result;
+        }
       }
 
       console.warn(
@@ -418,26 +517,39 @@ export const notificationService = {
    */
   deleteNotification: async notificationId => {
     try {
-      // 优先删除 LocalStorage
-      const result = await localStorageAdapter.deleteNotification(
-        notificationId
-      );
-      if (result.success) {
-        console.log(
-          `[notificationService] Deleted notification ${notificationId} in LocalStorage`
+      if (isMock()) {
+        // Mock模式 - 使用LocalStorage
+        const result = await localStorageAdapter.deleteNotification(
+          notificationId
         );
-        return result;
-      }
+        if (result.success) {
+          console.log(
+            `[notificationService] Deleted notification ${notificationId} in LocalStorage`
+          );
+          return result;
+        }
+      } else {
+        // 生产模式 - 使用Supabase
+        const supabaseResult = await supabaseAdapter.deleteNotification(
+          notificationId
+        );
+        if (supabaseResult.success) {
+          console.log(
+            `[notificationService] Deleted notification ${notificationId} in Supabase`
+          );
+          return supabaseResult;
+        }
 
-      // 如果 LocalStorage 失败，尝试 Supabase
-      const supabaseResult = await supabaseAdapter.deleteNotification(
-        notificationId
-      );
-      if (supabaseResult.success) {
-        console.log(
-          `[notificationService] Deleted notification ${notificationId} in Supabase`
+        // Supabase失败后，fallback到LocalStorage
+        const result = await localStorageAdapter.deleteNotification(
+          notificationId
         );
-        return supabaseResult;
+        if (result.success) {
+          console.log(
+            `[notificationService] Deleted notification ${notificationId} in LocalStorage (fallback)`
+          );
+          return result;
+        }
       }
 
       console.warn(
@@ -484,24 +596,39 @@ export const notificationService = {
         },
       };
 
-      // 优先保存到 LocalStorage
-      const result = await localStorageAdapter.createNotification(notification);
-      if (result.success) {
-        console.log(
-          `[notificationService] Created general notification in LocalStorage`
+      if (isMock()) {
+        // Mock模式 - 使用LocalStorage
+        const result = await localStorageAdapter.createNotification(
+          notification
         );
-        return result;
-      }
+        if (result.success) {
+          console.log(
+            `[notificationService] Created general notification in LocalStorage`
+          );
+          return result;
+        }
+      } else {
+        // 生产模式 - 使用Supabase
+        const supabaseResult = await supabaseAdapter.createNotification(
+          notification
+        );
+        if (supabaseResult.success) {
+          console.log(
+            `[notificationService] Created general notification in Supabase`
+          );
+          return supabaseResult;
+        }
 
-      // 如果 LocalStorage 失败，尝试 Supabase
-      const supabaseResult = await supabaseAdapter.createNotification(
-        notification
-      );
-      if (supabaseResult.success) {
-        console.log(
-          `[notificationService] Created general notification in Supabase`
+        // Supabase失败后，fallback到LocalStorage
+        const result = await localStorageAdapter.createNotification(
+          notification
         );
-        return supabaseResult;
+        if (result.success) {
+          console.log(
+            `[notificationService] Created general notification in LocalStorage (fallback)`
+          );
+          return result;
+        }
       }
 
       console.warn(

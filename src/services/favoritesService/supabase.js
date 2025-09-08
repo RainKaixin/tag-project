@@ -153,33 +153,29 @@ const supabaseAdapter = {
     const { userId, itemType, itemId } = params;
 
     try {
-      const { data, error } = await supabase
+      const { data: favorites, error } = await supabase
         .from('favorites')
         .select('id')
         .eq('user_id', userId)
         .eq('item_type', itemType)
         .eq('item_id', itemId)
-        .single();
+        .limit(1);
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          // no rows returned
-          console.log(
-            '[Favorites] Supabase checkFavoriteStatus: not favorited'
-          );
-          return {
-            success: true,
-            data: { isFavorited: false, favoriteId: null },
-          };
-        }
         console.error('[Favorites] Supabase checkFavoriteStatus error:', error);
         return { success: false, error: error.message };
       }
 
-      console.log('[Favorites] Supabase checkFavoriteStatus: favorited');
+      const isFavorited = favorites && favorites.length > 0;
+      const favoriteId = isFavorited ? favorites[0].id : null;
+
+      console.log(
+        '[Favorites] Supabase checkFavoriteStatus:',
+        isFavorited ? 'favorited' : 'not favorited'
+      );
       return {
         success: true,
-        data: { isFavorited: true, favoriteId: data.id },
+        data: { isFavorited, favoriteId },
       };
     } catch (error) {
       console.error(

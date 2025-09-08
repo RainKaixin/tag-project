@@ -16,7 +16,7 @@ const useNotificationActions = ({ state, setters }) => {
     try {
       setIsLoading(true);
       const result = await notificationService.getUserNotifications(
-        getCurrentUserId()
+        await getCurrentUserId()
       );
       if (result.success) {
         const notifications = result.data || [];
@@ -50,7 +50,7 @@ const useNotificationActions = ({ state, setters }) => {
 
     load();
 
-    const onChange = e => {
+    const onChange = async e => {
       const id = e?.detail?.userId;
       console.log(
         'NotificationCenter: Received event:',
@@ -58,9 +58,9 @@ const useNotificationActions = ({ state, setters }) => {
         'for user:',
         id,
         'current user:',
-        getCurrentUserId()
+        await getCurrentUserId()
       );
-      if (!id || id === getCurrentUserId()) {
+      if (!id || id === (await getCurrentUserId())) {
         console.log(
           'NotificationCenter: Reloading notifications due to change'
         );
@@ -144,7 +144,7 @@ const useNotificationActions = ({ state, setters }) => {
 
         // 重新加载通知列表以更新状态
         const result = await notificationService.getUserNotifications(
-          getCurrentUserId()
+          await getCurrentUserId()
         );
         if (result.success) {
           setItems(result.data || []);
@@ -159,7 +159,7 @@ const useNotificationActions = ({ state, setters }) => {
   // 标记所有为已读
   const handleMarkAllAsRead = useCallback(async () => {
     try {
-      await notificationService.markAllAsRead(getCurrentUserId());
+      await notificationService.markAllAsRead(await getCurrentUserId());
       console.log('NotificationCenter: Marked all as read');
     } catch (error) {
       console.error('Error marking notifications as read:', error);
@@ -178,7 +178,7 @@ const useNotificationActions = ({ state, setters }) => {
     async (notification, action) => {
       try {
         const { requestId } = notification.meta;
-        const currentUserId = getCurrentUserId();
+        const currentUserId = await getCurrentUserId();
 
         console.log('Handling collaboration request:', {
           requestId,

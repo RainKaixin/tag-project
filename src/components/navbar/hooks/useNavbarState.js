@@ -86,7 +86,7 @@ const useNavbarState = user => {
       mounted = false;
       window.removeEventListener('notif:unreadChanged', onChange);
     };
-  }, []); // 空依赖数组，只在挂载时执行
+  }, [currentUser]); // 依赖 currentUser，当用户状态变化时重新执行
 
   // 外部点击关闭下拉菜单
   useEffect(() => {

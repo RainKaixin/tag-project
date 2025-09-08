@@ -98,6 +98,16 @@ export const localStorageAdapter = {
 
       for (const key of keys) {
         const notifications = JSON.parse(localStorage.getItem(key) || '[]');
+
+        // 確保 notifications 是數組
+        if (!Array.isArray(notifications)) {
+          console.warn(
+            `[localStorageAdapter] Notifications for key ${key} is not an array:`,
+            notifications
+          );
+          continue;
+        }
+
         const notificationIndex = notifications.findIndex(
           n => n.id === notificationId
         );

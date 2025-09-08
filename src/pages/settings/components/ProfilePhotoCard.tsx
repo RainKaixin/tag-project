@@ -29,33 +29,37 @@ const ProfilePhotoCard: React.FC<ProfilePhotoCardProps> = ({
 
   // 初始化時從 localStorage 獲取頭像
   useEffect(() => {
-    if (!localAvatar && typeof window !== 'undefined') {
-      try {
-        // 从当前用户ID获取头像
-        const currentUserId = getCurrentUserId();
-        if (currentUserId) {
-          const avatarData = window.localStorage.getItem(
-            `tag.avatars.${currentUserId}`
-          );
-          if (avatarData) {
-            const parsedData = JSON.parse(avatarData);
-            if (parsedData && parsedData.avatarUrl) {
-              console.log(
-                '[ProfilePhotoCard] Initialized from localStorage:',
-                parsedData.avatarUrl?.substring(0, 30)
-              );
-              setLocalAvatar(parsedData.avatarUrl);
+    const initializeAvatar = async () => {
+      if (!localAvatar && typeof window !== 'undefined') {
+        try {
+          // 从当前用户ID获取头像
+          const currentUserId = await getCurrentUserId();
+          if (currentUserId) {
+            const avatarData = window.localStorage.getItem(
+              `tag.avatars.${currentUserId}`
+            );
+            if (avatarData) {
+              const parsedData = JSON.parse(avatarData);
+              if (parsedData && parsedData.avatarUrl) {
+                console.log(
+                  '[ProfilePhotoCard] Initialized from localStorage:',
+                  parsedData.avatarUrl?.substring(0, 30)
+                );
+                setLocalAvatar(parsedData.avatarUrl);
+              }
             }
           }
+        } catch (error) {
+          console.warn(
+            '[ProfilePhotoCard] Failed to read avatar from localStorage:',
+            error
+          );
         }
-      } catch (error) {
-        console.warn(
-          '[ProfilePhotoCard] Failed to read avatar from localStorage:',
-          error
-        );
       }
-    }
-  }, []);
+    };
+
+    initializeAvatar();
+  }, [localAvatar]);
 
   // 默认头像 SVG
   const DEFAULT_AVATAR =
