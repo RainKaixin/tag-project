@@ -102,7 +102,7 @@ export const validateFormData = formData => {
   } else if (
     !validatePasswordConfirmation(formData.password, formData.confirmPassword)
   ) {
-    errors.confirmPassword = 'Passwords do not match';
+    errors.confirmPassword = 'Passwords do not match'；
   }
 
   return {
