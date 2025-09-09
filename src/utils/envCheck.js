@@ -1,8 +1,7 @@
 // Mock API 状态检查（兼容 CRA 和 Vite）
 export const isMock = () => {
-  // 优先检查 CRA 环境变量，然后检查 Vite 环境变量
-  const useMock =
-    process.env.REACT_APP_USE_MOCK_API || import.meta?.env?.VITE_USE_MOCK_API;
+  // 优先检查 CRA 环境变量
+  const useMock = process.env.REACT_APP_USE_MOCK_API;
   return useMock === 'true';
 };
 

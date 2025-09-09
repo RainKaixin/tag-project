@@ -13,14 +13,10 @@ const SupabaseConnectionTest = () => {
   useEffect(() => {
     // 檢查環境變量
     setEnvVars({
-      VITE_SUPABASE_URL:
-        process.env.REACT_APP_SUPABASE_URL ||
-        import.meta?.env?.VITE_SUPABASE_URL,
-      VITE_SUPABASE_ANON_KEY:
-        process.env.REACT_APP_SUPABASE_ANON_KEY ||
-        import.meta?.env?.VITE_SUPABASE_ANON_KEY
-          ? '✅ 已設置'
-          : '❌ 未設置',
+      REACT_APP_SUPABASE_URL: process.env.REACT_APP_SUPABASE_URL || '未設置',
+      REACT_APP_SUPABASE_ANON_KEY: process.env.REACT_APP_SUPABASE_ANON_KEY
+        ? '✅ 已設置'
+        : '❌ 未設置',
     });
 
     // 測試連接

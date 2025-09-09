@@ -1,11 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-// 从环境变量获取Supabase配置（兼容 CRA 和 Vite）
-const supabaseUrl =
-  process.env.REACT_APP_SUPABASE_URL || import.meta?.env?.VITE_SUPABASE_URL;
-const supabaseKey =
-  process.env.REACT_APP_SUPABASE_ANON_KEY ||
-  import.meta?.env?.VITE_SUPABASE_ANON_KEY;
+// 从环境变量获取Supabase配置
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
 // 检查环境变量是否配置
 if (!supabaseUrl || !supabaseKey) {

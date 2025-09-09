@@ -23,7 +23,8 @@
   ],
   "env": {
     "GENERATE_SOURCEMAP": "false",
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "CI": "false"
   },
   "buildCommand": "npm run build"
 }
