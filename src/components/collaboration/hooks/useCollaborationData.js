@@ -693,7 +693,7 @@ export const useCollaborationData = () => {
           // 使用智能清理器清理空间
           try {
             const { default: smartDataCleaner } = await import(
-              '../../utils/smartDataCleaner.js'
+              '../../../utils/smartDataCleaner.js'
             );
 
             // 执行智能清理

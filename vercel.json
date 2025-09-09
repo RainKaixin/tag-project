@@ -22,6 +22,8 @@
     }
   ],
   "env": {
-    "GENERATE_SOURCEMAP": "false"
-  }
+    "GENERATE_SOURCEMAP": "false",
+    "NODE_ENV": "production"
+  },
+  "buildCommand": "npm run build"
 }
