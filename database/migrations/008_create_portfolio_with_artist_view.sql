@@ -33,3 +33,4 @@ CREATE INDEX IF NOT EXISTS idx_portfolio_with_artist_is_public ON portfolio(is_p
 
 
 
+

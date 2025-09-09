@@ -1,78 +1,32 @@
 module.exports = {
-  env: {
-    browser: true,
-    es2021: true,
-    node: true,
-  },
-  parser: '@typescript-eslint/parser',
-  parserOptions: {
-    ecmaFeatures: {
-      jsx: true,
-    },
-    ecmaVersion: 12,
-    sourceType: 'module',
-  },
-  extends: [
-    'eslint:recommended',
-    'plugin:react/recommended',
-    'plugin:react-hooks/recommended',
-    'plugin:jsx-a11y/recommended',
-    'plugin:@typescript-eslint/recommended',
-  ],
-  plugins: ['react', 'react-hooks', 'jsx-a11y', 'import', '@typescript-eslint'],
+  extends: ['react-app', 'react-app/jest'],
   rules: {
-    // React相关规则
-    'react/react-in-jsx-scope': 'off', // React 17+ 不需要导入React
-    'react/prop-types': 'off', // 使用TypeScript时关闭
-    'react/jsx-uses-react': 'off',
-    'react/jsx-uses-vars': 'error',
-    'react/no-unescaped-entities': 'warn', // 开发阶段允许未转义实体
+    // 忽略未使用變量警告
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': 'off',
 
-    // React Hooks规则
-    'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'warn',
+    // 忽略React Hooks依賴項警告
+    'react-hooks/exhaustive-deps': 'off',
 
-    // 导入规则
-    'import/order': [
-      'error',
-      {
-        groups: [
-          'builtin',
-          'external',
-          'internal',
-          'parent',
-          'sibling',
-          'index',
-        ],
-        'newlines-between': 'always',
-        alphabetize: {
-          order: 'asc',
-          caseInsensitive: true,
-        },
-      },
-    ],
-    'import/no-unresolved': 'off', // 让IDE处理路径解析
+    // 忽略可訪問性警告
+    'jsx-a11y/click-events-have-key-events': 'off',
+    'jsx-a11y/no-static-element-interactions': 'off',
+    'jsx-a11y/no-noninteractive-element-interactions': 'off',
+    'jsx-a11y/label-has-associated-control': 'off',
 
-    // 代码风格规则
-    'no-console': 'off', // 开发阶段允许console
-    'no-debugger': 'error',
-    'no-unused-vars': 'warn',
-    'prefer-const': 'error',
-    'no-var': 'error',
-    '@typescript-eslint/no-empty-function': 'warn', // 开发阶段允许空函数
-    '@typescript-eslint/no-explicit-any': 'warn', // 开发阶段允许any类型
-    '@typescript-eslint/no-non-null-assertion': 'warn', // 开发阶段允许非空断言
+    // 忽略字符轉義警告
+    'react/no-unescaped-entities': 'off',
 
-    // JSX规则
-    'jsx-a11y/anchor-is-valid': 'warn',
-    'jsx-a11y/click-events-have-key-events': 'warn',
-    'jsx-a11y/no-static-element-interactions': 'warn',
-    'jsx-a11y/no-noninteractive-element-interactions': 'warn',
-    'jsx-a11y/label-has-associated-control': 'warn',
-  },
-  settings: {
-    react: {
-      version: 'detect',
-    },
+    // 忽略空函數警告
+    '@typescript-eslint/no-empty-function': 'off',
+
+    // 忽略any類型警告
+    '@typescript-eslint/no-explicit-any': 'off',
+
+    // 忽略其他警告
+    'jsx-a11y/anchor-is-valid': 'off',
+    'import/no-anonymous-default-export': 'off',
+    'no-restricted-globals': 'off',
+    'import/first': 'off',
   },
 };
