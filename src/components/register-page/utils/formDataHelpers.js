@@ -31,7 +31,7 @@ export const validateEmail = email => {
 export const validateScadEmail = email => {
   if (!email) return false;
   const emailLower = email.toLowerCase();
-  return emailLower.endsWith('@scad.edu');
+  return emailLower.includes('@scad.edu');
 };
 
 /**
