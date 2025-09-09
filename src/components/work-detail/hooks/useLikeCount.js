@@ -58,9 +58,6 @@ const useLikeCount = (artworkId, initialLikeCount = 0, workData = null) => {
           result.data.likes
         );
 
-        // 暫時禁用通知創建，等待數據庫約束問題修復
-        // TODO: 修復 notifications_unique_follow 約束問題後重新啟用
-        /*
         // 如果开始点赞，创建点赞通知（只有当点赞者不是作品作者时）
         if (
           result.data.liked &&
@@ -90,7 +87,6 @@ const useLikeCount = (artworkId, initialLikeCount = 0, workData = null) => {
             );
           }
         }
-        */
 
         // 調試：打印詳細的點讚統計
         console.log(

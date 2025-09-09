@@ -1,11 +1,12 @@
 // user-dropdown v1: 用户下拉菜单组件
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { NotificationBadge } from '../../ui';
 import { isUserLoggedIn } from '../utils/navbarHelpers';
 
+import LogoutConfirmModal from './LogoutConfirmModal';
 import UserAvatar from './UserAvatar';
 
 /**
@@ -33,12 +34,28 @@ const UserDropdown = ({
 }) => {
   const isLoggedIn = isUserLoggedIn(user);
   const navigate = useNavigate();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // 处理头像点击 - 直接跳转到艺术家主页面
   const handleAvatarClick = () => {
     if (isLoggedIn) {
       navigate('/artist/me');
     }
+  };
+
+  // 处理登出按钮点击 - 显示确认弹窗
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  // 处理确认登出
+  const handleConfirmLogout = () => {
+    onLogoutClick();
+  };
+
+  // 处理取消登出
+  const handleCancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   return (
@@ -138,7 +155,7 @@ const UserDropdown = ({
 
           {/* 登出选项 */}
           <button
-            onClick={onLogoutClick}
+            onClick={handleLogoutClick}
             className='flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200 border-t border-gray-100'
           >
             <svg
@@ -158,6 +175,14 @@ const UserDropdown = ({
           </button>
         </div>
       )}
+
+      {/* 登出确认弹窗 */}
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onClose={handleCancelLogout}
+        onConfirm={handleConfirmLogout}
+        userEmail={user?.email || user?.user_metadata?.email}
+      />
     </div>
   );
 };

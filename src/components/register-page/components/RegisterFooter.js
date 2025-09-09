@@ -1,7 +1,10 @@
 // register-footer v1: 注册页面底部组件
 // 从 RegisterPage.js 中提取的底部区域
 
-import React from 'react';
+import React, { useState } from 'react';
+
+import PrivacyPolicyModal from './PrivacyPolicyModal';
+import TermsOfServiceModal from './TermsOfServiceModal';
 
 /**
  * RegisterFooter 组件 - 注册页面底部区域
@@ -10,6 +13,17 @@ import React from 'react';
  * @returns {JSX.Element} 底部组件
  */
 const RegisterFooter = ({ onLoginClick }) => {
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+
+  const handlePrivacyClick = () => {
+    setShowPrivacyModal(true);
+  };
+
+  const handleTermsClick = () => {
+    setShowTermsModal(true);
+  };
+
   return (
     <>
       {/* Bottom Options */}
@@ -31,16 +45,32 @@ const RegisterFooter = ({ onLoginClick }) => {
               <span className='ml-2'>© 2025 TAG. All rights reserved.</span>
             </div>
             <div className='flex space-x-6 text-sm text-gray-500'>
-              <a href='#' className='hover:text-gray-700'>
+              <button
+                onClick={handlePrivacyClick}
+                className='hover:text-gray-700 transition-colors duration-200'
+              >
                 Privacy Policy
-              </a>
-              <a href='#' className='hover:text-gray-700'>
+              </button>
+              <button
+                onClick={handleTermsClick}
+                className='hover:text-gray-700 transition-colors duration-200'
+              >
                 Terms of Service
-              </a>
+              </button>
             </div>
           </div>
         </div>
       </footer>
+
+      {/* 彈窗組件 */}
+      <PrivacyPolicyModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+      />
+      <TermsOfServiceModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+      />
     </>
   );
 };

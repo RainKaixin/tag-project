@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 
 import NavBar from './components/navbar/NavBar_refactored';
@@ -6,7 +6,7 @@ import { LoadingOverlay, ScrollToTop } from './components/ui';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { Splash } from './components/ui/Splash';
 import { AppProvider, useAppContext } from './context/AppContext';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import AppRoutes from './routes/AppRoutes';
 import smartDataCleaner from './utils/smartDataCleaner';
 

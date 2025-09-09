@@ -12,6 +12,15 @@ export const getProfile = async userId => {
   try {
     console.log(`[Supabase Profile] Getting profile for user: ${userId}`);
 
+    // 验证 userId 是否为有效的 UUID 格式
+    if (!userId || !isValidUUID(userId)) {
+      console.warn(`[Supabase Profile] Invalid userId format: ${userId}`);
+      return {
+        success: false,
+        error: 'Invalid user ID format',
+      };
+    }
+
     // 不再为特定用户ID提供Mock数据回退
     // 所有用户都应该从Supabase获取真实数据
 
@@ -64,6 +73,15 @@ export const getProfile = async userId => {
 export const saveProfile = async (userId, profileData) => {
   try {
     console.log(`[Supabase Profile] Saving profile for user: ${userId}`);
+
+    // 验证 userId 是否为有效的 UUID 格式
+    if (!userId || !isValidUUID(userId)) {
+      console.warn(`[Supabase Profile] Invalid userId format: ${userId}`);
+      return {
+        success: false,
+        error: 'Invalid user ID format',
+      };
+    }
 
     // 不再为特定用户ID提供Mock模式限制
     // 所有用户都应该能够保存到Supabase

@@ -29,9 +29,8 @@ const RegisterForm = ({
   // 检查邮箱是否为有效的 SCAD 邮箱（保留逻辑，暂时不启用）
   const isScadEmail = validateScadEmail(formData.email);
 
-  // 开发阶段：暂时关闭邮箱限制，允许所有邮箱注册
-  // TODO: 生产环境时启用此限制
-  const isDevelopmentMode = true; // 开发模式标志
+  // 启用 SCAD 邮箱限制，只允许 @scad.edu 邮箱注册
+  const isDevelopmentMode = false; // 开发模式标志
   const allowAllEmails = isDevelopmentMode; // 是否允许所有邮箱
 
   // 密码显示状态

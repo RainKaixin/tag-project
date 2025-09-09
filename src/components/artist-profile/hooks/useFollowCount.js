@@ -66,63 +66,30 @@ const useFollowCount = artistId => {
       let result;
 
       if (currentlyFollowing) {
-        // 当前已关注，执行取消关注
+        // 取消关注
         result = await unfollowUser(currentUser.id, artistId);
+        if (!result.success) {
+          console.error('[FollowCount] Failed to unfollow:', result.error);
+          return;
+        }
+        setIsFollowingState(false);
+        setFollowersCount(prev => Math.max(0, prev - 1));
       } else {
-        // 当前未关注，执行关注
+        // 关注
         result = await followUser(currentUser.id, artistId);
-      }
-
-      if (result.success) {
-        const newFollowingState = !currentlyFollowing;
-
-        // 更新本地状态
-        setIsFollowingState(newFollowingState);
-
-        // 获取最新的关注者数量
-        const followersResult = await getFollowers(artistId);
-        if (followersResult.success) {
-          setFollowersCount(followersResult.data.length);
+        if (!result.success) {
+          // 如果是409错误，说明已关注，需要同步状态
+          if (result.error && result.error.includes('already follows')) {
+            console.log('[FollowCount] Already following, syncing state');
+            setIsFollowingState(true);
+            await refreshFollowStatus();
+            return;
+          }
+          console.error('[FollowCount] Failed to follow:', result.error);
+          return;
         }
-
-        console.log(
-          '[FollowCount] Follow toggled successfully:',
-          newFollowingState ? 'Following' : 'Unfollowing'
-        );
-
-        // 触发 follow:changed 事件，通知其他组件更新
-        const followChangedEvent = new CustomEvent('follow:changed', {
-          detail: {
-            followerId: currentUser.id,
-            artistId: artistId,
-            isFollowing: newFollowingState,
-            operation: newFollowingState ? 'follow' : 'unfollow',
-          },
-        });
-        window.dispatchEvent(followChangedEvent);
-
-        // 如果开始关注，通知将由数据库触发器自动创建
-        if (newFollowingState) {
-          console.log(
-            '[FollowCount] Follow successful - notification will be created by database trigger'
-          );
-        }
-
-        // 触发关注状态变化事件，通知其他组件更新
-        window.dispatchEvent(
-          new CustomEvent('follow:changed', {
-            detail: {
-              followerId: currentUser.id,
-              artistId,
-              isFollowing: newFollowingState,
-              followersCount: followersResult.success
-                ? followersResult.data.length
-                : followersCount,
-            },
-          })
-        );
-      } else {
-        console.error('[FollowCount] Failed to toggle follow:', result.error);
+        setIsFollowingState(true);
+        setFollowersCount(prev => prev + 1);
       }
     } catch (error) {
       console.error('[FollowCount] Error toggling follow:', error);
@@ -147,6 +114,8 @@ const useFollowCount = artistId => {
       // 检查关注状态
       const followResult = await checkIsFollowing(currentUser.id, artistId);
       if (!followResult.success) {
+        // 如果查询失败，默认设为 false
+        setIsFollowingState(false);
         console.error(
           '[FollowCount] Failed to check follow status:',
           followResult.error
@@ -164,7 +133,12 @@ const useFollowCount = artistId => {
         return;
       }
 
-      setFollowersCount(followersResult.data.length);
+      // 使用 count 字段或 data.length，優先使用 count
+      const count =
+        followersResult.count !== undefined
+          ? followersResult.count
+          : followersResult.data.length;
+      setFollowersCount(count);
       setIsFollowingState(followResult.isFollowing);
       console.log(
         '[FollowCount] Refreshed follow status:',
@@ -185,11 +159,11 @@ const useFollowCount = artistId => {
       const result = await getFollowers(artistId);
 
       if (result.success) {
-        setFollowersCount(result.data.length);
-        console.log(
-          '[FollowCount] Refreshed followers count:',
-          result.data.length
-        );
+        // 使用 count 字段或 data.length，優先使用 count
+        const count =
+          result.count !== undefined ? result.count : result.data.length;
+        setFollowersCount(count);
+        console.log('[FollowCount] Refreshed followers count:', count);
       } else {
         console.error(
           '[FollowCount] Failed to refresh followers count:',

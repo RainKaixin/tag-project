@@ -342,3 +342,4 @@ create index if not exists idx_portfolio_with_artist_is_public on public.portfol
 
 
 
+

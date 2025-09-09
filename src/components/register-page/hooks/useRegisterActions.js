@@ -51,7 +51,7 @@ const useRegisterActions = ({
           // 提示用户检查邮箱
           setError(
             'email',
-            '✅ Verification code sent! Please check your inbox.'
+            "✅ Verification code sent! Please check your inbox.\nIf you don't receive the email, please check your junk/spam folder."
           );
           // 發送成功後，通知組件跳轉到 OTP 驗證步驟
           if (onStepChange) {

@@ -270,8 +270,13 @@ const ArtistHeader = ({
                     toggleFollow();
                   }}
                   className={getFollowButtonStyle(isFollowing)}
+                  disabled={isFollowing === null}
                 >
-                  {isFollowing ? 'Following' : 'Follow'}
+                  {isFollowing === null
+                    ? 'Loading...'
+                    : isFollowing
+                    ? 'Following'
+                    : 'Follow'}
                 </button>
               )}
             </div>

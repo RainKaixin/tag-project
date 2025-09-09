@@ -613,6 +613,12 @@ export const getRoleBadgeStyle = isInitiator => {
 export const getFollowButtonStyle = isFollowing => {
   const baseStyle =
     'px-4 py-2 rounded-md font-medium transition-colors duration-200';
+
+  // 如果狀態為 null（未加載），顯示加載狀態
+  if (isFollowing === null) {
+    return `${baseStyle} bg-gray-300 text-gray-500 cursor-not-allowed`;
+  }
+
   return isFollowing
     ? `${baseStyle} bg-gray-200 text-gray-700 hover:bg-gray-300`
     : `${baseStyle} bg-blue-500 text-white hover:bg-blue-600`;

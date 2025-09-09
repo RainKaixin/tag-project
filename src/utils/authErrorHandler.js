@@ -4,7 +4,10 @@
 export const getErrorMessage = error => {
   const message = error.message.toLowerCase();
 
-  if (message.includes('already registered')) {
+  if (
+    message.includes('already registered') ||
+    message.includes('registered')
+  ) {
     return 'This email is already registered. Please sign in or use a different email.';
   }
   if (message.includes('expired')) {

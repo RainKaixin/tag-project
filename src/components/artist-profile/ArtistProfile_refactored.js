@@ -48,10 +48,7 @@ const ArtistProfile = () => {
   });
 
   // 使用关注管理Hook
-  const followCountState = useFollowCount(
-    artistState.artist?.id,
-    artistState.followersCount
-  );
+  const followCountState = useFollowCount(artistState.artist?.id);
 
   // 使用 Following 计数 Hook
   const followingCountState = useFollowingCount(
@@ -95,8 +92,8 @@ const ArtistProfile = () => {
           '[ArtistProfile] Current artist was followed/unfollowed, refreshing followers count'
         );
         // 觸發 Followers 計數刷新
-        if (followCountState.refresh) {
-          followCountState.refresh();
+        if (followCountState.refreshFollowersCount) {
+          followCountState.refreshFollowersCount();
         }
       }
     };

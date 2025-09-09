@@ -83,11 +83,6 @@ export const usePortfolioForm = () => {
       const value = e.target.value;
       setTagInput(value);
 
-      // 檢查是否以 # 開頭
-      if (!value.startsWith('#') && value.length > 0) {
-        return; // 不是以 # 開頭，不處理
-      }
-
       // 檢查分隔符：空格、逗號、回車
       const separators = [' ', ',', '\n'];
       const hasSeparator = separators.some(separator =>
@@ -101,13 +96,15 @@ export const usePortfolioForm = () => {
           return;
         }
 
-        // 提取當前標籤
-        const currentTag = value.split(/[\s,\n]/)[0].toLowerCase();
+        // 提取當前標籤，移除 # 前綴（如果存在）
+        let currentTag = value.split(/[\s,\n]/)[0];
+        if (currentTag.startsWith('#')) {
+          currentTag = currentTag.slice(1);
+        }
 
-        // 使用統一的標籤解析器驗證
-        const extractedTags = extractTags(currentTag);
-        if (extractedTags.length > 0) {
-          const newTag = `#${extractedTags[0].slug}`;
+        // 驗證標籤是否有效（至少2個字符，只包含字母數字下劃線短橫線）
+        if (currentTag.length >= 2 && /^[a-zA-Z0-9_-]+$/.test(currentTag)) {
+          const newTag = `#${currentTag.toLowerCase()}`;
           // 檢查是否重複
           if (!formData.tags.includes(newTag)) {
             setFormData(prev => ({
@@ -127,7 +124,7 @@ export const usePortfolioForm = () => {
   // 處理標籤輸入框的鍵盤事件
   const handleTagInputKeyDown = useCallback(
     e => {
-      if (e.key === 'Enter' || e.key === ',') {
+      if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
         e.preventDefault();
 
         // 檢查標籤數量限制
@@ -137,11 +134,16 @@ export const usePortfolioForm = () => {
         }
 
         const value = tagInput.trim();
-        if (value.startsWith('#')) {
-          // 使用統一的標籤解析器驗證
-          const extractedTags = extractTags(value);
-          if (extractedTags.length > 0) {
-            const newTag = `#${extractedTags[0].slug}`;
+        if (value.length > 0) {
+          // 移除 # 前綴（如果存在）
+          let currentTag = value;
+          if (currentTag.startsWith('#')) {
+            currentTag = currentTag.slice(1);
+          }
+
+          // 驗證標籤是否有效（至少2個字符，只包含字母數字下劃線短橫線）
+          if (currentTag.length >= 2 && /^[a-zA-Z0-9_-]+$/.test(currentTag)) {
+            const newTag = `#${currentTag.toLowerCase()}`;
             if (!formData.tags.includes(newTag)) {
               setFormData(prev => ({
                 ...prev,
