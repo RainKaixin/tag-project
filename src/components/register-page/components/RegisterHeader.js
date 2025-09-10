@@ -24,7 +24,7 @@ const RegisterHeader = () => {
       </h2>
       <p className='text-sm text-gray-600 mb-4 whitespace-nowrap'>
         Only <span className='text-red-600 font-semibold'>scad.edu</span> emails
-        are currently eligible for TAG registration.
+        are currently eligible for TAG registration
       </p>
     </div>
   );
