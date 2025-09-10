@@ -1,0 +1,37 @@
+User-agent: *
+Allow: /
+
+# 允許訪問靜態資源
+Allow: /assets/
+Allow: /TAG_Logo.png
+Allow: /TAG_mini_logo.png
+Allow: /favicon.ico
+
+# 允許訪問SEO文件
+Allow: /sitemap.xml
+Allow: /robots.txt
+
+# 禁止訪問管理頁面
+Disallow: /admin/
+Disallow: /test-supabase
+Disallow: /testing/
+
+# 禁止訪問用戶私有頁面（需要登錄的頁面）
+Disallow: /me
+Disallow: /tagme
+Disallow: /upload
+Disallow: /settings
+
+# 允許訪問公開頁面
+Allow: /
+Allow: /about
+Allow: /work/
+Allow: /artist/
+Allow: /t/
+Allow: /major/
+Allow: /login
+Allow: /register
+
+# Sitemap位置
+Sitemap: https://www.techartguide.com/sitemap.xml
+Sitemap: https://tag-project-git-main-rain-wangs-projects.vercel.app/sitemap.xml

@@ -33,6 +33,29 @@ const RegisterForm = ({
   const isDevelopmentMode = false; // 开发模式标志
   const allowAllEmails = isDevelopmentMode; // 是否允许所有邮箱
 
+  // 檢查是否為有效的SCAD郵箱（包括student.scad.edu）
+  const isValidScadEmail = isScadEmail;
+
+  // 調試信息
+  console.log('RegisterForm Debug:', {
+    email: formData.email,
+    isScadEmail,
+    isValidScadEmail,
+    allowAllEmails,
+    isSendingCode,
+    buttonDisabled: isSendingCode || (!allowAllEmails && !isValidScadEmail),
+  });
+
+  // 測試 validateScadEmail 函數
+  console.log('Email validation test:', {
+    'test@scad.edu': validateScadEmail('test@scad.edu'),
+    'test@student.scad.edu': validateScadEmail('test@student.scad.edu'),
+    'test@mail.student.scad.edu': validateScadEmail(
+      'test@mail.student.scad.edu'
+    ),
+    'test@gmail.com': validateScadEmail('test@gmail.com'),
+  });
+
   // 密码显示状态
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -90,9 +113,9 @@ const RegisterForm = ({
           <button
             type='button'
             onClick={() => onSendCode(formData.email)}
-            disabled={isSendingCode || (!allowAllEmails && !isScadEmail)}
+            disabled={isSendingCode || (!allowAllEmails && !isValidScadEmail)}
             className={`px-4 py-3 text-sm font-medium rounded-md whitespace-nowrap transition-colors duration-200 ${
-              (allowAllEmails || isScadEmail) && !isSendingCode
+              (allowAllEmails || isValidScadEmail) && !isSendingCode
                 ? 'text-white bg-tag-blue hover:bg-tag-dark-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tag-blue'
                 : 'text-gray-400 bg-gray-200 cursor-not-allowed'
             }`}

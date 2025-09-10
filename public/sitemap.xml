@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- 首頁 -->
+  <url>
+    <loc>https://www.techartguide.com/</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://www.techartguide.com/TAG_Logo.png</image:loc>
+      <image:title>TAG - Student Creative Platform</image:title>
+    </image:image>
+  </url>
+
+  <!-- About頁面 -->
+  <url>
+    <loc>https://www.techartguide.com/about</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- 登錄頁面 -->
+  <url>
+    <loc>https://www.techartguide.com/login</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- 註冊頁面 -->
+  <url>
+    <loc>https://www.techartguide.com/register</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- 作品詳情頁面範例 -->
+  <!-- 注意：這些URL需要根據實際數據動態生成 -->
+  <url>
+    <loc>https://www.techartguide.com/work/example-work-1</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://www.techartguide.com/assets/placeholder.svg</image:loc>
+      <image:title>Example Student Work</image:title>
+    </image:image>
+  </url>
+
+  <!-- 藝術家檔案頁面範例 -->
+  <url>
+    <loc>https://www.techartguide.com/artist/example-artist-1</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- 標籤聚合頁面範例 -->
+  <url>
+    <loc>https://www.techartguide.com/t/photo</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://www.techartguide.com/t/landscape</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- 專業聚合頁面範例 -->
+  <url>
+    <loc>https://www.techartguide.com/major/visual-effects</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://www.techartguide.com/major/game-design</loc>
+    <lastmod>2025-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>

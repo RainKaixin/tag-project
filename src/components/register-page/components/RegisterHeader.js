@@ -11,9 +11,13 @@ const RegisterHeader = () => {
   return (
     <div className='text-center mb-8'>
       <img
-        src={`${process.env.PUBLIC_URL}/TAG_Logo.png`}
+        src={`${process.env.PUBLIC_URL || ''}/TAG_Logo.png`}
         alt='TAG Logo'
         className='h-12 w-auto mx-auto mb-6'
+        onError={e => {
+          console.error('Logo failed to load:', e.target.src);
+          e.target.style.display = 'none';
+        }}
       />
       <h2 className='text-3xl font-bold text-gray-900 mb-2'>
         Create your account
