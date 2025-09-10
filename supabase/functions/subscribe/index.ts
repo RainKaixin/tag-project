@@ -3,8 +3,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // 允许的来源（按需增减）
 const ALLOW_ORIGINS = new Set([
+  'https://techartguide.com',   
   'https://www.techartguide.com',
   'https://rainwang.art',
+  'https://tag-project-49wp5aico-rain-wangs-projects.vercel.app/',
   'http://localhost:3000',
 ])
 
