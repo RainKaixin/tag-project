@@ -31,7 +31,7 @@ const RegisterForm = ({
 
   // 启用 SCAD 邮箱限制，只允许 @scad.edu 邮箱注册
   const isDevelopmentMode = process.env.NODE_ENV === 'development';
-  const allowAllEmails = isDevelopmentMode; // 是否允许所有邮箱
+  const allowAllEmails = false; // 是否允许所有邮箱
 
   // 檢查是否為有效的SCAD郵箱（包括student.scad.edu）
   const isValidScadEmail = isScadEmail;
@@ -113,7 +113,7 @@ const RegisterForm = ({
           <button
             type='button'
             onClick={() => onSendCode(formData.email)}
-            disabled={isSendingCode || (!allowAllEmails && !isValidScadEmail)}
+            disabled={isSendingCode || !isValidScadEmail}
             className={`px-4 py-3 text-sm font-medium rounded-md whitespace-nowrap transition-colors duration-200 ${
               (allowAllEmails || isValidScadEmail) && !isSendingCode
                 ? 'text-white bg-tag-blue hover:bg-tag-dark-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tag-blue'
