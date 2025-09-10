@@ -11,7 +11,7 @@ const RegisterHeader = () => {
   return (
     <div className='text-center mb-8'>
       <img
-        src={`${process.env.PUBLIC_URL || ''}/TAG_Logo.png`}
+        src="/TAG_Logo.png"
         alt='TAG Logo'
         className='h-12 w-auto mx-auto mb-6'
         onError={e => {
