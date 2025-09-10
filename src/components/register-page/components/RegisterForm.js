@@ -30,7 +30,7 @@ const RegisterForm = ({
   const isScadEmail = validateScadEmail(formData.email);
 
   // 启用 SCAD 邮箱限制，只允许 @scad.edu 邮箱注册
-  const isDevelopmentMode = false; // 开发模式标志
+  const isDevelopmentMode = process.env.NODE_ENV === 'development';
   const allowAllEmails = isDevelopmentMode; // 是否允许所有邮箱
 
   // 檢查是否為有效的SCAD郵箱（包括student.scad.edu）
