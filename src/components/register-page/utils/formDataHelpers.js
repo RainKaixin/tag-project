@@ -31,7 +31,8 @@ export const validateEmail = email => {
 export const validateScadEmail = email => {
   if (!email) return false;
   const emailLower = email.toLowerCase();
-  return emailLower.endsWith('@scad.edu');
+  // 允許任何包含 @scad.edu 的郵箱，包括 student.scad.edu
+  return emailLower.includes('@scad.edu');
 };
 
 /**

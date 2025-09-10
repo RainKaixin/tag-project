@@ -45,7 +45,11 @@ const NavbarLogo = ({ onClick, className = '' }) => {
         className={`flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity duration-200 ${className}`}
         onClick={handleLogoClick}
       >
-        <img src='/TAG_Logo.png' alt='TAG Logo' className='h-12 w-auto' />
+        <img
+          src={`${process.env.PUBLIC_URL}/TAG_Logo.png`}
+          alt='TAG Logo'
+          className='h-12 w-auto'
+        />
       </Link>
 
       {/* 重要通知弹窗 */}

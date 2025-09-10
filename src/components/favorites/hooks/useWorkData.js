@@ -101,6 +101,12 @@ export const useWorkData = () => {
       return realWork;
     }
 
+    // 如果真实数据加载完成且找不到作品，返回 null（表示作品不存在）
+    if (!loading && Object.keys(worksData).length > 0) {
+      console.warn('[useWorkData] Work not found in real data:', itemId);
+      return null;
+    }
+
     // 如果找不到真实数据，使用默认数据
     const defaultArtworks = [
       {

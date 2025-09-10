@@ -485,7 +485,25 @@ export const deletePortfolioItem = async (itemId, userId = null) => {
 
     console.log('[Portfolio] Deleting item:', itemId, 'for user:', userId);
 
-    // 从 Supabase 数据库删除
+    // 删除作品前，先清理相关收藏记录
+    console.log('[Portfolio] Cleaning up related favorites for item:', itemId);
+    const { error: favoritesError } = await supabase
+      .from('favorites')
+      .delete()
+      .eq('item_id', itemId)
+      .eq('item_type', 'work');
+
+    if (favoritesError) {
+      console.warn('[Portfolio] Failed to clean favorites:', favoritesError);
+      // 不阻止删除操作，只记录警告
+    } else {
+      console.log(
+        '[Portfolio] Successfully cleaned up favorites for item:',
+        itemId
+      );
+    }
+
+    // 从 Supabase 数据库删除作品
     const { error } = await supabase
       .from('portfolio')
       .delete()

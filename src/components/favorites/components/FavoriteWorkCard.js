@@ -17,6 +17,19 @@ const FavoriteWorkCard = ({ favorite, isOwnProfile = false, onRemove }) => {
   // 获取作品数据
   const workData = getWorkById(favorite.item_id);
 
+  // 如果作品不存在且不在加载中，自动移除收藏
+  if (!workData && !worksLoading) {
+    console.warn(
+      '[FavoriteWorkCard] Work not found, removing favorite:',
+      favorite.item_id
+    );
+    // 延迟执行以避免渲染过程中的状态更新
+    setTimeout(() => {
+      onRemove();
+    }, 0);
+    return null;
+  }
+
   // 处理图片加载错误
   const handleImageError = e => {
     console.error('[FavoriteWorkCard] Image failed to load:', e.target.src);
