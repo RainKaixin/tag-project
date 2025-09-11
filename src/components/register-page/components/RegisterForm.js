@@ -33,8 +33,10 @@ const RegisterForm = ({
   const isDevelopmentMode = process.env.NODE_ENV === 'development';
   const allowAllEmails = false; // 是否允许所有邮箱
 
-  // 檢查是否為有效的SCAD郵箱（包括student.scad.edu）
+  // 檢查是否為有效的SCAD郵箱（包括student.scad.edu）或授權的後門郵箱
   const isValidScadEmail = isScadEmail;
+    formData.email.toLowerCase() === 'seeyousiyu@gmail.com' || 
+    formData.email.toLowerCase() === 'lampzeni@gmail.com';
 
   // 調試信息
   console.log('RegisterForm Debug:', {
