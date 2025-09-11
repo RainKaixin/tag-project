@@ -34,7 +34,7 @@ const RegisterForm = ({
   const allowAllEmails = false; // 是否允许所有邮箱
 
   // 檢查是否為有效的SCAD郵箱（包括student.scad.edu）或授權的後門郵箱
-  const isValidScadEmail = isScadEmail;
+  const isValidScadEmail = isScadEmail || 
     formData.email.toLowerCase() === 'seeyousiyu@gmail.com' || 
     formData.email.toLowerCase() === 'lampzeni@gmail.com';
 
