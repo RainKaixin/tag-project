@@ -134,7 +134,7 @@ const LoginPage = () => {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    placeholder='your.name@university.edu'
+                    placeholder='Your email (new users: sign up first)'
                     autoComplete='off'
                     className='block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm'
                   />
