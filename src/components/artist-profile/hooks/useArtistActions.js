@@ -13,12 +13,22 @@ import { useNavigation } from '../../../utils/navigation';
  */
 const useArtistActions = ({ state, setters }) => {
   const navigate = useNavigate();
-  const { goBack, navigateToWork } = useNavigation();
+  const { goBack, navigateToWork, navigateToGallery } = useNavigation();
 
   // 处理返回按钮点击
   const handleBackClick = useCallback(() => {
+  // 根据按钮文本决定返回行为
+  // 如果是 "Back to Gallery"，直接跳转到 Gallery
+  // 其他情况使用原来的 goBack 逻辑
+  const currentPath = window.location.pathname;
+  if (currentPath.includes('/artist/')) {
+    // 从艺术家档案页面返回，直接跳转到 Gallery
+    navigateToGallery();
+  } else {
+    // 其他情况使用原来的逻辑
     goBack();
-  }, [goBack]);
+  }
+}, [goBack, navigateToGallery]);
 
   // 处理编辑个人资料按钮点击
   const handleEditProfileClick = useCallback(() => {
