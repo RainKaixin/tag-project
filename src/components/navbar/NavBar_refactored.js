@@ -43,8 +43,8 @@ const NavBar = () => {
           {/* Logo */}
           <NavbarLogo onClick={actions.handleLogoClick} />
 
-          {/* Center Upload Button - Absolute Centering */}
-          <div className='absolute left-1/2 transform -translate-x-1/2'>
+          {/* Center Upload Button - Absolute Centering - Hidden on mobile */}
+          <div className='absolute left-1/2 transform -translate-x-1/2 hidden md:block'>
             <button
               onClick={actions.handleUploadClick}
               className='bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-full text-sm font-semibold hover:from-blue-600 hover:to-purple-600 transition-all duration-200 flex items-center shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
