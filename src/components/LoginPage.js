@@ -260,7 +260,7 @@ const LoginPage = () => {
                     ></path>
                   </svg>
                 ) : null}
-                {isLoading ? 'Signing in...' : 'Sign in'}
+                {isLoading ? 'Logging in...' : 'Login'}
               </button>
             </form>
 
