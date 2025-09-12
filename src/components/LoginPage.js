@@ -101,7 +101,7 @@ const LoginPage = () => {
 
           {/* Slogan Title */}
           <div className='text-center mb-4'>
-            <h1 className='text-2xl sm:text-3xl font-bold mb-2'>
+            <h1 className='text-lg sm:text-xl font-bold mb-2'>
               <span className='bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent'>
                 Show your work.
               </span>
@@ -109,6 +109,9 @@ const LoginPage = () => {
                 Find your team.
               </span>
             </h1>
+            <p className='text-sm text-gray-700 font-medium'>
+              New here? Please Sign Up first.
+            </p>
           </div>
 
           {/* Login Card */}
@@ -126,12 +129,6 @@ const LoginPage = () => {
             <form onSubmit={handleSubmit} className='space-y-4 sm:space-y-5'>
               {/* Email Field */}
               <div>
-                <label
-                  htmlFor='email'
-                  className='block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2'
-                >
-                  Student Email
-                </label>
                 <div className='relative'>
                   <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
                     <svg
@@ -155,7 +152,7 @@ const LoginPage = () => {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    placeholder='New here? Please Sign Up first.'
+                    placeholder='Student Email'
                     autoComplete='off'
                     className='block w-full pl-8 sm:pl-10 pr-3 py-2 sm:py-2.5 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue text-sm'
                   />
@@ -257,11 +254,11 @@ const LoginPage = () => {
               <button
                 type='submit'
                 disabled={isLoading}
-                className='w-full flex justify-center py-2 sm:py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-tag-blue hover:bg-tag-dark-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tag-blue disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200'
+                className='w-full flex justify-center py-2 sm:py-2.5 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tag-blue disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200'
               >
                 {isLoading ? (
                   <svg
-                    className='animate-spin -ml-1 mr-3 h-5 w-5 text-white'
+                    className='animate-spin -ml-1 mr-3 h-5 w-5 text-gray-700'
                     xmlns='http://www.w3.org/2000/svg'
                     fill='none'
                     viewBox='0 0 24 24'
@@ -289,7 +286,7 @@ const LoginPage = () => {
             <div className='mt-4 sm:mt-5 flex justify-center'>
               <Link
                 to='/register'
-                className='w-full flex justify-center py-2 sm:py-2.5 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tag-blue transition-colors duration-200'
+                className='w-full flex justify-center py-2 sm:py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-tag-blue hover:bg-tag-dark-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tag-blue transition-colors duration-200'
               >
                 Sign Up
               </Link>
@@ -299,21 +296,21 @@ const LoginPage = () => {
       </div>
 
       {/* Footer */}
-      <footer className='bg-white border-t border-gray-200'>
+      <footer className='bg-gray-900 border-t border-gray-700'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'>
           <div className='flex justify-between items-center'>
-            <div className='text-sm text-gray-500'>
+            <div className='text-sm text-gray-300'>
               <span className='font-bold'>Tech Art Guide</span>
               <span className='ml-2'>© 2025 TAG. All rights reserved.</span>
             </div>
-            <div className='flex space-x-6 text-sm text-gray-500'>
-              <a href='#' className='hover:text-gray-700'>
+            <div className='flex space-x-6 text-sm text-gray-300'>
+              <a href='#' className='hover:text-white'>
                 Privacy Policy
               </a>
-              <a href='#' className='hover:text-gray-700'>
+              <a href='#' className='hover:text-white'>
                 Terms of Service
               </a>
-              <a href='#' className='hover:text-gray-700'>
+              <a href='#' className='hover:text-white'>
                 Help Center
               </a>
             </div>
