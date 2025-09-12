@@ -89,25 +89,46 @@ const LoginPage = () => {
     <div className='min-h-screen bg-gray-50 flex flex-col'>
       {/* Main Content */}
       <div className='flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8'>
-        <div className='max-w-md w-full space-y-8'>
+        <div className='max-w-sm w-full space-y-6'>
+          {/* Mobile Logo - Outside card, above slogan */}
+          <div className='text-center mb-4 block md:hidden'>
+            <img
+              src={`${process.env.PUBLIC_URL}/TAG_Logo.png`}
+              alt='TAG Logo'
+              className='h-12 w-auto mx-auto'
+            />
+          </div>
+
+          {/* Slogan Title */}
+          <div className='text-center mb-4'>
+            <h1 className='text-2xl sm:text-3xl font-bold mb-2'>
+              <span className='bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent'>
+                Show your work.
+              </span>
+              <span className='bg-gradient-to-r from-purple-500 to-purple-600 bg-clip-text text-transparent ml-2'>
+                Find your team.
+              </span>
+            </h1>
+          </div>
+
           {/* Login Card */}
-          <div className='bg-white rounded-lg shadow-lg p-8'>
-            {/* Logo and Header */}
-            <div className='text-center mb-8'>
+          <div className='bg-white rounded-lg shadow-lg p-4 sm:p-6'>
+            {/* Desktop Logo and Header - Inside card */}
+            <div className='text-center mb-4 sm:mb-6 hidden md:block'>
               <img
                 src={`${process.env.PUBLIC_URL}/TAG_Logo.png`}
                 alt='TAG Logo'
-                className='h-12 w-auto mx-auto mb-6'
+                className='h-12 w-auto mx-auto mb-3 sm:mb-4'
               />
             </div>
 
             {/* Login Form */}
-            <form onSubmit={handleSubmit} className='space-y-6'>
+            <form onSubmit={handleSubmit} className='space-y-4 sm:space-y-5'>
               {/* Email Field */}
               <div>
                 <label
                   htmlFor='email'
-                  className='block text-sm font-medium text-gray-700 mb-2'
+                  className='block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2'
                 >
                   Student Email
                 </label>
@@ -136,7 +157,7 @@ const LoginPage = () => {
                     onChange={handleInputChange}
                     placeholder='New here? Please Sign Up first.'
                     autoComplete='off'
-                    className='block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue sm:text-sm'
+                    className='block w-full pl-8 sm:pl-10 pr-3 py-2 sm:py-2.5 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tag-blue focus:border-tag-blue text-sm'
                   />
                 </div>
               </div>
@@ -145,7 +166,7 @@ const LoginPage = () => {
               <div>
                 <label
                   htmlFor='password'
-                  className='block text-sm font-medium text-gray-700 mb-2'
+                  className='block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2'
                 >
                   Password
                 </label>
@@ -174,7 +195,7 @@ const LoginPage = () => {
                     onChange={handleInputChange}
                     placeholder='••••••••'
                     autoComplete='off'
-                    className='block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-tag-blue focus:border-tag-blue sm:text-sm'
+                    className='block w-full pl-8 sm:pl-10 pr-3 py-2 sm:py-2.5 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-tag-blue focus:border-tag-blue text-sm'
                   />
                 </div>
               </div>
@@ -232,11 +253,11 @@ const LoginPage = () => {
                 </div>
               </div>
 
-              {/* Sign In Button */}
+              {/* Login Button */}
               <button
                 type='submit'
                 disabled={isLoading}
-                className='w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-tag-blue hover:bg-tag-dark-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tag-blue disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200'
+                className='w-full flex justify-center py-2 sm:py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-tag-blue hover:bg-tag-dark-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tag-blue disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200'
               >
                 {isLoading ? (
                   <svg
@@ -265,10 +286,10 @@ const LoginPage = () => {
             </form>
 
             {/* Bottom Options */}
-            <div className='mt-6 flex justify-center'>
+            <div className='mt-4 sm:mt-5 flex justify-center'>
               <Link
                 to='/register'
-                className='w-full flex justify-center py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tag-blue transition-colors duration-200'
+                className='w-full flex justify-center py-2 sm:py-2.5 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tag-blue transition-colors duration-200'
               >
                 Sign Up
               </Link>
