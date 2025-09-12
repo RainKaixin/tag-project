@@ -101,8 +101,8 @@ const LoginPage = () => {
           </div>
 
           {/* Slogan */}
-          <div className='text-center mb-4'>
-            <h1 className='text-2xl sm:text-3xl font-bold mb-2'>
+          <div className='text-center mb-6'>
+            <h1 className='text-lg sm:text-3xl font-bold mb-1'>
               <span className='inline-flex flex-nowrap items-baseline gap-2 whitespace-nowrap'>
                 <span className='bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent'>
                   Show your work.
@@ -302,7 +302,7 @@ const LoginPage = () => {
       </div>
 
       {/* Footer */}
-      <footer className='bg-white border-t border-gray-200'>
+      <footer className='bg-white border-t border-gray-200 hidden md:block'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'>
           <div className='flex justify-between items-center'>
             <div className='text-sm text-gray-600'>
