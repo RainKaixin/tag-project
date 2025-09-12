@@ -71,7 +71,7 @@ const NavBar = () => {
 
           {/* Right Side Buttons */}
           <div className='flex items-center space-x-4'>
-            {/* Gallery Button - Same size as TAGMe */}
+            {/* Gallery Button - Same size as TAGMe - Hidden on mobile */}
             <button
               onClick={actions.handleGalleryClick}
               onMouseDown={e => {
@@ -86,7 +86,7 @@ const NavBar = () => {
               Gallery
             </button>
 
-            {/* TAGMe Button - Same size as Gallery */}
+            {/* TAGMe Button - Same size as Gallery - Hidden on mobile */}
             <Link
               to='/tagme'
               className='bg-tag-purple text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-purple-700 transition-colors duration-200 min-w-[80px] text-center hidden md:block'
@@ -94,19 +94,21 @@ const NavBar = () => {
               TAGMe
             </Link>
 
-            {/* User Dropdown */}
+            {/* User Dropdown - Hidden on mobile */}
             {!loading && (
-              <UserDropdown
-                user={currentUser}
-                currentUser={state.currentUser}
-                showDropdown={state.showDropdown}
-                onToggle={actions.handleDropdownToggle}
-                onSettingsClick={actions.handleSettingsClick}
-                onNotificationsClick={actions.handleNotificationsClick}
-                onLogoutClick={actions.handleLogoutClick}
-                unreadCount={state.unreadCount}
-                dropdownRef={dropdownRef}
-              />
+              <div className='hidden md:block'>
+                <UserDropdown
+                  user={currentUser}
+                  currentUser={state.currentUser}
+                  showDropdown={state.showDropdown}
+                  onToggle={actions.handleDropdownToggle}
+                  onSettingsClick={actions.handleSettingsClick}
+                  onNotificationsClick={actions.handleNotificationsClick}
+                  onLogoutClick={actions.handleLogoutClick}
+                  unreadCount={state.unreadCount}
+                  dropdownRef={dropdownRef}
+                />
+              </div>
             )}
             {loading && (
               <div className='w-8 h-8 rounded-full bg-gray-200 animate-pulse'></div>
