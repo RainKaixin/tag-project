@@ -37,11 +37,11 @@ const BannerSection = () => {
   };
 
   return (
-    <section className='relative min-h-[560px] lg:min-h-[640px] overflow-hidden'>
+    <section className='relative min-h-[140px] lg:min-h-[160px] overflow-hidden'>
       <div className='flex flex-col lg:flex-row'>
         {/* 左栏 - TAG */}
         <div
-          className='relative w-full lg:w-1/2 bg-gradient-to-b from-blue-600 to-blue-700 min-h-[560px] lg:min-h-[640px] flex items-start justify-center px-8 lg:px-8 pt-20 lg:pt-24 pb-16 lg:pb-20 cursor-pointer transition-all duration-500 ease-out'
+          className='relative w-full lg:w-1/2 bg-black hover:bg-gradient-to-b hover:from-blue-600 hover:to-blue-700 min-h-[140px] lg:min-h-[160px] flex items-center justify-center px-8 lg:px-8 py-8 cursor-pointer transition-all duration-500 ease-out'
           style={{
             width: window.innerWidth >= 1024 ? getBlueWidth() : '100%',
             transitionTimingFunction: 'cubic-bezier(.22,.61,.36,1)',
@@ -53,15 +53,17 @@ const BannerSection = () => {
           role='link'
           tabIndex={0}
         >
-          <div className='flex flex-col items-end max-w-md gap-6 lg:pr-0'>
+          <div className='flex flex-col items-center text-center'>
             {/* 主标题 */}
-            <div className='leading-[0.8]'>
+            <div className='leading-[0.8] mb-4'>
               <h1
-                className='text-white font-black uppercase tracking-[-0.03em]'
+                className='text-transparent font-black uppercase tracking-[-0.03em]'
                 style={{
-                  fontSize: 'clamp(56px, 7vw, 96px)',
+                  fontSize: 'clamp(40px, 5vw, 64px)',
                   fontFamily: 'Poppins, Inter, system-ui, sans-serif',
                   textRendering: 'optimizeLegibility',
+                  WebkitTextStroke: '1px white',
+                  WebkitTextFillColor: 'transparent',
                 }}
               >
                 TAG
@@ -69,7 +71,7 @@ const BannerSection = () => {
               <h1
                 className='text-blue-200 font-black tracking-[-0.03em]'
                 style={{
-                  fontSize: 'clamp(32px, 4vw, 56px)',
+                  fontSize: 'clamp(24px, 3vw, 40px)',
                   fontFamily: 'Poppins, Inter, system-ui, sans-serif',
                   textRendering: 'optimizeLegibility',
                 }}
@@ -79,24 +81,11 @@ const BannerSection = () => {
             </div>
 
             {/* 副标题 */}
-            <div className='space-y-2 mt-6 md:mt-8 text-right'>
-              <p
-                className='text-white/95 font-semibold leading-tight'
-                style={{ fontSize: 'clamp(20px, 2.2vw, 28px)' }}
-              >
-                Show your work
-              </p>
-              <p
-                className='text-white/95 font-semibold leading-tight'
-                style={{ fontSize: 'clamp(20px, 2.2vw, 28px)' }}
-              >
-                Get hired!
-              </p>
-            </div>
-
-            {/* 描述 */}
-            <p className='text-white text-lg opacity-80 leading-relaxed text-right'>
-              Explore TAG Gallery
+            <p
+              className='text-white font-black leading-tight'
+              style={{ fontSize: 'clamp(24px, 3vw, 36px)' }}
+            >
+              Show your work
             </p>
           </div>
         </div>
@@ -104,7 +93,7 @@ const BannerSection = () => {
         {/* 右栏 - TAG ME */}
         <Link
           to='/tagme'
-          className='relative w-full lg:w-1/2 bg-gradient-to-b from-purple-600 to-purple-700 min-h-[560px] lg:min-h-[640px] flex items-start justify-center px-8 lg:px-8 pt-20 lg:pt-24 pb-16 lg:pb-20 cursor-pointer transition-all duration-500 ease-out'
+          className='relative w-full lg:w-1/2 bg-black hover:bg-gradient-to-b hover:from-purple-600 hover:to-purple-700 min-h-[140px] lg:min-h-[160px] flex items-center justify-center px-8 lg:px-8 py-8 cursor-pointer transition-all duration-500 ease-out'
           style={{
             width: window.innerWidth >= 1024 ? getPurpleWidth() : '100%',
             transitionTimingFunction: 'cubic-bezier(.22,.61,.36,1)',
@@ -112,15 +101,17 @@ const BannerSection = () => {
           onMouseEnter={() => setHoveredSection('purple')}
           onMouseLeave={() => setHoveredSection(null)}
         >
-          <div className='flex flex-col items-start max-w-md gap-6 lg:pl-0'>
+          <div className='flex flex-col items-center text-center'>
             {/* 主标题 */}
-            <div className='leading-[0.8]'>
+            <div className='leading-[0.8] mb-4'>
               <h1
-                className='text-white font-black uppercase tracking-[-0.03em]'
+                className='text-transparent font-black uppercase tracking-[-0.03em]'
                 style={{
-                  fontSize: 'clamp(56px, 7vw, 96px)',
+                  fontSize: 'clamp(40px, 5vw, 64px)',
                   fontFamily: 'Poppins, Inter, system-ui, sans-serif',
                   textRendering: 'optimizeLegibility',
+                  WebkitTextStroke: '1px white',
+                  WebkitTextFillColor: 'transparent',
                 }}
               >
                 TAG
@@ -128,7 +119,7 @@ const BannerSection = () => {
               <h1
                 className='text-purple-200 font-black tracking-[-0.03em]'
                 style={{
-                  fontSize: 'clamp(48px, 6vw, 80px)',
+                  fontSize: 'clamp(24px, 3vw, 40px)',
                   fontFamily: 'Poppins, Inter, system-ui, sans-serif',
                   textRendering: 'optimizeLegibility',
                 }}
@@ -138,24 +129,11 @@ const BannerSection = () => {
             </div>
 
             {/* 副标题 */}
-            <div className='space-y-2 mt-6 md:mt-8'>
-              <p
-                className='text-white/95 font-semibold leading-tight'
-                style={{ fontSize: 'clamp(20px, 2.2vw, 28px)' }}
-              >
-                Find your team
-              </p>
-              <p
-                className='text-white/95 font-semibold leading-tight'
-                style={{ fontSize: 'clamp(20px, 2.2vw, 28px)' }}
-              >
-                Build experience!
-              </p>
-            </div>
-
-            {/* 描述 */}
-            <p className='text-white text-lg opacity-80 leading-relaxed'>
-              Explore TAGMe
+            <p
+              className='text-white font-black leading-tight'
+              style={{ fontSize: 'clamp(24px, 3vw, 36px)' }}
+            >
+              Find your team
             </p>
           </div>
         </Link>
