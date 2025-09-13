@@ -28,7 +28,7 @@ const CompetitionBanner = () => {
 
           <button
             onClick={handleJoinNowClick}
-            className='bg-black text-white px-8 py-3 rounded-md text-lg font-medium hover:bg-tag-blue transition-colors duration-200'
+            className='bg-transparent text-black px-8 py-3 rounded-md text-lg font-medium border border-black hover:bg-tag-blue hover:text-white hover:border-transparent transition-colors duration-200'
           >
             Join Now
           </button>
