@@ -42,7 +42,7 @@ const NavbarLogo = ({ onClick, className = '' }) => {
     <>
       <Link
         to='/'
-        className={`flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity duration-200 ${className}`}
+        className={`flex-shrink-0 cursor-pointer transition-opacity duration-200 hover:opacity-80 ${className}`}
         onClick={handleLogoClick}
       >
         <img
