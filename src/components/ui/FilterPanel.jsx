@@ -16,7 +16,7 @@ export function FilterPanel() {
     'Animation',
     'Architecture',
     'Art History',
-    'Creative Business Leadership',
+    'Creative Business',
     'Fashion Design',
     'Fibers',
     'Film',
@@ -109,7 +109,7 @@ export function FilterPanel() {
   };
 
   return (
-    <div className='bg-white p-6 rounded-lg shadow-sm border border-gray-200'>
+    <div className='bg-white p-6 rounded-none border-t-0 border-b-0 border-l-0 border-r border-black'>
       <h3 className='text-lg font-semibold text-gray-900 mb-4'>Filters</h3>
 
       {/* Action Buttons - 移到最上面 */}
@@ -139,7 +139,7 @@ export function FilterPanel() {
         <select
           value={sortBy}
           onChange={e => setSortBy(e.target.value)}
-          className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-tag-blue focus:border-tag-blue'
+          className='w-full px-3 py-2 border border-black bg-white rounded-md focus:outline-none focus:ring-1 focus:ring-tag-blue focus:border-tag-blue'
         >
           <option value='Latest'>Latest</option>
           <option value='Popular'>Popular</option>
@@ -148,17 +148,22 @@ export function FilterPanel() {
 
       {/* Major */}
       <div className='mb-6'>
-        <h4 className='text-sm font-medium text-gray-900 mb-3'>Major</h4>
+        <h4 className='text-base font-bold text-white mb-3 text-right uppercase bg-black px-3 py-2 -mx-6'>
+          Major
+        </h4>
         <div className='space-y-2'>
           {categoryOptions.map(category => (
-            <label key={category} className='flex items-center'>
+            <label
+              key={category}
+              className='flex items-center justify-end px-2 py-1 rounded cursor-pointer hover:bg-tag-blue hover:text-white transition-colors duration-200'
+            >
+              <span className='mr-2 text-sm'>{category}</span>
               <input
                 type='checkbox'
                 checked={categories.includes(category)}
                 onChange={() => handleCategoryChange(category)}
                 className='h-4 w-4 text-tag-blue focus:ring-tag-blue border-gray-300 rounded'
               />
-              <span className='ml-2 text-sm text-gray-700'>{category}</span>
             </label>
           ))}
         </div>
@@ -166,17 +171,22 @@ export function FilterPanel() {
 
       {/* Software */}
       <div className='mb-6'>
-        <h4 className='text-sm font-medium text-gray-900 mb-3'>Software</h4>
+        <h4 className='text-base font-bold text-white mb-3 text-right uppercase bg-black px-3 py-2 -mx-6'>
+          Software
+        </h4>
         <div className='space-y-2'>
           {softwareOptions.map(softwareName => (
-            <label key={softwareName} className='flex items-center'>
+            <label
+              key={softwareName}
+              className='flex items-center justify-end px-2 py-1 rounded cursor-pointer hover:bg-tag-blue hover:text-white transition-colors duration-200'
+            >
+              <span className='mr-2 text-sm'>{softwareName}</span>
               <input
                 type='checkbox'
                 checked={software.includes(softwareName)}
                 onChange={() => handleSoftwareChange(softwareName)}
                 className='h-4 w-4 text-tag-blue focus:ring-tag-blue border-gray-300 rounded'
               />
-              <span className='ml-2 text-sm text-gray-700'>{softwareName}</span>
             </label>
           ))}
         </div>
