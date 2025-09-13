@@ -198,37 +198,43 @@ const GallerySection = () => {
   // 如果正在初始化，显示加载状态
   if (isInitializing) {
     return (
-      <section className='py-16 bg-gray-50' data-section='gallery'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+      <section className='py-16 bg-white' data-section='gallery'>
+        <div className='w-full px-4 sm:px-6 lg:px-8'>
           <div className='flex flex-col mb-8'>
-            <h2 className='text-3xl font-bold text-gray-400 mb-6'>
-              TAG Gallery
-            </h2>
-            <div className='flex items-center space-x-6'>
+            <div className='flex items-center justify-between'>
               {/* Search Bar Placeholder */}
               <div className='w-7/12'>
                 <div className='h-10 bg-gray-200 rounded-md animate-pulse'></div>
               </div>
-              <div className='inline-flex rounded-full border border-gray-300 bg-white p-1'>
-                {tabs.map(tab => (
-                  <button
-                    key={tab}
-                    className={`relative px-12 py-3 text-base font-semibold tracking-wide ${
-                      activeTab === tab ? 'text-white' : 'text-gray-700'
-                    }`}
-                  >
-                    {activeTab === tab && (
-                      <div className='absolute inset-0 bg-tag-blue rounded-full' />
-                    )}
-                    <span className='relative z-10'>{tab}</span>
-                  </button>
-                ))}
+              <div className='flex-1 flex justify-end'>
+                <div className='inline-flex rounded-md border border-black bg-transparent p-1'>
+                  {tabs.map(tab => (
+                    <button
+                      key={tab}
+                      className={`relative px-16 py-3 text-base font-semibold tracking-wide ${
+                        activeTab === tab ? 'text-white' : 'text-black'
+                      }`}
+                    >
+                      {activeTab === tab && (
+                        <div className='absolute inset-0 bg-black rounded-sm' />
+                      )}
+                      <span className='relative z-10'>{tab}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-          <div className='flex-1'>
-            <div className='animate-pulse'>
-              <div className='h-64 bg-gray-200 rounded-lg'></div>
+          <div className='flex flex-col lg:flex-row gap-4'>
+            {/* Filter Panel Placeholder */}
+            <div className='hidden lg:block lg:w-64 flex-shrink-0'>
+              <div className='bg-gray-200 rounded-lg h-96 animate-pulse'></div>
+            </div>
+            {/* Content Area Placeholder */}
+            <div className='flex-1'>
+              <div className='animate-pulse'>
+                <div className='h-64 bg-gray-200 rounded-lg'></div>
+              </div>
             </div>
           </div>
         </div>
@@ -237,15 +243,13 @@ const GallerySection = () => {
   }
 
   return (
-    <section className='py-16 bg-gray-50' data-section='gallery'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+    <section className='py-16 bg-white' data-section='gallery'>
+      <div className='w-full px-4 sm:px-6 lg:px-8'>
         {/* Section Header */}
         <div className='flex flex-col mb-8'>
-          <h2 className='text-3xl font-bold text-gray-400 mb-6'>TAG Gallery</h2>
-
-          {/* Search Bar and Tab Button Group - Left Aligned */}
-          <div className='flex items-center space-x-6'>
-            {/* Search Bar - 70% width */}
+          {/* Search Bar and Tab Button Group - Aligned with content below */}
+          <div className='flex items-center justify-between'>
+            {/* Search Bar - Left aligned with Filters */}
             <div className='w-7/12'>
               <SearchBar
                 onInputChange={e => console.log('Search:', e.target.value)}
@@ -254,39 +258,46 @@ const GallerySection = () => {
               />
             </div>
 
-            {/* Segmented Tab Button Group - 30% width */}
-            <div className='inline-flex rounded-full border border-gray-300 bg-white p-1'>
-              {tabs.map((tab, index) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`relative px-12 py-3 text-base font-semibold tracking-wide transition-all duration-300 ease-in-out ${
-                    activeTab === tab
-                      ? 'text-white'
-                      : 'text-gray-700 hover:text-gray-900'
-                  }`}
-                >
-                  {/* Active Background */}
-                  {activeTab === tab && (
-                    <div className='absolute inset-0 bg-tag-blue rounded-full transition-all duration-300 ease-in-out' />
-                  )}
+            {/* Segmented Tab Button Group - Extended width to align with Works grid */}
+            <div className='flex-1 flex justify-end'>
+              <div className='inline-flex rounded-md border border-black bg-transparent p-1'>
+                {tabs.map((tab, index) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`relative px-16 py-3 text-base font-semibold tracking-wide transition-all duration-300 ease-in-out group ${
+                      activeTab === tab
+                        ? 'text-white'
+                        : 'text-black group-hover:text-white'
+                    }`}
+                  >
+                    {/* Active Background - 点击后黑色 */}
+                    {activeTab === tab && (
+                      <div className='absolute inset-0 bg-black rounded-sm transition-all duration-300 ease-in-out' />
+                    )}
 
-                  {/* Text Content */}
-                  <span className='relative z-10'>{tab}</span>
-                </button>
-              ))}
+                    {/* Hover Background - 鼠标悬停蓝色 */}
+                    {activeTab !== tab && (
+                      <div className='absolute inset-0 bg-transparent group-hover:bg-tag-blue rounded-sm transition-all duration-300 ease-in-out' />
+                    )}
+
+                    {/* Text Content */}
+                    <span className='relative z-10'>{tab}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Content Area */}
         <div className='flex flex-col lg:flex-row gap-4'>
-          {/* Filter Panel - Hidden on mobile, visible on large screens */}
+          {/* Filter Panel - Left Sidebar */}
           <div className='hidden lg:block lg:w-64 flex-shrink-0'>
             <FilterPanel />
           </div>
 
-          {/* Content Area */}
+          {/* Content Area - Right Side */}
           <div className='flex-1'>
             {activeTab === 'Works' && <GalleryGrid currentUser={currentUser} />}
             {activeTab === 'Artists' && (
