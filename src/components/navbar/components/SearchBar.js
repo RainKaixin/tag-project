@@ -33,7 +33,7 @@ const SearchBar = ({
           type='text'
           placeholder={placeholder}
           onChange={onInputChange}
-          className='block w-full pl-9 pr-3 py-2 border border-gray-200 rounded-md leading-5 bg-white placeholder-gray-400 focus:outline-none focus:placeholder-gray-300 focus:ring-1 focus:ring-gray-300 focus:border-gray-300 text-sm shadow-sm'
+          className='block w-full pl-9 pr-3 py-2 border-t border-b border-gray-200 border-l-0 border-r-0 rounded-none leading-5 bg-white placeholder-gray-400 focus:outline-none focus:placeholder-gray-300 focus:ring-1 focus:ring-gray-300 focus:border-gray-300 text-sm'
         />
       </div>
     </div>
