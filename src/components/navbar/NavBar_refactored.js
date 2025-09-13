@@ -49,7 +49,7 @@ const NavBar = () => {
           <div className='absolute left-1/2 transform -translate-x-1/2 hidden md:block'>
             <button
               onClick={actions.handleUploadClick}
-              className='bg-transparent text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+              className='bg-transparent text-white px-6 py-3 rounded-full text-sm font-semibold border border-white/30 hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:border-transparent transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
               aria-label='Upload Work'
             >
               Upload Work
